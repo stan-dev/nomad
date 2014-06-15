@@ -253,7 +253,7 @@ namespace nomad {
       
     }
     
-    virtual void second_order_reverse_adj() {
+    void second_order_reverse_adj() {
       
       if (autodiff_order >= 2) {
         
@@ -295,7 +295,7 @@ namespace nomad {
       
     }
     
-    virtual void third_order_forward_val() {
+    void third_order_forward_val() {
       
       if (autodiff_order >= 3) {
         
@@ -352,7 +352,7 @@ namespace nomad {
       
     } // third_order_forward_val
     
-    virtual void third_order_reverse_adj() {
+    void third_order_reverse_adj() {
       
       if (autodiff_order >= 3) {
 
@@ -432,13 +432,8 @@ namespace nomad {
                 else        third_partial += k * (k + 1) / 2 + 1;
                 if (j >= i) third_partial += j * (j + 1) * (j + 2) / 6 + 1;
                 
-                //std::cout << "\t" << g1 << "\t" << in_v2 << "\t" << third_val(input(k))
-                //<< "\t" << *third_partial << std::endl;
-                
               }
             }
-            
-            //std::cout << "third order contribution: " << in_g4 << std::endl;
             
             fourth_grad(input(i)) += in_g4;
             
@@ -481,7 +476,7 @@ namespace nomad {
       second_grad() = 0;
     }
     
-    virtual void third_order_forward_val() {
+    void third_order_forward_val() {
       if (n_inputs_) {
         third_val() = 0;
         fourth_val() = 0;

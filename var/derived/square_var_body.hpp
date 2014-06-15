@@ -38,21 +38,21 @@ namespace nomad {
       }
     }
     
-    virtual void second_order_forward_val() {
+    void second_order_forward_val() {
       if (autodiff_order >= 2) {
         second_grad() = 0;
         second_val() = 2 * second_val(input()) * first_val(input());
       }
     }
     
-    virtual void second_order_reverse_adj() {
+    void second_order_reverse_adj() {
       if (autodiff_order >= 2) {
         second_grad(input()) +=   2 * second_grad() * first_val(input())
                                 + 2 * first_grad() * second_val(input());
       }
     }
     
-    virtual void third_order_forward_val() {
+    void third_order_forward_val() {
       if (autodiff_order >= 3) {
         third_grad() = 0;
         fourth_grad() = 0;
@@ -63,7 +63,7 @@ namespace nomad {
       
     } // third_order_forward_val
     
-    virtual void third_order_reverse_adj() {
+    void third_order_reverse_adj() {
       
       if (autodiff_order >= 3) {
         

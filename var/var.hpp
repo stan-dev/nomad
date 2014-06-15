@@ -48,7 +48,7 @@ namespace nomad {
     index_t body() const { return body_idx_; }
     void set_body(index_t body_idx) { body_idx_ = body_idx; }
     
-    static short order() { return autodiff_order; }
+    constexpr static short order() { return autodiff_order; }
     
     double& first_val()   const { return var_bodies_[body_idx_].first_val(); }
     double& first_grad()  const { return var_bodies_[body_idx_].first_grad(); }

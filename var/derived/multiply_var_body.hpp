@@ -40,7 +40,7 @@ namespace nomad {
       }
     }
     
-    virtual void second_order_forward_val() {
+    void second_order_forward_val() {
       if (autodiff_order >= 2) {
         second_val() = 0;
         second_grad() = 0;
@@ -49,7 +49,7 @@ namespace nomad {
       }
     }
     
-    virtual void second_order_reverse_adj() {
+    void second_order_reverse_adj() {
       if (autodiff_order >= 2) {
         const double g1 = first_grad();
         const double g2 = second_grad();
@@ -60,7 +60,7 @@ namespace nomad {
       }
     }
     
-    virtual void third_order_forward_val() {
+    void third_order_forward_val() {
       
       if (autodiff_order >= 3) {
         
@@ -81,7 +81,7 @@ namespace nomad {
       
     } // third_order_forward_val
     
-    virtual void third_order_reverse_adj() {
+    void third_order_reverse_adj() {
       
       if (autodiff_order >= 3) {
         
