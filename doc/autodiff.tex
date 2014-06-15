@@ -1,0 +1,1044 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}
+\geometry{letterpaper}
+\usepackage{graphicx}
+\usepackage{amssymb, amsmath}
+\usepackage{epstopdf}
+\usepackage{color}
+\usepackage[table]{xcolor}
+\usepackage{multirow}
+
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\title{Efficient Implementation of Automatic Differentiation}
+\author{Michael Betancourt}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+Automatic differentiation (autodiff) is a tool for automating the chain rule when 
+computing derivatives of complex, composite functions.  As one moves to higher 
+derivatives the construction of autodiff becomes significantly more difficult and 
+obfuscates computationally efficient implementations.
+
+In this note I will take advantage of the \textit{dual number} perspective of autodiff
+to simplify the construction and implementation of various higher-order derivations.
+After discussing the basics of dual numbers and how they can be used to derive
+automatic differentiation, I'll review first, second, and third-order implementations.
+
+\section*{Dual Numbers}
+
+Dual numbers are an extension of the real numbers, $\mathbb{R}$, given by the
+addition of a new element, $\mathbf{a}$,%
+%
+\footnote{In this note bold face will refer to the dual units while the regular
+typeface will correspond to elements of $\mathbb{R}$.  I will also reserve
+roman letters for real numbers and greek letters for dual numbers.}
+%
+which is nilpotent, $\mathbf{a}^{2} = 0$. I will refer to this new element as a \textit{dual unit}.
+
+This extended space of dual numbers forms a two-dimensional associative algebra 
+over the reals; in other words, the addition of the dual unit generates a two-dimensional
+space, $\mathbb{D}$, with elements
+%
+\begin{equation*}
+\xi = x + \mathbf{a} \, \delta x; \, \xi \in \mathbb{D}, \, x, \delta x \in \mathbb{R}
+\end{equation*}
+%
+equipped with addition and multiplication operations,
+%
+\begin{align*}
+\xi_{1} + \xi_{2} &= \left( x_{1} + \mathbf{a} \, \delta x_{1} \right) + \left( x_{2} + \mathbf{a} \,  \delta x_{2} \right) 
+\\
+&= \left( x_{1} + x_{2} \right) + \mathbf{a} \left( \delta x_{1} + \delta x_{2} \right) 
+\\
+\xi_{1} \cdot \xi_{2} 
+&= \left( x_{1} + \mathbf{a} \, \delta x_{1} \right) \cdot \left( x_{2} + \mathbf{a} \, \delta x_{2} \right) 
+\\
+&= x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathbf{a} + \delta x_{1} \delta x_{2} \, \mathbf{a}^{2} 
+\\
+&= x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathbf{a}.
+\end{align*}  
+
+Note that, because the dual unit is nilpotent, we cannot define an inverse to multiplication.  
+Mathematically this means that the dual numbers form only a local ring; compare this to 
+the complex numbers on which we can define division and whose associative algebra is a field.
+
+Dual numbers have many uses in mathematics and physics, but here we will focus on their
+relationship to functions.  Any smooth function $f : \mathbb{R} \rightarrow \mathbb{R}$ 
+induces a function on the dual numbers, $f : \mathbb{D} \rightarrow \mathbb{D}$, 
+via a Taylor series around any purely real point, $\xi_{0} = x_{0} + \mathbf{a} \, 0$,
+%
+\begin{align*}
+f \! \left( \xi \right) 
+&= 
+\sum_{n = 0}^{\infty} \frac{ \left( \xi - \xi_{0} \right)^{n} }{n!} 
+\frac{ \partial^{n} f }{ \partial \xi^{n} } \! \left( \xi = \xi_{0} \right) 
+\\
+&= 
+\sum_{n = 0}^{\infty} \frac{ \left( \left( x - x_{0} \right) + \mathbf{a} \, \delta x \right)^{n} }{n!} 
+\frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right)
+\\
+&= 
+\sum_{n = 0}^{\infty} \frac{ \left( x - x_{0} \right)^{n} }{n!} 
+\frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right)
++ \mathbf{a} \, \delta x \sum_{n = 0}^{\infty} \frac{ \left( x - x_{0} \right)^{n - 1} }{\left( n - 1 \right)!} 
+\frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right) 
+\\
+&= 
+f \! \left( x \right) 
++ \mathbf{a} \, \delta x \frac{ \partial f }{ \partial x } \! \left( x \right).
+\end{align*}
+%
+Extending a function to dual numbers requires not just the value of the function
+but also its derivatives!  The second component of dual numbers formalizes
+the intuitive concept of an ``infinitesimal'' in that any product of more than one
+will vanish by construction.
+
+The generalization to multivariate functions is straightforward: any function 
+$f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ is first decomposed into $m$
+functions $f_{i} : \mathbb{R}^{n} \rightarrow \mathbb{R}$ which generalize
+to dual numbers as
+%
+\begin{equation} \label{dualFunction}
+f_{i} \! \left( \xi_{j} \right) = f_{i} \! \left( x_{j} \right) 
++ \mathbf{a} \sum_{j = 1}^{n} \delta x_{j} \frac{ \partial f_{i} \! \left( x_{j} \right) }{ \partial x_{j} }.
+\end{equation}
+%
+Note that in the general case the extension does not require the full Jacobian, 
+$ \partial f_{i} \! \left( x_{j} \right) \! / \partial x_{j}$, but rather its inner product with 
+$\delta x_{j}$.
+
+The power of extending functions to dual numbers is the implicit incorporation of 
+the chain rule. A composition of the functions $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ 
+and $g : \mathbb{R}^{m} \rightarrow \mathbb{R}^{p}$, for example, becomes
+%
+\begin{align*}
+g_{i} \! \left( f_{j} \! \left( \xi_{k} \right) \right)
+&= 
+g_{i} \! \left( f_{j} \! \left( x_{k} + \mathbf{a} \, \delta x_{k} \right) \right)
+\\
+&=
+g_{i} \! \left( f_{j} \! \left( x_{k} \right) 
++ \mathbf{a} \, \sum_{k} \delta x_{k} \frac{ \partial f_{j} }{ \partial x_{k} } \! \left( x_{k} \right) \right)
+\\
+&=
+g_{i} \! \left( f_{j} \! \left( x_{k} \right) \right)
++ \mathbf{a} \, \sum_{k} \delta x_{k} 
+\frac{ \partial g_{i} }{ \partial f_{j} }  \! \left( f_{j} \! \left( x_{k} \right) \right)
+\frac{ \partial f_{j} }{ \partial x_{k} } \! \left( x_{k} \right):
+\end{align*}
+%
+the second component is just $\sum_{k} \delta x_{k} \partial g_{i} / \partial x_{k} $ 
+as would have been computed by the chain rule.  The real utility of dual numbers is 
+that they factor the chain rule into the purely differential operations (computing partial
+derivatives) and the purely algebraic operations (addition and multiplication), which 
+allows for a straightforward algorithmic implementation.
+
+\section*{First-Order Automatic Differentiation}
+
+Automatic differentiation implements the propagation of dual numbers through a
+composite function and, consequently, the chain rule.  We begin by transforming
+a composite function into an \textit{expression graph}, where each node is given
+by a dual number intermediate to the calculation and edges denote the 
+dependencies of the functions (Figure \ref{fig:exprGraph}).
+
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 30)
+%
+%\put(0, 0) { \framebox(50, 30){} }
+%\put(25, 0) { \framebox(25, 30){} }
+%\put(25, 0) { \framebox(6.25, 30){} }
+%\put(25, 0) { \framebox(12.5, 30){} }
+%\put(25, 0) { \framebox(18.75, 30){} }
+%
+%\put(25, 0) { \framebox(3.125, 30){} }
+%\put(25, 0) { \framebox(9.375, 30){} }
+%\put(25, 0) { \framebox(15.625, 30){} }
+%
+\put(12.5, 15) { \makebox(0, 0) 
+{$z \! \left( y_{1} \! \left( x_{1}, x_{2} \right), y_{2} \! \left( x_{2}, x_{3} \right) \right)$} }
+%
+\put(21.875, 15) { \vector(1, 0){6.25} }
+%
+\put(31.25, 7.5) { \circle{4} }
+\put(31.25, 7.5) { \makebox(0, 0) {$ x_{1} $} }
+%
+\put(37.5, 7.5) { \circle{4} }
+\put(37.5, 7.5) { \makebox(0, 0) { $ x_{2} $ } }
+%
+\put(43.75, 7.5) { \circle{4} }
+\put(43.75, 7.5) { \makebox(0, 0) { $ x_{3} $ } }
+%
+\put(31.25, 9.5) { \vector(3, 4){2.75} }
+\put(37.5, 9.5) { \vector(-3, 4){2.75} }
+\put(37.5, 9.5) { \vector(3, 4){2.75} }
+\put(43.75, 9.5) { \vector(-3, 4){2.75} }
+%
+\put(35, 15) {\circle{4} } % Tweaked to the right
+\put(34.375, 15) { \makebox(0, 0) { $y_{1}$ } }
+%
+\put(41.25, 15) {\circle{4} } % Tweaked to the right
+\put(40.625, 15) { \makebox(0, 0) { $y_{2}$ } }
+%
+\put(34.375, 17) { \vector(3, 4){2.75} }
+\put(40.625, 17) { \vector(-3, 4){2.75} }
+%
+\put(38, 22.5) {\circle{4} } % Tweaked to the right
+\put(37.5, 22.5) { \makebox(0, 0) { $ z $ } }
+%
+\end{picture} 
+\caption{
+Composite functions are isomorphic to directed acyclic graphs known as 
+an \textit{expression graph} or \textit{expression tree}.  Here we the function
+$z \! \left( y_{1} \! \left( x_{1}, x_{2} \right), y_{2} \! \left( x_{2}, x_{3} \right) \right)$
+generates a three level graph.
+}
+\label{fig:exprGraph} 
+\end{figure}
+
+Once the expression graph has been constructed the evaluation of the function
+reduces to propagating the values of the dual numbers along the edges.  The
+directionality of the messages at each node is not constrained, but in practice we 
+typically consider passing all messages \textit{forward} with the evaluation and passing
+all messages \textit{reverse} to the evaluation.
+
+\subsection*{Forward Mode}
+
+Note that the second component of a dual number-valued function is really
+a directional derivative, mapping the input vector $\delta x_{j}$ to
+$\sum_{k} \delta x_{k} \partial f_{j} / \partial x_{k}$.  In other words,
+the Jacobian is a map $J: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
+
+In forward mode autodiff we propagate $\delta x_{j}$ defined at the inputs
+forward through the expression graph using the Jacobian map at each
+node (Figure \ref{fig:directions}).  Following the literature we will refer to the components of the dual
+numbers as \textit{values},
+%
+\begin{equation*}
+\mathcal{V} \! \left( \xi \right) 
+= \mathcal{V} \! \left( x + \mathbf{a} \, \delta x \right) 
+= x,
+\end{equation*}
+%
+and \textit{tangents} or \textit{perturbations},
+\begin{equation*}
+\mathcal{T} \! \left( \xi \right) 
+= \mathcal{T} \! \left( x + \mathbf{a} \, \delta x \right) 
+= \delta x,
+\end{equation*}
+%
+respectively.
+
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 30)
+%
+%\put(0, 0) { \framebox(50, 30){} }
+%\put(0, 0) { \framebox(12.5, 30){} }
+%\put(0, 0) { \framebox(25, 30){} }
+%\put(0, 0) { \framebox(37.5, 30){} }
+%\put(0, 0) { \framebox(50, 10){} }
+%\put(0, 0) { \framebox(50, 20){} }
+%
+% Forward Mode
+%
+\put(12.5, 5) { \makebox(0, 0) { Forward Mode } }
+%
+\put(13, 10) {\circle{4} } % Tweak to the right
+\put(12.5, 10) { \makebox(0, 0) { $ \xi_{j} $ } }
+%
+\put(12, 12) { \vector(0, 1){6} }
+\put(13, 12) { \vector(0, 1){6} }
+%
+\put(13, 20) {\circle{4} } % Tweak to the right
+\put(12.5, 20) { \makebox(0, 0) { $ \xi_{i} $ } }
+%
+\put(6.75, 15) { \makebox(0, 0) 
+{ $ \mathcal{V} \! \left( \xi_{j} \right) = x_{j} \! \left( x_{i} \right)$ } }
+\put(16.5, 16) { \makebox(0, 0) 
+{ $ \mathcal{T} \! \left( \xi_{i} \right) =  $} }
+\put(20, 14) { \makebox(0, 0) 
+{ $ \sum_{i} \frac{ \partial x_{i} }{ \partial x_{j} } \mathcal{T} \! \left( \xi_{j} \right)  $ } }
+%
+% Reverse Mode
+%
+\put(37.5, 5) { \makebox(0, 0) { Reverse Mode } }
+%
+\put(38, 10) {\circle{4} } % Tweak to the right
+\put(37.5, 10) { \makebox(0, 0) { $ \xi_{j} $ } }
+%
+\put(37, 12) { \vector(0, 1){6} }
+\put(38, 18) { \vector(0, -1){6} }
+%
+\put(38, 20) {\circle{4} } % Tweak to the right
+\put(37.5, 20) { \makebox(0, 0) { $ \xi_{i} $ } }
+%
+\put(31.75, 15) { \makebox(0, 0) 
+{ $ \mathcal{V} \! \left( x_{j} \right) = x_{j} \! \left( x_{i} \right)$ } }
+\put(41.5, 14) { \makebox(0, 0) 
+{ $ \mathcal{A} \! \left( \xi_{j} \right) =  $} }
+\put(45, 16) { \makebox(0, 0) 
+{ $ \sum_{i} \frac{ \partial x_{i} }{ \partial x_{j} } \mathcal{A} \! \left( \xi_{i} \right)  $ } }
+%
+\end{picture} 
+\caption{
+In forward mode autodiff the Jacobian propagates directional derivatives, 
+$\mathcal{T} \! \left( \xi \right)$ forward in the same direction as the
+values, $\mathcal{V} \! \left( \xi \right)$.  Reverse mode autodiff, on 
+the other hand, uses the adjoint Jacobian to propagate adjoint directional 
+derivatives, $\mathcal{A} \! \left( \xi \right)$, backwards against the 
+values, $\mathcal{V} \! \left( \xi \right)$.
+}
+\label{fig:directions} 
+\end{figure}
+
+Messages accumulated at the output nodes yield the components of the directional
+derivative, $\sum_{k} \delta x_{k} \partial f_{j} / \partial x_{k}$.
+
+\subsection*{Reverse Mode}
+
+In reverse mode autodiff we consider not the Jacobian but rather its \textit{adjoint},
+$J^{T} : \mathbb{R}^{m} \rightarrow \mathbb{R}^{n}$, which maps the second
+component of dual numbers at the outputs, denoted $\mathrm{d} f_{i}$ to differentiate
+them from their use in forward mode autodiff, to the adjoint directional derivative, 
+$\sum_{j} \mathrm{d} f_{j} \partial f_{j} / \partial x_{k}$.  Using the adjoint Jacobian
+we can propagate the $\mathrm{d} f_{i}$ at the outputs backwards through the 
+expression graph until the input nodes yield the components of the transposed
+directional derivative (Figure \ref{fig:directions}).
+
+When considering the action of the adjoint Jacobian the components of the dual
+numbers as denoted \textit{values},
+%
+\begin{equation*}
+\mathcal{V} \! \left( \xi \right) 
+= \mathcal{V} \! \left( x + \mathbf{a} \, \mathrm{d} x \right) 
+= x,
+\end{equation*}
+%
+and \textit{adjoints} or \textit{sensitivities},
+\begin{equation*}
+\mathcal{A} \! \left( \xi \right) 
+= \mathcal{A} \! \left( x + \mathbf{a} \, \mathrm{d} x \right) 
+= \mathrm{d} x,
+\end{equation*}
+%
+respectively.
+
+\subsection*{Performance}
+
+The relative performance of forward and reverse mode autodiff depends on
+the sizes of $n$ and $m$ and the desired components of the Jacobian.  Note
+that per evaluation forward mode will be faster than reverse mode as it requires
+only one sweep compared to the two reverse mode requires (one forward sweep
+to build up the expression graph and one reverse sweep to compute the adjoint
+directional derivative).  Moreover the overhead for forward mode will be larger
+since it does not require the full expression graph to be stored.
+
+Consider, for example, the many-to-one case where $m = 1$.  Here forward
+mode computes the scalar $\sum_{k} \delta x_{i} \partial f / \partial x_{i}$
+where as the reverse mode computes the full vector gradient 
+$\mathrm{d} f \partial f / \partial x_{i}$.  If the directional derivative is all
+that is necessary then the forward mode calculation will be quicker given
+the considerations above.  On the other hand, if the full vector gradient is required 
+then the small overhead from reverse mode will be dwarfed by the $m$ repetitions 
+required to build the full gradient from directional derivatives in forward mode.
+
+In general, computing the full Jacobian is faster with forward mode if $n \ll m$ 
+and faster with reverse mode if $n \gg m$.
+
+\section*{Higher-Order Automatic Differentiation}
+
+One substantial advantage of dual numbers is that they dramatically ease the
+manipulation of higher-order variants of the chain rule.  In order to go to 
+higher-order, however, we need to introduce nested dual numbers.
+
+For example, let $\mathbf{a}$ and $\mathbf{b}$ be two distinct dual units.
+A first-order dual number,
+%
+\begin{equation*}
+\zeta_{i} = z_{i} + \mathbf{a} \, \delta z_{i},
+\end{equation*}
+%
+then becomes a second-order dual number by replacing the 
+real-valued components with dual numbers in the direction of the second 
+dual unit,
+%
+\begin{alignat*}{3}
+\zeta_{i} 
+&=
+\xi_{i} 
+&&+ \mathbf{a} \, \eta_{i}
+\\
+&=
+\left( x_{i} + \mathbf{b} \, \delta x_{i} \right)
+&&+ \mathbf{a} \left( \delta y_{i} + \mathbf{b} \, \delta^{2} y_{i} \right).
+\end{alignat*}
+%
+I will refer to $x_{i}$ as the first value, $\delta x_{i}$ as the first gradient, 
+$\delta y_{i}$ as the second value, and $\delta^{2} y_{i}$
+as the second gradient.  Higher-order dual numbers follow recursively 
+by replacing the real-valued components with additional dual numbers along 
+distinct dual units.
+
+Higher-order dual numbers are evaluated in the same manner of forward and 
+reverse sweeps as the first order dual numbers, with the propagation rules
+for each component generated by the dual algebra.  Forward and reverse
+propagations yield various directional derivatives as defined in Table \ref{tab:directDerivs}.
+
+\begin{table*}[t!]
+	\centering
+	\renewcommand{\arraystretch}{2}
+	\begin{tabular}{cccc}
+	\rowcolor[gray]{0.9} \textbf{Value Type} & \textbf{Order} 
+	& \textbf{Formula} & \textbf{Mode} 
+	\\
+	Scalar & First & 
+	$ \displaystyle \sum_{j} v_{j} \, f_{i} \! \left( x_{j} \right)$ & Forward
+	\\
+	\rowcolor[gray]{0.9}
+	Vector & First & 
+	$ \displaystyle  f_{i} \! \left( x_{j} \right)$ & Reverse
+	\\
+	Scalar & Second & 
+	$ \displaystyle \sum_{jk} v_{j} \, u_{k} \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} }$ 
+	& Forward
+	\\
+	\rowcolor[gray]{0.9}
+	Vector & Second & 
+	$ \displaystyle \sum_{j} v_{j} \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} }$  
+	& Reverse
+	\\
+	Scalar & Third & 
+	$ \displaystyle \sum_{jkl} v_{j} \, u_{k} \, w_{l} 
+	\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l}}$  
+	& Forward
+	\\
+	\rowcolor[gray]{0.9}
+	Vector & Third & 
+	$\displaystyle \sum_{jk} v_{j} \, u_{k} \frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l}}$
+	& Reverse
+	\\
+	\end{tabular}
+	\caption{Automatic differentiation computes directional derivatives and
+	generalizations thereof.  In general, forward mode calculations return
+	scalars while reverse mode calculations return vectors.
+	\label{tab:directDerivs}}
+\end{table*}
+
+Here we compute the propagation rules for second and third-order directional 
+derivatives to complement the first-order rules derived above before considering 
+how to use these rules to compute popular differential objects such as the Hessian.
+
+\subsection*{Second-Order}
+
+The extension of a function $f: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ to
+a second-order dual number follows from the recursive application of the
+first-order extension: given the dual number
+%
+\begin{alignat*}{3}
+\zeta_{i} 
+&=
+\xi_{i} 
+&&+ \mathbf{a} \, \eta_{i}
+\\
+&=
+\left( x_{i} + \mathbf{b} \, \delta x_{i} \right)
+&&+ \mathbf{a} \left( \delta y_{i} + \mathbf{b} \, \delta^{2} y_{i} \right)
+\end{alignat*}
+%
+we have
+%
+\begin{align*}
+f_{i} \! \left( \zeta_{j} \right)
+=&
+f_{i} \! \left( \xi_{j} \right) 
++ \mathbf{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
+\\
+=&
+f_{i} \! \left( x_{j} + \mathbf{b} \, \delta x_{j} \right) 
++ \mathbf{a} \sum_{j} \left( \delta y_{j} + \mathbf{b} \, \delta^{2} y_{j} \right)
+\frac{ \partial f_{i} }{ \partial x_{j} } 
+\! \left( x_{j} + \mathbf{b} \, \delta x_{j} \right) 
+\\
+=&
+f_{i} \! \left( x_{j} \right) 
++ \mathbf{b} \sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
+\\
+&+ 
+\mathbf{a} \sum_{j} \left( \delta y_{j} + \mathbf{b} \, \delta^{2} y_{j} \right)
+\left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right) + 
+\mathbf{b} \, \sum_{k} \delta x_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( x_{j} \right) \right) 
+\\
+=&
+\quad\quad\quad 
+f_{i} \! \left( x_{j} \right) 
+\quad\quad\quad\;\;\;
++ \mathbf{b} \;\;\;
+\sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
+\\
+&+ 
+\mathbf{a} \left( 
+\sum_{j} \delta y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right) 
++ \mathbf{b} \left(
+\sum_{j} \delta^{2} y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
++ \sum_{jk} \delta x_{k} \, \delta y_{j}
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( x_{j} \right)
+\right)
+\right)
+\end{align*}
+%
+These results are summarized in Table \ref{tab:secondOrder}.
+
+\begin{table*}[t!]
+	\centering
+	\renewcommand{\arraystretch}{2}
+	\begin{tabular}{ccc}
+	\rowcolor[gray]{0.9} \textbf{Component} & \textbf{Input} & \textbf{Output} \\
+	First Value & 
+	$x_{i}$ & 
+	$f_{i} \! \left( x_{j} \right)$ 
+	\\
+	\rowcolor[gray]{0.9} 
+	First Gradient & 
+	$\delta x_{i}$ &
+	$\displaystyle \sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)$
+	\\
+	Second Value & 
+	$\delta y_{i}$ & 
+	$\displaystyle \sum_{j} \delta y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)$
+	\\
+	\rowcolor[gray]{0.9} 
+	Second Gradient & 
+	$\delta^{2} y_{i}$ & 
+	$\displaystyle \sum_{j} \delta^{2} y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
+	+ \sum_{jk} \delta x_{k} \, \delta y_{j}
+	\frac{ \partial f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( x_{j} \right)$
+	\\
+	\end{tabular}
+	\caption{Recursively expanding an input function yields its action
+	on a second-order dual number input.
+	\label{tab:secondOrder}}
+\end{table*}
+
+In forward mode we compute four different values at each node -- the function
+evaluation, a directional derivative along $\delta x_{i}$, a directional derivative
+along $\delta y_{i}$, and the scalar-valued second-order directional derivative
+$ \sum_{j} \delta^{2} y_{j} \, \partial f_{i} / \partial x_{j}
++ \sum_{jk} \delta x_{k} \, \delta y_{j} \, \partial f_{i} / \partial x_{j} \partial x_{k}$.
+
+The generalization of reverse mode requires some care because the second-order
+Jacobian, $\partial f_{i} / \partial x_{j} \partial x_{k}$, does not have a well-defined
+transpose.  If we propagate the second-order values forward first, however,
+then we can define the linear operator 
+$\delta y_{j} \, \partial f_{i} / \partial x_{j} \partial x_{k}$ which can be transposed.
+Second-order reverse mode then consists of a forward sweep in which the
+first and second-order values are computed, and then reverse sweep in which
+the first and second-order gradients are computed.  This yields the function
+evaluation, the full gradient, a directional derivative along $\delta y_{j}$, and
+the vector-valued second-order directional derivative 
+$ \sum_{j} \mathrm{d}^{2} y_{j} \, \partial f_{i} / \partial x_{j}
++ \sum_{jk} \mathrm{d} x_{k} \, \delta y_{j} \, \partial f_{i} / \partial x_{j} \partial x_{k}$
+
+\subsection*{Third-Order}
+
+Continuing to third-order follows in kind.  Given a third-order dual number,
+%
+\begin{alignat*}{10}
+\zeta_{i} 
+&=
+&& \xi_{i} && && &&
+&&+ \mathbf{a} \, 
+&& \eta_{i} && && &&
+\\
+&=
+( && \sigma_{i} && + \mathbf{b} && \tau_{i} &&)
+&&+ \mathbf{a} \,
+( && \upsilon_{i} && + \mathbf{b} && \nu_{i} && )
+\\
+&=
+(( && s_{i} + \mathbf{c} \, \delta s_{i} )
+&& + \mathbf{b} \;
+( && \delta t_{i} + \mathbf{c} \, \delta^{2} t_{i}  ) &&)
+&&+ \mathbf{a} \;
+(( && \delta u_{i} + \mathbf{c} \, \delta^{2} u_{i} )
+&& + \mathbf{b} \;
+( && \delta^{2} v_{i} + \mathbf{c} \, \delta^{3} v_{i} ) &&)
+\end{alignat*}
+%
+we have
+%
+\begin{align*}
+f_{i} \! \left( \zeta_{j} \right)
+%
+=&
+f_{i} \! \left( \xi_{j} \right) 
++ \mathbf{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
+\\
+%
+=&
+f_{i} \! \left( \sigma_{j} + \mathbf{b} \, \tau_{j} \right) 
++ \mathbf{a} \sum_{j} \left( \upsilon_{j} + \mathbf{b} \, \nu_{j} \right)
+\frac{ \partial f_{i} }{ \partial x_{j} } 
+\! \left( \sigma_{j} + \mathbf{b} \, \tau_{j} \right) 
+\\
+%
+=&
+f_{i} \! \left( \sigma_{j} \right) + \mathbf{b} 
+\sum_{j} \tau_{j} \frac{ \partial f_{i} }{ \partial x_{j} } 
+\! \left( \sigma_{j} \right)
++ \mathbf{a} \sum_{j} \left( \upsilon_{j} + \mathbf{b} \, \nu_{j} \right)
+\left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
++ \mathbf{b} \sum_{k} \tau_{k}
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( \sigma_{j} \right) \right) 
+\\
+%
+=&
+f_{i} \! \left( \sigma_{j} \right) + \mathbf{b} 
+\sum_{j} \tau_{j} \frac{ \partial f_{i} }{ \partial x_{j} } 
+\! \left( \sigma_{j} \right)
++ \mathbf{a} \sum_{j}
+\upsilon_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
+\\
+& + \mathbf{a} \, \mathbf{b} \sum_{j}
+ \nu_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
++ \mathbf{a} \, \mathbf{b} \, \sum_{jk} \upsilon_{j} \tau_{k}
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( \sigma_{j} \right)
+\\
+%
+=&
+f_{i} \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right) + \mathbf{b} 
+\sum_{j} \left( \delta t_{j} + \mathbf{c} \, \delta^{2} t_{j} \right) 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\\
+&+ 
+\mathbf{a} \sum_{j}
+\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\\
+& + \mathbf{a} \, \mathbf{b} \sum_{j}
+\left( \delta^{2} v_{j} + \mathbf{c} \, \delta^{3} v_{j} \right) \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
+\left( \delta t_{k} + \mathbf{c} \, \delta^{2} t_{k} \right)
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\\
+%
+=&
+f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{b}
+\sum_{j} \left( \delta t_{j} + \mathbf{c} \, \delta^{2} t_{j} \right) 
+\left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++  \mathbf{c} \sum_{k} \delta s_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
+\\
+&+ 
+\mathbf{a} \sum_{j}
+\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
+\left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{c} \sum_{k} \delta s_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
+\\
+& + \mathbf{a} \, \mathbf{b} \sum_{j}
+\left( \delta^{2} v_{j} + \mathbf{c} \, \delta^{3} v_{j} \right) 
+\left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{c} \sum_{k} \delta s_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
+\left( \delta t_{k} + \mathbf{c} \, \delta^{2} t_{k} \right)
+\\
+& \quad\quad\quad\quad \times \left(
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
++ \mathbf{c} \sum_{l} \delta s_{l} 
+\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
+\right)
+\\
+%
+\end{align*}
+
+\begin{align*}
+f_{i} \! \left( \zeta_{j} \right)
+%
+=&
+f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \sum_{j} \delta^{2} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\left( \delta u_{j} \delta t_{k}
++ \mathbf{c} \left(
+\delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k} 
+\right) \right)
+\\
+& \quad\quad\quad\quad \times \left(
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
++ \mathbf{c} \sum_{l} \delta s_{l} 
+\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
+\right)
+\\
+%
+=&
+f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \sum_{j} \delta^{2} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\delta u_{j} \delta t_{k} \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk}
+\left( \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
+\\
+&+
+\mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jkl}
+\delta u_{j} \delta t_{k} \, \delta s_{l} 
+\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
+\\
+%
+\end{align*}
+
+\begin{align*}
+f_{i} \! \left( \zeta_{j} \right)
+%
+=&
+f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+&+ 
+\mathbf{a} \, \mathbf{b} 
+\left( 
+\sum_{j} \delta^{2} v_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\delta u_{j} \delta t_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\right)
+\\
+&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
+\\
+&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk}
+\left( 
+\delta s_{k} \, \delta^{2} v_{j} + \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
+\\
+&+
+\mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jkl}
+\delta u_{j} \delta t_{k} \, \delta s_{l} 
+\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
+\\
+%
+=& \hspace{26mm} 
+f_{i} \! \left( s_{j} \right) 
+\hspace{9mm}
++ \mathbf{c} 
+\hspace{3mm}
+\sum_{j} \delta s_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\\
+& \hspace{8mm} + 
+\mathbf{b} \left( \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\hspace{1mm}
++ \mathbf{c} \left( 
+\sum_{j} \delta^{2} t_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \sum_{jk} \delta s_{k} \, \delta t_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right) \right)
+\\
+&+ 
+\mathbf{a} \Bigg( 
+\hspace{9mm}
+\sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathbf{c} \left( \sum_{j} \delta^{2} u_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
++ \sum_{jk} \delta s_{k} \, \delta u_{j} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
+\\
+& 
+\hspace{8mm} 
++ \mathbf{b} \Bigg(
+\hspace{0.5mm}
+\sum_{j} \delta^{2} v_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\delta u_{j} \delta t_{k} 
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
+\\
+& \hspace{34mm} 
++ \mathbf{c} \Bigg(
+\sum_{j} \delta^{3} v_{j} 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
+\\
+& \hspace{40mm} 
++ \sum_{jk}
+\left( 
+\delta s_{k} \, \delta^{2} v_{j} + \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
+\\
+& \hspace{40mm} +
+\sum_{jkl}
+\delta u_{j} \delta t_{k} \, \delta s_{l} 
+\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right) 
+\Bigg)
+\Bigg)
+\Bigg)
+\\
+%
+\end{align*}
+%
+These results are summarized in Table \ref{tab:thirdOrder}.
+
+\begin{table*}[t!]
+	\centering
+	\renewcommand{\arraystretch}{2}
+	\begin{tabular}{ccc}
+	\rowcolor[gray]{0.9} \textbf{Component} & \textbf{Input} & \textbf{Output} \\
+	First Value & 
+	$s_{i}$ & 
+	$f_{i} \! \left( s_{j} \right)$ 
+	\\
+	\rowcolor[gray]{0.9} 
+	First Gradient & 
+	$\delta s_{i}$ &
+	$\displaystyle \sum_{j} \delta s_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) $
+	\\
+	Second Value & 
+	$\delta t_{i}$ & 
+	$\displaystyle \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)$
+	\\
+	\rowcolor[gray]{0.9} 
+	Second Gradient & 
+	$\delta^{2} t_{i}$ &
+	$\displaystyle \sum_{j} \delta^{2} t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
+	+ \sum_{jk} \delta s_{k} \, \delta t_{j} 
+	\frac{ \partial f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)$
+	\\
+	Third Value & 
+	$\delta u_{i}$ &
+	$\displaystyle \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)$
+	\\
+	\rowcolor[gray]{0.9} 
+	Third Gradient & 
+	$\delta^{2} u_{i}$ &
+	$\displaystyle \sum_{j} \delta^{2} u_{j} 
+	\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
+	+ \sum_{jk} \delta s_{k} \, \delta u_{j} 
+	\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)$
+	\\
+	Fourth Value & 
+	$\delta^{2} v_{i}$ & 
+	$\displaystyle \sum_{j} \delta^{2} v_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+	\delta u_{j} \delta t_{k} 
+	\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)$
+	\\
+	\rowcolor[gray]{0.9} 
+       \multirow{3}{*}{ \vspace{-8mm} Fourth Gradient} & 
+	\multirow{3}{*}{ \vspace{-8mm} $\delta^{3} v_{i}$} &
+	$\displaystyle \sum_{j} \delta^{3} v_{j} 
+	\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) $ 
+	\\ 
+	& &
+	$\displaystyle + \sum_{jk} \left( 
+	\delta s_{k} \, \delta^{2} v_{j} + \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
+	\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) $ 
+	\\
+	\rowcolor[gray]{0.9} 
+	& &
+	$ \displaystyle+ \sum_{jkl} \delta u_{j} \delta t_{k} \, \delta s_{l} 
+	\frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right) $
+	\\
+	\end{tabular}
+	\caption{Recursively expanding an input function yields its action
+	on a third-order dual number input.
+	\label{tab:thirdOrder}}
+\end{table*}
+
+A forward sweep of third-order autodiff yields a wealth of information.  In addition
+to the function evaluation we have three different first-order scalar-valued directional 
+derivatives, three different second-order scalar-valued directional derivatives,
+and a single third-order scalar-valued directional derivative.
+
+As above, reverse mode requires a separation of values and gradients.  A
+preliminary forwards sweep first builds the expression graph and computes the
+function, three first-order scalar-valued directional derivatives, and a second-order
+scalar-valued directional derivative.  Given the values we can define adjoint
+Jacobians and sweep backwards, generating the vector-valued gradient,
+two second-order vector-valued directional derivatives, and one third-order
+vector-valued directional derivative.
+
+\subsection*{Higher-Order Techniques}
+
+Lastly let's review some techniques for computing various differential objects that
+are common in statistical and optimization applications.  Here we focus on many-
+to-one functions, $f : \mathbb{R}^{n} \rightarrow 1$.
+
+\begin{description}
+	
+	\item[Directional Derivative] \hfill \\
+	
+	\begin{description}
+		\item[Form:] $\displaystyle \vec{v} \cdot \vec{g} = \sum_{i} v_{i} \frac{ \partial f }{ \partial x_{i} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\delta x_{i} = v_{i}$. \\
+		Compute first-order forward sweep. \\
+		Return first gradient of output.
+		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
+		\item[Adjuncts:] $ f $
+	\end{description}
+
+	\item[Gradient] \hfill \\
+	\begin{description}
+		\item[Form:] $\displaystyle \vec{g} = \frac{ \partial f }{ \partial x_{i} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\mathrm{d} f = 1$. \\
+		Compute first-order reverse sweep. \\
+		Return first gradient of inputs.
+		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
+		\item[Adjuncts:] $ f $
+	\end{description}
+	
+	\item[Hessian Quadratic Form] \hfill \\
+	\begin{description}
+		\item[Form:] 
+		$\displaystyle \vec{v\,}^{T} H \, \vec{u} = \sum_{ij} v_{i} u_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\delta x_{i} = v_{i}, \, \delta y_{i} = u_{i}, \delta^{2} y_{i} = 0$. \\
+		Compute second-order forward sweep. \\
+		Return second gradient of output.
+		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
+		\item[Adjuncts:] $ f, \vec{v} \cdot \vec{g}, \vec{u} \cdot \vec{g}$
+	\end{description}
+	
+	\item[Hessian-Vector Product] \hfill \\
+	\begin{description}
+		\item[Form:] $\displaystyle H \vec{v} = \sum_{j} v_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\mathrm{d} f = 1$. \\
+		Compute first-order reverse sweep for first gradients. \\
+		Initialize $\delta y_{i} = v_{i}$. \\
+		Propagate second values in a forward sweep. \\
+		Initialize $\mathrm{d}^{2} f = 0.$ \\
+		Compute second-order reverse sweep. \\
+		Return second gradient of inputs.
+		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
+		\item[Adjuncts:] $ f, \vec{v} \cdot \vec{g}, \vec{g}$
+	\end{description}
+	
+	\item[Hessian] \hfill \\
+	\begin{description}
+		\item[Form:] $\displaystyle \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\mathrm{d} f = 1$. \\
+		Compute first-order reverse sweep for first gradients. \\
+		For each $j$ compute the $j$th row of the Hessian as:
+		\begin{itemize}
+			\setlength{\itemsep}{0cm}
+			\setlength{\parskip}{0cm}
+			\item[] Initialize $\delta y_{i} = \delta^{j}_{i}$.
+			\item[] Propagate second values in a forward sweep. 
+			\item[] Initialize $\mathrm{d}^{2} f = 0.$
+			\item[] Compute second-order reverse sweep.
+			\item[] Return second gradient of inputs
+		\end{itemize}
+		\item[Cost:] $\mathcal{O} \! \left( n \right)$
+		\item[Adjuncts:] $ f, \vec{g}$
+	\end{description}
+	
+	\item[Gradient of the Trace of a Matrix Hessian Product] \hfill \\
+	\begin{description}
+		\item[Form:] 
+		$\displaystyle \frac{\partial}{\partial x_{i} } \mathrm{Tr} \! \left[ M \cdot H \right]
+		= \sum_{jk} M_{jk} \frac{ \partial^{3} f }{ \partial x_{i}  \partial x_{j}  \partial x_{k} } $
+		\item[Algorithm:] \hfill \\
+		Initialize $\mathrm{d} f = 1$. \\
+		Compute first-order reverse sweep for first gradients. \\
+		Initialize the trace gradient to zero.
+		For each $j$ increment the trace gradient with:
+		\begin{itemize}
+			\setlength{\itemsep}{0cm}
+			\setlength{\parskip}{0cm}
+			\item[] Initialize $\delta t_{i} = \delta^{j}_{i}$.
+			\item[] Propagate second values in a forward sweep. 
+			\item[] Initialize $\mathrm{d}^{2} f = 0$.
+			\item[] Compute second-order reverse sweep.
+			\item[] Initialize $\delta u_{i} = M_{ji}, \delta^{2} v_{i} = 0$.
+			\item[] Propagate third and fourth values in a  forward sweep.
+			\item[] Initialize $\mathrm{d}^{3} f = 0$.
+			\item[] Compute third-order reverse sweep.
+			\item[] Return the fourth gradient of the inputs.
+		\end{itemize}
+		\item[Cost:] $\mathcal{O} \! \left( n \right)$
+		\item[Adjuncts:] $ f, \vec{g}, H$
+	\end{description}
+	
+\end{description}
+
+\end{document}
