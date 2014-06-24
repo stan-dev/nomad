@@ -86,13 +86,6 @@ namespace nomad {
           for (size_t j = 0; j < d; ++j)
             v(j) = var_bodies_[j + 1].fourth_grad();
           
-          /*
-          for (size_t j = 1; j < next_body_idx_; ++j) {
-            std::cout << "Node " << j << std::endl;
-            var_bodies_[j].print<3>(&std::cout);
-          }
-          */
-          
           third_order_reverse_adj(f_var);
           
           for (size_t j = 0; j < d; ++j)

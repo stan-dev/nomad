@@ -7,6 +7,8 @@
 #include <matrix/functions.hpp>
 
 #include <tests/validate_exceptions.hpp>
+#include <tests/test_scalar_functions.hpp>
+#include <tests/test_scalar_operators.hpp>
 
 using namespace nomad;
 
@@ -326,10 +328,13 @@ int main(int argc, const char * argv[]) {
   //time_funnel();
   
   //validate_matrix();
-  time_matrix();
+  //time_matrix();
   
   //validate_dot();
   //time_dot();
+  
+  test_scalar_functions();
+  test_scalar_operators();
   
   return 0;
 }
