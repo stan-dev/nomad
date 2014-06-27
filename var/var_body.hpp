@@ -463,24 +463,11 @@ namespace nomad {
     
     var_body(): var_base() {};
     
-    var_body(unsigned int n_inputs): var_base(n_inputs) {};
-    
-    void first_order_forward_adj() {
-      if (autodiff_order >= 1) {
-        if (n_inputs_) first_grad() = 0;
-      }
-    }
-    
     void second_order_forward_val() {
-      if (n_inputs_) second_val() = 0;
       second_grad() = 0;
     }
     
     void third_order_forward_val() {
-      if (n_inputs_) {
-        third_val() = 0;
-        fourth_val() = 0;
-      }
       third_grad() = 0;
       fourth_grad() = 0;
     }
