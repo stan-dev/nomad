@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <var/var.hpp>
+#include <var/derived/unary_var_body.hpp>
 
 namespace nomad {
   
@@ -14,9 +15,9 @@ namespace nomad {
     
     next_inputs_delta = n_inputs;
     next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+      unary_var_body<autodiff_order, partials_order>::n_partials();
     
-    new var_body<autodiff_order, partials_order>(n_inputs);
+    new unary_var_body<autodiff_order, partials_order>();
 
     double val = std::exp(input.first_val());
     
