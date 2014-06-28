@@ -8,6 +8,108 @@
 
 namespace nomad {
 
+  // acos
+  template <typename T>
+  struct acos_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return acos(v);
+      
+    }
+    static std::string name() { return "acos"; }
+  };
+  
+  void test_acos() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<acos_func>(x);
+  }
+  
+  // acosh
+  template <typename T>
+  struct acosh_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return acosh(v);
+      
+    }
+    static std::string name() { return "acosh"; }
+  };
+  
+  void test_acosh() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<acosh_func>(x);
+  }
+  
+  // asin
+  template <typename T>
+  struct asin_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return asin(v);
+      
+    }
+    static std::string name() { return "asin"; }
+  };
+  
+  void test_asin() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<asin_func>(x);
+  }
+  
+  // asinh
+  template <typename T>
+  struct asinh_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return asinh(v);
+      
+    }
+    static std::string name() { return "asinh"; }
+  };
+  
+  void test_asinh() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<asinh_func>(x);
+  }
+  
+  // atan
+  template <typename T>
+  struct atan_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return atan(v);
+      
+    }
+    static std::string name() { return "atan"; }
+  };
+  
+  void test_atan() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<atan_func>(x);
+  }
+  
+  // atanh
+  template <typename T>
+  struct atanh_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return atanh(v);
+      
+    }
+    static std::string name() { return "atanh"; }
+  };
+  
+  void test_atanh() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<atanh_func>(x);
+  }
+  
   // exp
   template <typename T>
   struct exp_func {
@@ -43,6 +145,12 @@ namespace nomad {
   }
   
   void test_scalar_functions() {
+    test_acos();
+    test_acosh();
+    test_asin();
+    test_asinh();
+    test_atan();
+    test_atanh();
     test_exp();
     test_square();
   }

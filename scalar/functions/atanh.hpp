@@ -1,5 +1,5 @@
-#ifndef nomad__scalar__functions__exp_hpp
-#define nomad__scalar__functions__exp_hpp
+#ifndef nomad__scalar__functions__atanh_hpp
+#define nomad__scalar__functions__atanh_hpp
 
 #include <math.h>
 #include <var/var.hpp>
@@ -7,10 +7,10 @@
 
 namespace nomad {
   
-  inline double exp(double x) { return std::exp(x); }
+  inline double atanh(double x) { return std::atanh(x); }
   
   template <short autodiff_order>
-  inline var<autodiff_order> exp(const var<autodiff_order>& input) {
+  inline var<autodiff_order> atanh(const var<autodiff_order>& input) {
     
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
@@ -21,15 +21,16 @@ namespace nomad {
     
     new unary_var_body<autodiff_order, partials_order>();
 
-    double val = std::exp(input.first_val());
-    
-    push_dual_numbers<autodiff_order>(val);
+    const double x = input.first_val();
+    push_dual_numbers<autodiff_order>(std::atanh(x));
     
     push_inputs(input.dual_numbers());
     
-    if (autodiff_order >= 1) push_partials(val);
-    if (autodiff_order >= 2) push_partials(val);
-    if (autodiff_order >= 3) push_partials(val);
+    double d1 = 1.0 / (1 - x * x);
+    
+    if (autodiff_order >= 1) push_partials(d1);
+    if (autodiff_order >= 2) push_partials(2 * x * d1 * d1);
+    if (autodiff_order >= 3) push_partials((2 + 6 * x * x) * d1 * d1 * d1);
 
     return var<autodiff_order>(next_body_idx_ - 1);
     
