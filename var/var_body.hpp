@@ -201,6 +201,8 @@ namespace nomad {
       // n + n * (n + 1) / 2 + n * (n + 1) * (n + 2) / 6
       if (autodiff_order >= 3 && partials_order >= 3)
         return n_inputs * (11 + 6 * n_inputs + n_inputs * n_inputs) / 6;
+      
+      return 0;
     }
     
     inline void first_order_forward_adj() {
