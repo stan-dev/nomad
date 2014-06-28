@@ -42,10 +42,9 @@ namespace nomad {
     
     void second_order_forward_val() {
       if (autodiff_order >= 2) {
-        second_val() = 0;
+        second_val() =   second_val(input()) * first_val(input(1))
+                       + second_val(input(1)) * first_val(input());
         second_grad() = 0;
-        second_val() +=   second_val(input()) * first_val(input(1))
-                        + second_val(input(1)) * first_val(input());
       }
     }
     

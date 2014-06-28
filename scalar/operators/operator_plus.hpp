@@ -2,7 +2,7 @@
 #define nomad__scalar__operators__operator_plus_hpp
 
 #include <var/var.hpp>
-#include <var/derived/sum_var_body.hpp>
+#include <var/derived/binary_sum_var_body.hpp>
 
 namespace nomad {
 
@@ -13,9 +13,9 @@ namespace nomad {
     const unsigned int n_inputs = 2;
     
     next_inputs_delta = n_inputs;
-    // next_partials_delta not used by sum_var_body
+    // next_partials_delta not used by binary_sum_var_body
     
-    new sum_var_body<autodiff_order>(n_inputs);
+    new binary_sum_var_body<autodiff_order>();
     
     push_dual_numbers<autodiff_order>(v1.first_val() + v2.first_val());
     

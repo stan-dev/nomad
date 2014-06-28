@@ -1,12 +1,12 @@
-#ifndef nomad__var__derived__sum_var_body_hpp
-#define nomad__var__derived__sum_var_body_hpp
+#ifndef nomad__var__derived__multi_sum_var_body_hpp
+#define nomad__var__derived__multi_sum_var_body_hpp
 
 #include <var/var_body.hpp>
 
 namespace nomad {
 
   template<short autodiff_order>
-  class sum_var_body: public var_base {
+  class multi_sum_var_body: public var_base {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
@@ -18,7 +18,7 @@ namespace nomad {
     
     static inline void operator delete(void* /* ignore */) {};
     
-    sum_var_body(int n_inputs): var_base(n_inputs) {};
+    multi_sum_var_body(int n_inputs): var_base(n_inputs) {};
  
     inline unsigned int n_first_partials() { return 0; }
     inline unsigned int n_second_partials() { return 0; }

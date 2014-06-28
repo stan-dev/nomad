@@ -4,7 +4,7 @@
 #include <Eigen/Core>
 
 #include <var/var.hpp>
-#include <var/derived/sum_var_body.hpp>
+#include <var/derived/multi_sum_var_body.hpp>
 
 namespace nomad {
   
@@ -19,9 +19,9 @@ namespace nomad {
     const unsigned int n_inputs = input.size();
     
     next_inputs_delta = n_inputs;
-    // next_partials_delta not used by sum_var_body
+    // next_partials_delta not used by multi_sum_var_body
     
-    new sum_var_body<autodiff_order>(n_inputs);
+    new multi_sum_var_body<autodiff_order>(n_inputs);
     
     double sum = 0;
     
