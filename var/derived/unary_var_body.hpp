@@ -36,23 +36,25 @@ namespace nomad {
       if (autodiff_order >= 1 && partials_order >= 1) return 1;
       if (autodiff_order >= 2 && partials_order >= 2) return 2;
       if (autodiff_order >= 3 && partials_order >= 3) return 3;
+      return 0;
     }
     
     inline static unsigned int n_partials(unsigned int n_inputs) {
       if (autodiff_order >= 1 && partials_order >= 1) return 1;
       if (autodiff_order >= 2 && partials_order >= 2) return 2;
       if (autodiff_order >= 3 && partials_order >= 3) return 3;
+      return 0;
     }
     
     inline void first_order_forward_adj() {
       first_grad() = 0;
       if (partials_order >= 1)
-        first_grad() += first_grad(input()) * first_partials()[0];
+        first_grad() += first_grad(input()) * first_partials(0);
     }
     
     inline void first_order_reverse_adj() {
       if (partials_order >= 1)
-        first_grad(input()) += first_grad() * first_partials()[0];
+        first_grad(input()) += first_grad() * first_partials(0);
     }
     
     void second_order_forward_val() {
@@ -63,7 +65,7 @@ namespace nomad {
         second_grad() = 0;
         
         if (partials_order >= 1)
-          second_val() += second_val(input()) * first_partials()[0];
+          second_val() += second_val(input()) * first_partials(0);
         
       }
       
@@ -74,10 +76,10 @@ namespace nomad {
       if (autodiff_order >= 2) {
         
         if (partials_order >= 1)
-            second_grad(input()) += second_grad() * *first_partials();
+            second_grad(input()) += second_grad() * first_partials(0);
         
         if (partials_order >= 2)
-          second_grad(input()) += first_grad() * second_val(input()) * first_partials()[1];
+          second_grad(input()) += first_grad() * second_val(input()) * first_partials(1);
         
       }
       
@@ -94,12 +96,12 @@ namespace nomad {
         fourth_grad() = 0;
         
         if (partials_order >= 1) {
-          third_val() += third_val(input()) * first_partials()[0];
-          fourth_val() += fourth_val(input()) * first_partials()[0];
+          third_val() += third_val(input()) * first_partials(0);
+          fourth_val() += fourth_val(input()) * first_partials(0);
         }
         
         if (partials_order >= 2)
-          fourth_val() += second_val(input()) * third_val(input()) * first_partials()[1];
+          fourth_val() += second_val(input()) * third_val(input()) * first_partials(1);
         
       }
       
@@ -115,19 +117,20 @@ namespace nomad {
         const double g4 = fourth_grad();
         
         if (partials_order >= 1) {
-          third_grad(input())  += g3 * first_partials()[0];
-          fourth_grad(input()) += g4 * first_partials()[0];
+          third_grad(input())  += g3 * first_partials(0);
+          fourth_grad(input()) += g4 * first_partials(0);
         }
         
         if (partials_order >= 2) {
-          third_grad(input())  += g1 * third_val(input()) * first_partials()[1];
+          third_grad(input())  += g1 * third_val(input()) * first_partials(1);
           fourth_grad(input()) += (   g1 * fourth_val(input())
                                     + g2 * third_val(input())
-                                    + g3 * second_val(input()) ) * first_partials()[1];
+                                    + g3 * second_val(input()) ) * first_partials(1);
         }
         
         if(partials_order >= 3)
-          fourth_grad(input()) += g1 * second_val(input()) * third_val(input()) * first_partials()[2];
+          fourth_grad(input()) += g1 * second_val(input())
+                                  * third_val(input()) * first_partials(2);
         
       }
       

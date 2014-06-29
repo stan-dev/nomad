@@ -109,6 +109,25 @@ namespace nomad {
     x *= 0.576;
     tests::test_function<atanh_func>(x);
   }
+ 
+  // binary_prod_cubes
+  template <typename T>
+  struct binary_prod_cubes_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return binary_prod_cubes(v1, v2);
+      
+    }
+    static std::string name() { return "binary_prod_cubes"; }
+  };
+  
+  void test_binary_prod_cubes() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(2);
+    x[0] = 0.576;
+    x[1] = 0.832;
+    tests::test_function<binary_prod_cubes_func>(x);
+  }
   
   // exp
   template <typename T>
@@ -144,6 +163,27 @@ namespace nomad {
     tests::test_function<square_func>(x);
   }
   
+  // trinary_prod_cubes
+  template <typename T>
+  struct trinary_prod_cubes_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      T v3 = x[2];
+      return trinary_prod_cubes(v1, v2, v3);
+      
+    }
+    static std::string name() { return "trinary_prod_cubes"; }
+  };
+  
+  void test_trinary_prod_cubes() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(3);
+    x[0] = 0.576;
+    x[1] = 0.832;
+    x[1] = -1.765;
+    tests::test_function<trinary_prod_cubes_func>(x);
+  }
+  
   void test_scalar_functions() {
     test_acos();
     test_acosh();
@@ -151,8 +191,10 @@ namespace nomad {
     test_asinh();
     test_atan();
     test_atanh();
+    test_binary_prod_cubes();
     test_exp();
     test_square();
+    test_trinary_prod_cubes();
   }
 
 }

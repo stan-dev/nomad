@@ -71,11 +71,21 @@ namespace nomad {
 
     inline double* first_partials()  { return partials_ + partials_idx_; }
     inline double* second_partials() { return partials_ + partials_idx_ + n_first_partials(); }
-    inline double* third_partials()  { return partials_ + partials_idx_ + n_second_partials(); }
+    inline double* third_partials()  { return partials_ + partials_idx_ + n_first_partials() + n_second_partials(); }
 
-    inline unsigned int n_first_partials() { return 0; }
-    inline unsigned int n_second_partials() { return 0; }
-    inline unsigned int n_third_partials() { return 0; }
+    inline double first_partials(index_t idx)  {
+      return partials_[partials_idx_ + idx];
+    }
+    inline double second_partials(index_t idx) {
+      return partials_[partials_idx_ + n_first_partials() + idx];
+    }
+    inline double third_partials(index_t idx)  {
+      return partials_[partials_idx_ + n_first_partials() + n_second_partials() + idx];
+    }
+    
+    inline virtual unsigned int n_first_partials() { return 0; }
+    inline virtual unsigned int n_second_partials() { return 0; }
+    inline virtual unsigned int n_third_partials() { return 0; }
     
     inline static unsigned int n_partials(unsigned int n_inputs) { return 0; }
 
@@ -283,7 +293,7 @@ namespace nomad {
               g2 += g1 * second_val(input(j)) * *second_partial;
               
               if (j < i) ++second_partial;
-              else       second_partial += j * (j + 1) / 2 + 1;
+              else       second_partial += j + 1;
               
             }
             
@@ -341,7 +351,7 @@ namespace nomad {
               v4 += s2 * third_val(input(j)) * *second_partial;
               
               if (j < i) ++second_partial;
-              else       second_partial += j * (j + 1) / 2 + 1;
+              else       second_partial += j + 1;
               
             }
           }
@@ -385,7 +395,7 @@ namespace nomad {
               
               if(!*second_partial) {
                 if (j < i) ++second_partial;
-                else       second_partial += j * (j + 1) / 2 + 1;
+                else       second_partial += j + 1;
                 continue;
               }
               
@@ -398,7 +408,7 @@ namespace nomad {
               in_g4 += alpha * *second_partial;
               
               if (j < i) ++second_partial;
-              else       second_partial += j * (j + 1) / 2 + 1;
+              else       second_partial += j + 1;
 
             }
 
@@ -409,8 +419,8 @@ namespace nomad {
           
         }
         
-        if(partials_order >= 3) {
-          
+        if (partials_order >= 3) {
+
           for (int i = 0; i < n_inputs_; ++i) {
             
             double in_g4 = 0;
@@ -419,22 +429,31 @@ namespace nomad {
               
               const double in_v2 = second_val(input(j));
               
-              double* third_partial = third_partials()
-                                      + i * (i + 1) * (i + 2) / 6
-                                      + j * (j + 1) / 2;
+              double* third_partial = third_partials();
+              
+              if (j < i)
+                third_partial += + i * (i + 1) * (i + 2) / 6 + j * (j + 1) / 2; // Dense storage
+              else
+                third_partial += + i * (i + 1) / 2 + j * (j + 1) * (j + 2) / 6; // Sparse storage
               
               for (unsigned int k = 0; k < n_inputs_; ++k) {
-                
+
                 in_g4 +=   g1
                          * in_v2
                          * third_val(input(k))
                          * *third_partial;
-                
-                if (k < j)  ++third_partial;
-                else        third_partial += k * (k + 1) / 2 + 1;
-                if (j >= i) third_partial += j * (j + 1) * (j + 2) / 6 + 1;
+ 
+                if (k < i) {
+                  if (k < j) ++third_partial;                        // Dense-Dense storage
+                  else       third_partial += k + 1;                 // Dense-Sparse storage
+                }
+                else {
+                  if (k < j) third_partial += k + 1;                 // Dense-Sparse Storage
+                  else       third_partial += (k + 1) * (k + 2) / 2; // Sparse-Sparse storage
+                }
                 
               }
+              
             }
             
             fourth_grad(input(i)) += in_g4;
