@@ -11,11 +11,11 @@ namespace nomad {
   class var_base {
   protected:
     
-    index_t dual_numbers_idx_;
-    index_t partials_idx_;
-    index_t inputs_idx_;
+    nomad_idx_t dual_numbers_idx_;
+    nomad_idx_t partials_idx_;
+    nomad_idx_t inputs_idx_;
     
-    unsigned int n_inputs_;
+    nomad_idx_t n_inputs_;
     
   public:
     
@@ -27,9 +27,9 @@ namespace nomad {
       
       next_body_idx_++;
     
-    };
+    }
 
-    var_base(unsigned int n_inputs):
+    var_base(nomad_idx_t n_inputs):
     n_inputs_(n_inputs) {
       
       dual_numbers_idx_ = next_dual_number_idx_;
@@ -39,17 +39,27 @@ namespace nomad {
       next_body_idx_++;
     }
     
-    virtual ~var_base() {};
-
-    inline index_t dual_numbers() { return dual_numbers_idx_; }
-    inline unsigned int n_inputs() { return n_inputs_; }
+    virtual ~var_base() {}
     
-    index_t input() { return inputs_[inputs_idx_]; }
-    index_t input(unsigned int k) { return inputs_[inputs_idx_ + k]; }
+    var_base& operator=(const var_base& rhs) {
+      dual_numbers_idx_ = rhs.dual_numbers();
+      partials_idx_ = rhs.partials();
+      inputs_idx_ = rhs.inputs();
+      n_inputs_ = n_inputs();
+      return *this;
+    }
+
+    inline nomad_idx_t dual_numbers() const { return dual_numbers_idx_; }
+    inline nomad_idx_t partials() const { return partials_idx_; }
+    inline nomad_idx_t inputs() const { return inputs_idx_; }
+    inline nomad_idx_t n_inputs() const { return n_inputs_; }
+    
+    nomad_idx_t input() { return inputs_[inputs_idx_]; }
+    nomad_idx_t input(unsigned int k) { return inputs_[inputs_idx_ + k]; }
     
     // Are these used?
-    index_t begin() { return inputs_[inputs_idx_]; }
-    index_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
+    nomad_idx_t begin() { return inputs_[inputs_idx_]; }
+    nomad_idx_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
     
     inline double& first_val()   { return dual_numbers_[dual_numbers_idx_];     }
     inline double& first_grad()  { return dual_numbers_[dual_numbers_idx_ + 1]; }
@@ -60,34 +70,34 @@ namespace nomad {
     inline double& fourth_val()  { return dual_numbers_[dual_numbers_idx_ + 6]; }
     inline double& fourth_grad() { return dual_numbers_[dual_numbers_idx_ + 7]; }
     
-    inline static double& first_val(index_t idx)   { return dual_numbers_[idx];     }
-    inline static double& first_grad(index_t idx)  { return dual_numbers_[idx + 1]; }
-    inline static double& second_val(index_t idx)  { return dual_numbers_[idx + 2]; }
-    inline static double& second_grad(index_t idx) { return dual_numbers_[idx + 3]; }
-    inline static double& third_val(index_t idx)   { return dual_numbers_[idx + 4]; }
-    inline static double& third_grad(index_t idx)  { return dual_numbers_[idx + 5]; }
-    inline static double& fourth_val(index_t idx)  { return dual_numbers_[idx + 6]; }
-    inline static double& fourth_grad(index_t idx) { return dual_numbers_[idx + 7]; }
+    inline static double& first_val(nomad_idx_t idx)   { return dual_numbers_[idx];     }
+    inline static double& first_grad(nomad_idx_t idx)  { return dual_numbers_[idx + 1]; }
+    inline static double& second_val(nomad_idx_t idx)  { return dual_numbers_[idx + 2]; }
+    inline static double& second_grad(nomad_idx_t idx) { return dual_numbers_[idx + 3]; }
+    inline static double& third_val(nomad_idx_t idx)   { return dual_numbers_[idx + 4]; }
+    inline static double& third_grad(nomad_idx_t idx)  { return dual_numbers_[idx + 5]; }
+    inline static double& fourth_val(nomad_idx_t idx)  { return dual_numbers_[idx + 6]; }
+    inline static double& fourth_grad(nomad_idx_t idx) { return dual_numbers_[idx + 7]; }
 
     inline double* first_partials()  { return partials_ + partials_idx_; }
     inline double* second_partials() { return partials_ + partials_idx_ + n_first_partials(); }
     inline double* third_partials()  { return partials_ + partials_idx_ + n_first_partials() + n_second_partials(); }
 
-    inline double first_partials(index_t idx)  {
+    inline double first_partials(nomad_idx_t idx)  {
       return partials_[partials_idx_ + idx];
     }
-    inline double second_partials(index_t idx) {
+    inline double second_partials(nomad_idx_t idx) {
       return partials_[partials_idx_ + n_first_partials() + idx];
     }
-    inline double third_partials(index_t idx)  {
+    inline double third_partials(nomad_idx_t idx)  {
       return partials_[partials_idx_ + n_first_partials() + n_second_partials() + idx];
     }
     
-    inline virtual unsigned int n_first_partials() { return 0; }
-    inline virtual unsigned int n_second_partials() { return 0; }
-    inline virtual unsigned int n_third_partials() { return 0; }
+    inline virtual nomad_idx_t n_first_partials() { return 0; }
+    inline virtual nomad_idx_t n_second_partials() { return 0; }
+    inline virtual nomad_idx_t n_third_partials() { return 0; }
     
-    inline static unsigned int n_partials(unsigned int n_inputs) { return 0; }
+    inline static nomad_idx_t n_partials(unsigned int n_inputs) { return 0; }
 
     template<short autodiff_order>
     void print(std::ostream* output, std::string prefix = "") {
@@ -114,7 +124,7 @@ namespace nomad {
       if (n_inputs_) {
         *output << prefix << "Inputs stored at index " << inputs_idx_ << std::endl;
         *output << prefix << "Dual number index of inputs: " << std::endl;
-        for (int i = 0; i < n_inputs_; ++i)
+        for (nomad_idx_t i = 0; i < n_inputs_; ++i)
           *output << prefix << "  (" << i << ") " << input(i) << std::endl;
         *output << std::endl;
       }
@@ -123,15 +133,15 @@ namespace nomad {
         *output << prefix << "Partials stored at index = " << partials_idx_ << std::endl;
         
         if (n_first_partials()) *output << prefix << "First partials: " << std::endl;
-        for (int i = 0; i < n_first_partials(); ++i)
+        for (nomad_idx_t i = 0; i < n_first_partials(); ++i)
           *output << prefix << "  (" << i << ") " << first_partials()[i] << std::endl;
         
         if (n_second_partials()) *output << prefix << "Second partials: " << std::endl;
-        for (int i = 0; i < n_second_partials(); ++i)
+        for (nomad_idx_t i = 0; i < n_second_partials(); ++i)
           *output << prefix << "  (" << i << ") " << second_partials()[i] << std::endl;
         
         if (n_third_partials()) *output << prefix << "Third partials: " << std::endl;
-        for (int i = 0; i < n_third_partials(); ++i)
+        for (nomad_idx_t i = 0; i < n_third_partials(); ++i)
           *output << prefix << "  (" << i << ") " << third_partials()[i] << std::endl;
         
         *output << std::endl;
@@ -139,12 +149,12 @@ namespace nomad {
       
     }
 
-    inline virtual void first_order_forward_adj()  {};
-    inline virtual void first_order_reverse_adj()  {};
-    virtual void second_order_forward_val() {};
-    virtual void second_order_reverse_adj() {};
-    virtual void third_order_forward_val()  {};
-    virtual void third_order_reverse_adj()  {};
+    inline virtual void first_order_forward_adj()  {}
+    inline virtual void first_order_reverse_adj()  {}
+    virtual void second_order_forward_val() {}
+    virtual void second_order_reverse_adj() {}
+    virtual void third_order_forward_val()  {}
+    virtual void third_order_reverse_adj()  {}
     
   };
   
@@ -159,7 +169,7 @@ namespace nomad {
       max_body_idx *= 2;
       
       var_base* new_stack = new var_base[max_body_idx];
-      for (int i = 0; i < next_body_idx_; ++i)
+      for (nomad_idx_t i = 0; i < next_body_idx_; ++i)
         new_stack[i] = var_bodies_[i];
       delete[] var_bodies_;
       
@@ -181,26 +191,26 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
     
-    var_body(unsigned int n_inputs): var_base(n_inputs) {};
+    var_body(nomad_idx_t n_inputs): var_base(n_inputs) {}
 
-    inline unsigned int n_first_partials() {
+    inline nomad_idx_t n_first_partials() {
       return autodiff_order >= 1 && partials_order >= 1 ?
              n_inputs_ : 0;
     }
     
-    inline unsigned int n_second_partials() {
+    inline nomad_idx_t n_second_partials() {
       return autodiff_order >= 2 && partials_order >= 2 ?
              n_inputs_ * (n_inputs_ + 1) / 2 : 0;
     }
     
-    inline unsigned int n_third_partials() {
+    inline nomad_idx_t n_third_partials() {
       return autodiff_order >= 3 && partials_order >= 3 ?
              n_inputs_ * (n_inputs_ + 1) * (n_inputs_ + 2) / 6 : 0;
     }
     
-    inline static unsigned int n_partials(unsigned int n_inputs) {
+    inline static nomad_idx_t n_partials(unsigned int n_inputs) {
       if (autodiff_order >= 1 && partials_order >= 1)
         return n_inputs;
       
@@ -225,7 +235,7 @@ namespace nomad {
         
         double g = 0;
         
-        for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial)
+        for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial)
           g += first_grad(input(i)) * *first_partial;
         first_grad() += g;
         
@@ -237,7 +247,7 @@ namespace nomad {
       if (partials_order >= 1) {
         double* first_partial = first_partials();
         const double g = first_grad();
-        for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial)
+        for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial)
           first_grad(input(i)) += g * *first_partial;
       }
       
@@ -255,7 +265,7 @@ namespace nomad {
           double* first_partial = first_partials();
           double v2 = 0;
           
-          for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial)
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial)
             v2 += second_val(input(i)) * *first_partial;
           second_val() += v2;
           
@@ -274,7 +284,7 @@ namespace nomad {
           double* first_partial = first_partials();
           const double g = second_grad();
           
-          for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial)
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial)
             second_grad(input(i)) += g * *first_partial;
           
         }
@@ -283,12 +293,12 @@ namespace nomad {
           
           const double g1 = first_grad();
           
-          for (unsigned int i = 0; i < n_inputs_; ++i) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
             double g2 = 0;
             
             double* second_partial = second_partials() + i * (i + 1) / 2;
-            for (unsigned int j = 0; j < n_inputs_; ++j) {
+            for (nomad_idx_t j = 0; j < n_inputs_; ++j) {
               
               g2 += g1 * second_val(input(j)) * *second_partial;
               
@@ -325,7 +335,7 @@ namespace nomad {
           double v3 = 0;
           double v4 = 0;
           
-          for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial) {
             v3 += third_val(input(i)) * *first_partial;
             v4 += fourth_val(input(i)) * *first_partial;
           }
@@ -338,15 +348,15 @@ namespace nomad {
           
           double v4 = 0;
           
-          for (unsigned int i = 0; i < n_inputs_; ++i) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
             const double s2 = second_val(input(i));
             
-            // Benchmark this in the future?
-            if(!s2) continue;
+            // Benchmark in future
+            //if(s2 == 0) continue;
             
             double* second_partial = second_partials() + i * (i + 1) / 2;
-            for (unsigned int j = 0; j < n_inputs_; ++j) {
+            for (nomad_idx_t j = 0; j < n_inputs_; ++j) {
               
               v4 += s2 * third_val(input(j)) * *second_partial;
               
@@ -377,7 +387,7 @@ namespace nomad {
           
           double* first_partial = first_partials();
           
-          for (unsigned int i = 0; i < n_inputs_; ++i, ++first_partial) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial) {
             third_grad(input(i))  += g3 * *first_partial;
             fourth_grad(input(i)) += g4 * *first_partial;
           }
@@ -385,19 +395,22 @@ namespace nomad {
         
         if (partials_order >= 2) {
           
-          for (unsigned int i = 0; i < n_inputs_; ++i) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
             double in_g3 = 0;
             double in_g4 = 0;
             
             double* second_partial = second_partials() + i * (i + 1) / 2;
-            for (unsigned int j = 0; j < n_inputs_; ++j) {
+            for (nomad_idx_t j = 0; j < n_inputs_; ++j) {
               
-              if(!*second_partial) {
+              /*
+              // Benchmark in future
+              if(*second_partial == 0) {
                 if (j < i) ++second_partial;
                 else       second_partial += j + 1;
                 continue;
               }
+              */
               
               in_g3 += g1 * third_val(input(j)) * *second_partial;
               
@@ -421,11 +434,11 @@ namespace nomad {
         
         if (partials_order >= 3) {
 
-          for (int i = 0; i < n_inputs_; ++i) {
+          for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
             double in_g4 = 0;
             
-            for (int j = 0; j < n_inputs_; ++j) {
+            for (nomad_idx_t j = 0; j < n_inputs_; ++j) {
               
               const double in_v2 = second_val(input(j));
               
@@ -436,7 +449,7 @@ namespace nomad {
               else
                 third_partial += + i * (i + 1) / 2 + j * (j + 1) * (j + 2) / 6; // Sparse storage
               
-              for (unsigned int k = 0; k < n_inputs_; ++k) {
+              for (nomad_idx_t k = 0; k < n_inputs_; ++k) {
 
                 in_g4 +=   g1
                          * in_v2
@@ -480,9 +493,9 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
     
-    var_body(): var_base() {};
+    var_body(): var_base() {}
     
     void second_order_forward_val() {
       second_grad() = 0;

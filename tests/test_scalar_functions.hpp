@@ -8,6 +8,18 @@
 
 namespace nomad {
 
+  // Prototypes
+  void test_acos();
+  void test_acosh();
+  void test_asin();
+  void test_asinh();
+  void test_atan();
+  void test_atanh();
+  void test_binary_prod_cubes();
+  void test_exp();
+  void test_square();
+  void test_trinary_prod_cubes();
+  
   // acos
   template <typename T>
   struct acos_func {

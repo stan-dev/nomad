@@ -16,14 +16,14 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
     
-    multiply_var_body(): var_base(2) {};
+    multiply_var_body(): var_base(2) {}
  
-    inline unsigned int n_first_partials() { return 0; }
-    inline unsigned int n_second_partials() { return 0; }
-    inline unsigned int n_third_partials() { return 0; }
-    inline static unsigned int n_partials(unsigned int n_inputs) { return 0; }
+    inline nomad_idx_t n_first_partials() { return 0; }
+    inline nomad_idx_t n_second_partials() { return 0; }
+    inline nomad_idx_t n_third_partials() { return 0; }
+    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { return 0; }
     
     inline void first_order_forward_adj() {
       if (autodiff_order >= 1) {

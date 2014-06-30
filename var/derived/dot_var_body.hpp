@@ -16,14 +16,14 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
     
-    dot_var_body(int n_inputs): var_base(n_inputs) {};
+    dot_var_body(nomad_idx_t n_inputs): var_base(n_inputs) {}
  
-    inline unsigned int n_first_partials() { return 0; }
-    inline unsigned int n_second_partials() { return 0; }
-    inline unsigned int n_third_partials() { return 0; }
-    inline static unsigned int n_partials(unsigned int n_inputs) { return 0; }
+    inline nomad_idx_t n_first_partials() { return 0; }
+    inline nomad_idx_t n_second_partials() { return 0; }
+    inline nomad_idx_t n_third_partials() { return 0; }
+    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { return 0; }
     
     inline void first_order_forward_adj() {
       
@@ -35,10 +35,10 @@ namespace nomad {
         
         unsigned int end = n_inputs_ / 2;
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           g1 += first_grad(input(i)) * first_val(input(i + end));
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           g1 += first_grad(input(i + end)) * first_val(input(i));
         
         first_grad() += g1;
@@ -55,7 +55,7 @@ namespace nomad {
         
         const double g1 = first_grad();
         
-        for (unsigned int i = 0; i < end; ++i) {
+        for (nomad_idx_t i = 0; i < end; ++i) {
           first_grad(input(i)) += g1 * first_val(input(i + end));
           first_grad(input(i + end)) += g1 * first_val(input(i));
         }
@@ -73,10 +73,10 @@ namespace nomad {
         
         double v2 = 0;
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           v2 += second_val(input(i)) * first_val(input(i + end));
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           v2 += second_val(input(i + end)) * first_val(input(i));
         
         second_val() += v2;
@@ -88,16 +88,16 @@ namespace nomad {
       
       if (autodiff_order >= 2) {
         
-        unsigned int end = n_inputs_ / 2;
+        nomad_idx_t end = n_inputs_ / 2;
         
         const double g1 = first_grad();
         const double g2 = second_grad();
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           second_grad(input(i)) +=  g2 * first_val(input(i + end))
                                   + g1 * second_val(input(i + end));
         
-        for (unsigned int i = 0; i < end; ++i)
+        for (nomad_idx_t i = 0; i < end; ++i)
           second_grad(input(i + end)) +=  g2 * first_val(input(i))
                                         + g1 * second_val(input(i));
         
@@ -117,15 +117,15 @@ namespace nomad {
         double v3 = 0;
         double v4 = 0;
         
-        unsigned int end = n_inputs_ / 2;
+        nomad_idx_t end = n_inputs_ / 2;
         
-        for (unsigned int i = 0; i < end; ++i) {
+        for (nomad_idx_t i = 0; i < end; ++i) {
           v3 += third_val(input(i)) * first_val(input(i + end));
           v4 +=  fourth_val(input(i)) * first_val(input(i + end))
                + second_val(input(i)) * third_val(input(i + end));
         }
         
-        for (unsigned int i = 0; i < end; ++i) {
+        for (nomad_idx_t i = 0; i < end; ++i) {
           v3 += third_val(input(i + end)) * first_val(input(i));
           v4 +=  fourth_val(input(i + end)) * first_val(input(i))
                + second_val(input(i + end)) * third_val(input(i));
@@ -149,7 +149,7 @@ namespace nomad {
         const double g3 = third_grad();
         const double g4 = fourth_grad();
         
-        for (unsigned int i = 0; i < end; ++i) {
+        for (nomad_idx_t i = 0; i < end; ++i) {
           third_grad(input(i))  += g3 * first_val(input(i + end)) + g1 * third_val(input(i + end));
           fourth_grad(input(i)) +=   g4 * first_val(input(i + end))
                                    + g3 * second_val(input(i + end))
@@ -157,7 +157,7 @@ namespace nomad {
                                    + g1 * fourth_val(input(i + end));
         }
         
-        for (unsigned int i = 0; i < end; ++i) {
+        for (nomad_idx_t i = 0; i < end; ++i) {
           third_grad(input(i + end))  += g3 * first_val(input(i)) + g1 * third_val(input(i));
           fourth_grad(input(i + end)) +=   g4 * first_val(input(i))
                                          + g3 * second_val(input(i))

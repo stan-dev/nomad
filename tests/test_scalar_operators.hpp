@@ -8,6 +8,13 @@
 
 namespace nomad {
 
+  // Prototypes
+  void test_operator_divide();
+  void test_operator_multiply();
+  void test_operator_plus_equals();
+  void test_operator_plus();
+  void test_operator_unary_negative();
+  
   // operator_divide
   template <typename T>
   struct operator_divide_func {

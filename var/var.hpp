@@ -11,15 +11,14 @@ namespace nomad {
   class var {
   private:
 
-    index_t body_idx_;
+    nomad_idx_t body_idx_;
     
   public:
     
-    var() {};
+    var() {}
+    var(const var& v) : body_idx_(v.body_idx_) {}
     
-    var(const var& v) : body_idx_(v.body_idx_) { }
-    
-    explicit var(index_t body_idx) : body_idx_(body_idx) { }
+    explicit var(nomad_idx_t body_idx) : body_idx_(body_idx) {}
     
     var(double val) {
       // next_partials_delta not used by var_body<autodiff_order, 0>
@@ -43,10 +42,10 @@ namespace nomad {
       return *this;
     }
     
-    index_t dual_numbers() const { return var_bodies_[body_idx_].dual_numbers(); }
+    nomad_idx_t dual_numbers() const { return var_bodies_[body_idx_].dual_numbers(); }
     
-    index_t body() const { return body_idx_; }
-    void set_body(index_t body_idx) { body_idx_ = body_idx; }
+    nomad_idx_t body() const { return body_idx_; }
+    void set_body(nomad_idx_t body_idx) { body_idx_ = body_idx; }
     
     constexpr static short order() { return autodiff_order; }
     

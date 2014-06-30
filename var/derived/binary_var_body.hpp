@@ -16,30 +16,30 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
     
-    binary_var_body(): var_base(2) {};
+    binary_var_body(): var_base(2) {}
 
-    inline unsigned int n_first_partials() {
+    inline nomad_idx_t n_first_partials() {
       return autodiff_order >= 1 && partials_order >= 1 ? 2 : 0;
     }
     
-    inline unsigned int n_second_partials() {
+    inline nomad_idx_t n_second_partials() {
       return autodiff_order >= 2 && partials_order >= 2 ? 3 : 0;
     }
     
-    inline unsigned int n_third_partials() {
+    inline nomad_idx_t n_third_partials() {
       return autodiff_order >= 3 && partials_order >= 3 ? 4 : 0;
     }
 
-    inline static unsigned int n_partials() {
+    inline static nomad_idx_t n_partials() {
       if (autodiff_order >= 1 && partials_order >= 1) return 2;
       if (autodiff_order >= 2 && partials_order >= 2) return 5;
       if (autodiff_order >= 3 && partials_order >= 3) return 9;
       return 0;
     }
     
-    inline static unsigned int n_partials(unsigned int n_inputs) {
+    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) {
       if (autodiff_order >= 1 && partials_order >= 1) return 2;
       if (autodiff_order >= 2 && partials_order >= 2) return 5;
       if (autodiff_order >= 3 && partials_order >= 3) return 9;

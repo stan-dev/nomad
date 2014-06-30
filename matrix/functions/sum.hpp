@@ -15,8 +15,7 @@ namespace nomad {
   sum(const Eigen::MatrixBase<Derived>& input) {
     
     const short autodiff_order = Eigen::MatrixBase<Derived>::Scalar::order();
-    const short partials_order = 1;
-    const unsigned int n_inputs = input.size();
+    const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(input.size());
     
     next_inputs_delta = n_inputs;
     // next_partials_delta not used by multi_sum_var_body
@@ -25,11 +24,11 @@ namespace nomad {
     
     double sum = 0;
     
-    for (int n = 0; n < n_inputs; ++n)
+    for (eigen_idx_t n = 0; n < n_inputs; ++n)
       sum += input(n).first_val();
     push_dual_numbers<autodiff_order>(sum);
     
-    for (int n = 0; n < n_inputs; ++n)
+    for (eigen_idx_t n = 0; n < n_inputs; ++n)
       push_inputs(input(n).dual_numbers());
     
     return var<autodiff_order>(next_body_idx_ - 1);

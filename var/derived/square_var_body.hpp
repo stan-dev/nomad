@@ -17,14 +17,14 @@ namespace nomad {
       return var_bodies_ + next_body_idx_;
     }
     
-    static inline void operator delete(void* /* ignore */) {};
+    static inline void operator delete(void* /* ignore */) {}
+  
+    square_var_body(): var_base(1) {}
     
-    square_var_body(): var_base(1) {};
-    
-    inline unsigned int n_first_partials() { return 0; }
-    inline unsigned int n_second_partials() { return 0; }
-    inline unsigned int n_third_partials() { return 0; }
-    inline static unsigned int n_partials(unsigned int n_inputs) { return 0; }
+    inline nomad_idx_t n_first_partials() { return 0; }
+    inline nomad_idx_t n_second_partials() { return 0; }
+    inline nomad_idx_t n_third_partials() { return 0; }
+    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { return 0; }
     
     inline void first_order_forward_adj() {
       if (autodiff_order >= 1) {
@@ -67,13 +67,8 @@ namespace nomad {
       
       if (autodiff_order >= 3) {
         
-        const double g1 = first_grad();
-        const double g2 = second_grad();
-        const double g3 = third_grad();
-        const double g4 = fourth_grad();
-        
         third_grad(input()) +=   2 * third_grad() * first_val(input())
-        + 2 * first_grad() * third_val(input());
+                               + 2 * first_grad() * third_val(input());
         
         fourth_grad(input()) +=   2 * fourth_grad() * first_val(input())
                                 + 2 * third_grad()  * second_val(input())

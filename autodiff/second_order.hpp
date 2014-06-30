@@ -13,14 +13,14 @@ namespace nomad {
 
   template<class T_var>
   void second_order_forward_val(const T_var& v) {
-    for (index_t i = 1; i <= v.body(); ++i)
+    for (nomad_idx_t i = 1; i <= v.body(); ++i)
       var_bodies_[i].second_order_forward_val();
   }
   
   template<class T_var>
   void second_order_reverse_adj(const T_var& v) {
     var_bodies_[v.body()].second_grad() = 0;
-    for (index_t i = v.body(); i > 0; --i)
+    for (nomad_idx_t i = v.body(); i > 0; --i)
       var_bodies_[i].second_order_reverse_adj();
   }
 
@@ -33,7 +33,7 @@ namespace nomad {
     
     reset();
     
-    size_t d = x.size();
+    eigen_idx_t d = x.size();
     
     try {
       
@@ -50,19 +50,19 @@ namespace nomad {
       // First-order
       first_order_reverse_adj(f_var);
       
-      for (size_t i = 0; i < d; ++i)
+      for (eigen_idx_t i = 0; i < d; ++i)
         g(i) = var_bodies_[i + 1].first_grad();
       
       // Second-order
-      for (size_t i = 0; i < d; ++i) {
+      for (eigen_idx_t i = 0; i < d; ++i) {
         
-        for (size_t j = 0; j < d; ++j)
+        for (eigen_idx_t j = 0; j < d; ++j)
           var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
         
         second_order_forward_val(f_var);
         second_order_reverse_adj(f_var);
         
-        for (size_t j = 0; j < d; ++j)
+        for (eigen_idx_t j = 0; j < d; ++j)
           H(i, j) = var_bodies_[j + 1].second_grad();
         
       }
@@ -97,7 +97,7 @@ namespace nomad {
                            Eigen::MatrixXd& H,
                            const double epsilon = 1e-6) {
     
-    size_t d = x.size();
+    eigen_idx_t d = x.size();
     
     Eigen::VectorXd x_dynam(x);
     Eigen::VectorXd g_auto(d);
@@ -119,7 +119,7 @@ namespace nomad {
       throw e;
     }
     
-    for (size_t i = 0; i < d; ++i) {
+    for (eigen_idx_t i = 0; i < d; ++i) {
       
       Eigen::VectorXd g_diff = Eigen::VectorXd::Zero(d);
       
@@ -145,7 +145,7 @@ namespace nomad {
                     const Eigen::VectorXd& x,
                     const double epsilon = 1e-6) {
     
-    size_t d = x.size();
+    eigen_idx_t d = x.size();
     
     Eigen::MatrixXd auto_H(x.size(), x.size());
     try {
@@ -187,8 +187,8 @@ namespace nomad {
     std::cout << "    " << std::setw(n_column * width) << std::setfill('-')
               << "" << std::setfill(' ') << std::endl;
     
-    for (size_t i = 0; i < d; ++i) {
-      for (size_t j = 0; j < d; ++j) {
+    for (eigen_idx_t i = 0; i < d; ++i) {
+      for (eigen_idx_t j = 0; j < d; ++j) {
         std::cout << "    "
                   << std::setw(width) << std::left << i
                   << std::setw(width) << std::left << j
@@ -216,7 +216,7 @@ namespace nomad {
     
     reset();
     
-    size_t d = x.size();
+    eigen_idx_t d = x.size();
     
     try {
       
@@ -233,17 +233,17 @@ namespace nomad {
       // First-order
       first_order_reverse_adj(f_var);
       
-      for (size_t i = 0; i < d; ++i)
+      for (eigen_idx_t i = 0; i < d; ++i)
         g(i) = var_bodies_[i + 1].first_grad();
       
       // Second-order
-      for (size_t i = 0; i < d; ++i)
+      for (eigen_idx_t i = 0; i < d; ++i)
         var_bodies_[i + 1].second_val() = v(i);
       
       second_order_forward_val(f_var);
       second_order_reverse_adj(f_var);
       
-      for (size_t i = 0; i < d; ++i)
+      for (eigen_idx_t i = 0; i < d; ++i)
         hessian_dot_v(i) = var_bodies_[i + 1].second_grad();
       
     } catch (partial_fail_ex& e) {
@@ -314,7 +314,7 @@ namespace nomad {
     
     Eigen::VectorXd H_dot_v = H_auto * v;
     
-    for (size_t i = 0; i < x.size(); ++i) {
+    for (eigen_idx_t i = 0; i < x.size(); ++i) {
       
       std::cout << "    "
                 << std::setw(width) << std::left << i
@@ -340,7 +340,7 @@ namespace nomad {
     
     reset();
     
-    size_t d = x.size();
+    eigen_idx_t d = x.size();
     
     try {
       
@@ -357,15 +357,15 @@ namespace nomad {
       // First-order
       first_order_reverse_adj(f_var);
       
-      for (size_t i = 0; i < d; ++i)
+      for (eigen_idx_t i = 0; i < d; ++i)
         g(i) = var_bodies_[i + 1].first_grad();
       
       // Second-order
       trace_m_times_h = 0;
       
-      for (size_t i = 0; i < d; ++i) {
+      for (eigen_idx_t i = 0; i < d; ++i) {
         
-        for (size_t j = 0; j < d; ++j)
+        for (eigen_idx_t j = 0; j < d; ++j)
           var_bodies_[j + 1].second_val() = M(j, i);
         
         second_order_forward_val(f_var);

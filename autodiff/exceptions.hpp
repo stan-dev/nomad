@@ -9,13 +9,13 @@ namespace nomad {
   class partial_fail_ex: public std::runtime_error {
   public:
     partial_fail_ex(std::string error):
-      std::runtime_error(error) {};
+      std::runtime_error(error) {}
   };
 
   class autodiff_fail_ex: public std::runtime_error {
   public:
     autodiff_fail_ex(std::string error):
-      std::runtime_error(error) {};
+      std::runtime_error(error) {}
   };
   
 }

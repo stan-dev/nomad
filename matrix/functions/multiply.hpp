@@ -20,11 +20,11 @@ namespace nomad {
   multiply(const Eigen::MatrixBase<DerivedA>& M1,
            const Eigen::MatrixBase<DerivedB>& M2) {
     
-    const int N = M1.cols();
+    const eigen_idx_t N = M1.cols();
     Eigen::Matrix<var<Eigen::MatrixBase<DerivedA>::Scalar::order()>, Eigen::Dynamic, Eigen::Dynamic> M(N, N);
     
-    for (int i = 0; i < N; ++i) {
-      for (int j = 0; j < N; ++j) {
+    for (eigen_idx_t i = 0; i < N; ++i) {
+      for (eigen_idx_t j = 0; j < N; ++j) {
         M(i, j) = dot(M1.row(i), M2.col(j));
       }
     }

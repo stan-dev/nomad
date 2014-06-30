@@ -10,36 +10,41 @@
 #endif
 
 #include <vector>
+#include <autodiff/typedefs.hpp>
 
 namespace nomad {
-
-  typedef int index_t;
   
+  void reset();
+  void expand_var_bodies();
+  template<short autodiff_order> void expand_dual_numbers();
+  void expand_partials();
+  void expand_inputs();
+
   class var_base;
   
-  index_t base_body_size_ = 100000;
+  nomad_idx_t base_body_size_ = 100000;
   
   var_base* var_bodies_;
-  index_t next_body_idx_ = 1;
-  index_t max_body_idx = 0;
+  nomad_idx_t next_body_idx_ = 1;
+  nomad_idx_t max_body_idx = 0;
   
   double* dual_numbers_;
-  index_t next_dual_number_idx_ = 1;
-  index_t max_dual_number_idx = 0;
+  nomad_idx_t next_dual_number_idx_ = 1;
+  nomad_idx_t max_dual_number_idx = 0;
   
-  index_t base_partials_size_ = 100000;
+  nomad_idx_t base_partials_size_ = 100000;
   
   double* partials_;
-  index_t next_partials_idx_ = 1;
-  index_t next_partials_delta = 0;
-  index_t max_partials_idx = 0;
+  nomad_idx_t next_partials_idx_ = 1;
+  nomad_idx_t next_partials_delta = 0;
+  nomad_idx_t max_partials_idx = 0;
   
-  index_t base_inputs_size_ = 100000;
+  nomad_idx_t base_inputs_size_ = 100000;
   
-  index_t* inputs_;
-  index_t next_inputs_idx_ = 1;
-  index_t next_inputs_delta = 0;
-  index_t max_inputs_idx = 0;
+  nomad_idx_t* inputs_;
+  nomad_idx_t next_inputs_idx_ = 1;
+  nomad_idx_t next_inputs_delta = 0;
+  nomad_idx_t max_inputs_idx = 0;
   
   void reset() {
     next_body_idx_ = 1;
@@ -72,7 +77,7 @@ namespace nomad {
     partials_[next_partials_idx_++] = partial;
   }
   
-  inline void push_inputs(index_t input) {
+  inline void push_inputs(nomad_idx_t input) {
     inputs_[next_inputs_idx_++] = input;
   }
   
@@ -88,7 +93,7 @@ namespace nomad {
       max_dual_number_idx *= 2;
       
       double* new_stack = new double[max_dual_number_idx];
-      for (int i = 0; i < next_dual_number_idx_; ++i)
+      for (nomad_idx_t i = 0; i < next_dual_number_idx_; ++i)
         new_stack[i] = dual_numbers_[i];
       delete[] dual_numbers_;
       
@@ -106,7 +111,7 @@ namespace nomad {
       max_partials_idx *= 2;
       
       double* new_stack = new double[max_partials_idx];
-      for (int i = 0; i < next_partials_idx_; ++i)
+      for (nomad_idx_t i = 0; i < next_partials_idx_; ++i)
         new_stack[i] = partials_[i];
       delete[] partials_;
       
@@ -118,12 +123,12 @@ namespace nomad {
   void expand_inputs() {
     if (!max_inputs_idx) {
       max_inputs_idx = base_inputs_size_;
-      inputs_ = new index_t[max_inputs_idx];
+      inputs_ = new nomad_idx_t[max_inputs_idx];
     } else {
       max_inputs_idx *= 2;
       
-      index_t* new_stack = new index_t[max_inputs_idx];
-      for (int i = 0; i < next_inputs_idx_; ++i)
+      nomad_idx_t* new_stack = new nomad_idx_t[max_inputs_idx];
+      for (nomad_idx_t i = 0; i < next_inputs_idx_; ++i)
         new_stack[i] = inputs_[i];
       delete[] inputs_;
       

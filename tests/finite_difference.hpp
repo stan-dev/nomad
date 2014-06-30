@@ -32,7 +32,7 @@ namespace nomad {
       
       bool fail = false;
       
-      for (size_t i = 0; i < x.size(); ++i)
+      for (eigen_idx_t i = 0; i < x.size(); ++i)
         if ((auto_grad(i) - diff_grad(i)) / epsilon > 1) fail |= true;
       
       if (fail)
@@ -45,7 +45,7 @@ namespace nomad {
                       const Eigen::VectorXd& x,
                       const double epsilon = 1e-6) {
       
-      size_t d = x.size();
+      eigen_idx_t d = x.size();
       
       Eigen::MatrixXd auto_H(x.size(), x.size());
       try {
@@ -65,8 +65,8 @@ namespace nomad {
 
       bool fail = false;
       
-      for (size_t i = 0; i < d; ++i)
-        for (size_t j = 0; j <= i; ++j)
+      for (eigen_idx_t i = 0; i < d; ++i)
+        for (eigen_idx_t j = 0; j <= i; ++j)
           if ((auto_H(i, j) - diff_H(i, j)) / epsilon > 1) fail |= true;
       
       if (fail)
@@ -79,7 +79,7 @@ namespace nomad {
                            const Eigen::VectorXd& x,
                            const double epsilon = 1e-6) {
       
-      size_t d = x.size();
+      eigen_idx_t d = x.size();
       
       Eigen::MatrixXd auto_grad_H(d, d * d);
       try {
@@ -99,9 +99,9 @@ namespace nomad {
       
       bool fail = false;
       
-      for (size_t k = 0; k < d; ++k)
-        for (size_t i = 0; i <= k; ++i)
-          for (size_t j = 0; j <= i; ++j)
+      for (eigen_idx_t k = 0; k < d; ++k)
+        for (eigen_idx_t i = 0; i <= k; ++i)
+          for (eigen_idx_t j = 0; j <= i; ++j)
             if ((auto_grad_H.block(0, k * d, d, d)(i, j) - diff_grad_H.block(0, k * d, d, d)(i, j))
                 / epsilon > 1) fail |= true;
       

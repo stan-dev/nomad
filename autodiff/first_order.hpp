@@ -12,14 +12,14 @@ namespace nomad {
 
   template<class T_var>
   void first_order_forward_adj(const T_var& v) {
-    for (index_t i = 1; i <= v.body(); ++i)
+    for (nomad_idx_t i = 1; i <= v.body(); ++i)
       var_bodies_[i].first_order_forward_adj();
   }
   
   template<class T_var>
   void first_order_reverse_adj(const T_var& v) {
     var_bodies_[v.body()].first_grad() = 1.0;
-    for (index_t i = v.body(); i > 0; --i)
+    for (nomad_idx_t i = v.body(); i > 0; --i)
       var_bodies_[i].first_order_reverse_adj();
   }
 
@@ -47,7 +47,7 @@ namespace nomad {
       throw;
     }
     
-    for (size_t i = 0; i < x.size(); ++i)
+    for (eigen_idx_t i = 0; i < x.size(); ++i)
       g(i) = var_bodies_[i + 1].first_grad();
 
     reset();
@@ -87,7 +87,7 @@ namespace nomad {
       throw e;
     }
     
-    for (size_t i = 0; i < x.size(); ++i) {
+    for (eigen_idx_t i = 0; i < x.size(); ++i) {
       
       double delta_f = 0;
       
@@ -156,7 +156,7 @@ namespace nomad {
     
     Eigen::VectorXd x_dynam(x);
     
-    for (size_t i = 0; i < x.size(); ++i) {
+    for (eigen_idx_t i = 0; i < x.size(); ++i) {
       std::cout << "    "
                 << std::setw(width) << std::left << i
                 << std::setw(width) << std::left << auto_grad(i)
@@ -193,7 +193,7 @@ namespace nomad {
       
       f = f_var.first_val();
     
-      for (size_t i = 0; i < x.size(); ++i)
+      for (eigen_idx_t i = 0; i < x.size(); ++i)
         var_bodies_[i + 1].first_grad() = v(i);
       
       first_order_forward_adj(f_var);
