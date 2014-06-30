@@ -12,6 +12,14 @@
 
 using namespace nomad;
 
+double elapsed_secs(const clock_t& start);
+void validate_funnel();
+void time_funnel();
+void validate_matrix();
+void time_matrix();
+void validate_dot();
+void time_dot();
+
 template <typename T, int N>
 struct funnel_func {
   T operator()(const Eigen::VectorXd& x) const {
@@ -40,13 +48,13 @@ template <typename T>
 struct f_matrix {
   T operator()(const Eigen::VectorXd& x) const {
     
-    int N = sqrt(x.size());
+    eigen_idx_t N = static_cast<eigen_idx_t>(sqrt(x.size()));
     
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M(N, N);
     
     int k = 0;
-    for (int i = 0; i < N; ++i)
-      for (int j = 0; j < N; ++j)
+    for (eigen_idx_t i = 0; i < N; ++i)
+      for (eigen_idx_t j = 0; j < N; ++j)
         M(i, j) = x(k++);
     
     return sum(multiply(M, M.transpose()));
@@ -58,13 +66,13 @@ template <typename T>
 struct f_dot {
   T operator()(const Eigen::VectorXd& x) const {
     
-    int N = x.size() / 2;
+    eigen_idx_t N = x.size() / 2;
     
     Eigen::Matrix<T, Eigen::Dynamic, 1> v1(N);
     Eigen::Matrix<T, Eigen::Dynamic, 1> v2(N);
     
-    for (int n = 0; n < N; ++n) v1(n) = x(n);
-    for (int n = 0; n < N; ++n) v2(n) = x(N + n);
+    for (eigen_idx_t n = 0; n < N; ++n) v1(n) = x(n);
+    for (eigen_idx_t n = 0; n < N; ++n) v2(n) = x(N + n);
     
     return dot(v1, v2);
     
