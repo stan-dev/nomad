@@ -14,11 +14,64 @@ namespace nomad {
   void test_asin();
   void test_asinh();
   void test_atan();
+  void test_atan2();
   void test_atanh();
   void test_binary_prod_cubes();
+  void test_cbrt();
+  void test_cos();
+  void test_cosh();
+  void test_erf();
+  void test_erfc();
   void test_exp();
+  void test_exp2();
+  void test_expm1();
+  void test_fma();
+  void test_hypot();
+  void test_inv_cloglog();
+  void test_inv_logit();
+  void test_inv_sqrt();
+  void test_inv_square();
+  void test_inv();
+  void test_log_diff_exp();
+  void test_log_sum_exp();
+  void test_sin();
+  void test_sinh();
+  void test_sqrt();
   void test_square();
   void test_trinary_prod_cubes();
+  
+  void test_scalar_functions() {
+    test_acos();
+    test_acosh();
+    test_asin();
+    test_asinh();
+    test_atan();
+    test_atan2();
+    test_atanh();
+    test_binary_prod_cubes();
+    test_cbrt();
+    test_cos();
+    test_cosh();
+    test_erf();
+    test_erfc();
+    test_exp();
+    test_exp2();
+    test_expm1();
+    test_fma();
+    test_hypot();
+    test_inv_cloglog();
+    test_inv_logit();
+    test_inv_sqrt();
+    test_inv_square();
+    test_inv();
+    test_log_diff_exp();
+    test_log_sum_exp();
+    test_sin();
+    test_sinh();
+    test_sqrt();
+    test_square();
+    test_trinary_prod_cubes();
+  }
   
   // acos
   template <typename T>
@@ -105,6 +158,52 @@ namespace nomad {
     tests::test_function<atan_func>(x);
   }
   
+  // atan2
+  template <typename T>
+  struct atan2_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return atan2(v1, v2);
+      
+    }
+    static std::string name() { return "atan2_vv"; }
+  };
+  
+  template <typename T>
+  struct atan2_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return atan2(v, 0.4847);
+      
+    }
+    static std::string name() { return "atan2_vd"; }
+  };
+  
+  template <typename T>
+  struct atan2_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return atan2(0.3898, v);
+      
+    }
+    static std::string name() { return "atan2_dv"; }
+  };
+  
+  void test_atan2() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<atan2_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<atan2_vd_func>(x2);
+    tests::test_function<atan2_dv_func>(x2);
+  }
+  
   // atanh
   template <typename T>
   struct atanh_func {
@@ -140,6 +239,91 @@ namespace nomad {
     x[1] = 0.832;
     tests::test_function<binary_prod_cubes_func>(x);
   }
+
+  // cbrt
+  template <typename T>
+  struct cbrt_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return cbrt(v);
+      
+    }
+    static std::string name() { return "cbrt"; }
+  };
+  
+  void test_cbrt() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<cbrt_func>(x);
+  }
+  
+  // cos
+  template <typename T>
+  struct cos_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return cos(v);
+      
+    }
+    static std::string name() { return "cos"; }
+  };
+  
+  void test_cos() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<cos_func>(x);
+  }
+  
+  // cosh
+  template <typename T>
+  struct cosh_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return cosh(v);
+      
+    }
+    static std::string name() { return "cosh"; }
+  };
+  
+  void test_cosh() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<cosh_func>(x);
+  }
+
+  // erf
+  template <typename T>
+  struct erf_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return erf(v);
+      
+    }
+    static std::string name() { return "erf"; }
+  };
+  
+  void test_erf() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<erf_func>(x);
+  }
+  
+  // erfc
+  template <typename T>
+  struct erfc_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return erfc(v);
+      
+    }
+    static std::string name() { return "exp"; }
+  };
+  
+  void test_erfc() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<erfc_func>(x);
+  }
   
   // exp
   template <typename T>
@@ -156,6 +340,349 @@ namespace nomad {
     Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
     x *= 0.576;
     tests::test_function<exp_func>(x);
+  }
+  
+  // exp2
+  template <typename T>
+  struct exp2_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp2(v);
+      
+    }
+    static std::string name() { return "exp2"; }
+  };
+  
+  void test_exp2() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<exp2_func>(x);
+  }
+  
+  // expm1
+  template <typename T>
+  struct expm1_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return expm1(v);
+      
+    }
+    static std::string name() { return "expm1"; }
+  };
+  
+  void test_expm1() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<expm1_func>(x);
+  }
+  
+  // fma
+  template <typename T>
+  struct fma_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      T v3 = x[2];
+      return fma(v1, v2, v3);
+      
+    }
+    static std::string name() { return "fma"; }
+  };
+  
+  void test_fma() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(3);
+    x[0] *= -2.483;
+    x[1] *= 0.576;
+    x[2] *= 1.384;
+    tests::test_function<fma_func>(x);
+  }
+  
+  // hypot
+  template <typename T>
+  struct hypot_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return hypot(v1, v2);
+      
+    }
+    static std::string name() { return "hypot_vv"; }
+  };
+  
+  template <typename T>
+  struct hypot_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return hypot(v, 0.4847);
+      
+    }
+    static std::string name() { return "hypot_vd"; }
+  };
+  
+  template <typename T>
+  struct hypot_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return hypot(0.3898, v);
+      
+    }
+    static std::string name() { return "hypot_dv"; }
+  };
+  
+  void test_hypot() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<hypot_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<hypot_vd_func>(x2);
+    tests::test_function<hypot_dv_func>(x2);
+  }
+
+  // inv_cloglog
+  template <typename T>
+  struct inv_cloglog_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return inv_cloglog(v);
+      
+    }
+    static std::string name() { return "inv_cloglog"; }
+  };
+  
+  void test_inv_cloglog() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<inv_cloglog_func>(x);
+  }
+  
+  // inv_logit
+  template <typename T>
+  struct inv_logit_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return inv_logit(v);
+      
+    }
+    static std::string name() { return "inv_logit"; }
+  };
+  
+  void test_inv_logit() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<inv_logit_func>(x);
+  }
+  
+  // inv_sqrt
+  template <typename T>
+  struct inv_sqrt_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return inv_sqrt(v);
+      
+    }
+    static std::string name() { return "inv_sqrt"; }
+  };
+  
+  void test_inv_sqrt() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<inv_sqrt_func>(x);
+  }
+  
+  // inv_square
+  template <typename T>
+  struct inv_square_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return inv_square(v);
+      
+    }
+    static std::string name() { return "inv_square"; }
+  };
+  
+  void test_inv_square() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<inv_square_func>(x);
+  }
+  
+  // inv
+  template <typename T>
+  struct inv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return inv(v);
+      
+    }
+    static std::string name() { return "inv"; }
+  };
+  
+  void test_inv() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<inv_func>(x);
+  }
+  
+  // log_diff_exp
+  template <typename T>
+  struct log_diff_exp_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return log_diff_exp(v1, v2);
+      
+    }
+    static std::string name() { return "log_diff_exp_vv"; }
+  };
+  
+  template <typename T>
+  struct log_diff_exp_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return log_diff_exp(v, 0.5);
+      
+    }
+    static std::string name() { return "log_diff_exp_vd"; }
+  };
+  
+  template <typename T>
+  struct log_diff_exp_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return log_diff_exp(0.5, v);
+      
+    }
+    static std::string name() { return "log_diff_exp_dv"; }
+  };
+  
+  void test_log_diff_exp() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 1.0;
+    x1[1] *= 0.5;
+    
+    tests::test_function<log_diff_exp_vv_func>(x1);
+    
+    x1[0] = -1.0;
+    tests::test_function<log_diff_exp_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    
+    tests::test_function<log_diff_exp_vd_func>(x2);
+    tests::test_function<log_diff_exp_dv_func>(x2);
+    
+    x2[0] = -1.0;
+    tests::test_function<log_diff_exp_vd_func>(x2);
+    tests::test_function<log_diff_exp_dv_func>(x2);
+    
+  }
+  
+  // log_sum_exp
+  template <typename T>
+  struct log_sum_exp_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return log_sum_exp(v1, v2);
+      
+    }
+    static std::string name() { return "log_sum_exp_vv"; }
+  };
+  
+  template <typename T>
+  struct log_sum_exp_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return log_sum_exp(v, 0.5);
+      
+    }
+    static std::string name() { return "log_sum_exp_vd"; }
+  };
+  
+  template <typename T>
+  struct log_sum_exp_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return log_sum_exp(0.5, v);
+      
+    }
+    static std::string name() { return "log_sum_exp_dv"; }
+  };
+  
+  void test_log_sum_exp() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 1.0;
+    x1[1] *= 0.5;
+    
+    tests::test_function<log_sum_exp_vv_func>(x1);
+    
+    x1[0] = -1.0;
+    tests::test_function<log_sum_exp_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    
+    tests::test_function<log_sum_exp_vd_func>(x2);
+    tests::test_function<log_sum_exp_dv_func>(x2);
+    
+    x2[0] = -1.0;
+    tests::test_function<log_sum_exp_vd_func>(x2);
+    tests::test_function<log_sum_exp_dv_func>(x2);
+    
+  }
+  
+  // sin
+  template <typename T>
+  struct sin_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return sin(v);
+      
+    }
+    static std::string name() { return "sin"; }
+  };
+  
+  void test_sin() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<sin_func>(x);
+  }
+  
+  // sinh
+  template <typename T>
+  struct sinh_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return sinh(v);
+      
+    }
+    static std::string name() { return "sinh"; }
+  };
+  
+  void test_sinh() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<sinh_func>(x);
+  }
+  
+  // sqrt
+  template <typename T>
+  struct sqrt_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return sqrt(v);
+      
+    }
+    static std::string name() { return "sqrt"; }
+  };
+  
+  void test_sqrt() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<sqrt_func>(x);
   }
   
   // square
@@ -194,19 +721,6 @@ namespace nomad {
     x[1] = 0.832;
     x[1] = -1.765;
     tests::test_function<trinary_prod_cubes_func>(x);
-  }
-  
-  void test_scalar_functions() {
-    test_acos();
-    test_acosh();
-    test_asin();
-    test_asinh();
-    test_atan();
-    test_atanh();
-    test_binary_prod_cubes();
-    test_exp();
-    test_square();
-    test_trinary_prod_cubes();
   }
 
 }

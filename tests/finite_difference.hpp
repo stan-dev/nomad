@@ -1,7 +1,7 @@
 #ifndef nomad__tests__finite_difference_hpp
 #define nomad__tests__finite_difference_hpp
 
-
+#include <math.h>
 #include <autodiff/first_order.hpp>
 #include <autodiff/second_order.hpp>
 #include <autodiff/third_order.hpp>
@@ -33,7 +33,7 @@ namespace nomad {
       bool fail = false;
       
       for (eigen_idx_t i = 0; i < x.size(); ++i)
-        if ((auto_grad(i) - diff_grad(i)) / epsilon > 1) fail |= true;
+        if (std::fabs(auto_grad(i) - diff_grad(i)) / epsilon > 1) fail |= true;
       
       if (fail)
         std::cout << functional.name() << " failed gradient finite difference test" << std::endl;
@@ -67,7 +67,7 @@ namespace nomad {
       
       for (eigen_idx_t i = 0; i < d; ++i)
         for (eigen_idx_t j = 0; j <= i; ++j)
-          if ((auto_H(i, j) - diff_H(i, j)) / epsilon > 1) fail |= true;
+          if (std::fabs(auto_H(i, j) - diff_H(i, j)) / epsilon > 1) fail |= true;
       
       if (fail)
         std::cout << functional.name() << " failed Hessian finite difference test" << std::endl;
@@ -102,7 +102,7 @@ namespace nomad {
       for (eigen_idx_t k = 0; k < d; ++k)
         for (eigen_idx_t i = 0; i <= k; ++i)
           for (eigen_idx_t j = 0; j <= i; ++j)
-            if ((auto_grad_H.block(0, k * d, d, d)(i, j) - diff_grad_H.block(0, k * d, d, d)(i, j))
+            if (std::fabs(auto_grad_H.block(0, k * d, d, d)(i, j) - diff_grad_H.block(0, k * d, d, d)(i, j))
                 / epsilon > 1) fail |= true;
       
       if (fail)
