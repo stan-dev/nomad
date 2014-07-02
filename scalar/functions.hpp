@@ -19,6 +19,7 @@
 #include <scalar/functions/expm1.hpp>
 #include <scalar/functions/fma.hpp>
 #include <scalar/functions/hypot.hpp>
+#include <scalar/functions/if_else.hpp>
 #include <scalar/functions/inv_cloglog.hpp>
 #include <scalar/functions/inv_logit.hpp>
 #include <scalar/functions/inv_sqrt.hpp>
@@ -26,10 +27,21 @@
 #include <scalar/functions/inv.hpp>
 #include <scalar/functions/log_diff_exp.hpp>
 #include <scalar/functions/log_sum_exp.hpp>
+#include <scalar/functions/log.hpp>
+#include <scalar/functions/log1p_exp.hpp>
+#include <scalar/functions/log1p.hpp>
+#include <scalar/functions/log2.hpp>
+#include <scalar/functions/log10.hpp>
+#include <scalar/functions/multiply_log.hpp>
+#include <scalar/functions/pow.hpp>
+#include <scalar/functions/Phi.hpp>
 #include <scalar/functions/sin.hpp>
 #include <scalar/functions/sinh.hpp>
 #include <scalar/functions/sqrt.hpp>
 #include <scalar/functions/square.hpp>
+#include <scalar/functions/tan.hpp>
+#include <scalar/functions/tanh.hpp>
 #include <scalar/functions/trinary_prod_cubes.hpp>
+#include <scalar/functions/value_of.hpp>
 
 #endif
