@@ -5,6 +5,7 @@
 
 namespace nomad {
   
+  template <short autodiff_order>
   inline double value_of(const var<autodiff_order>& input) {
     return input.first_val();
   }
