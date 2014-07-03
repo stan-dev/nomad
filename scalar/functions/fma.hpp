@@ -48,18 +48,6 @@ namespace nomad {
       push_partials(0);
       push_partials(0);
     }
-    if (autodiff_order >= 3) {
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-    }
 
     return var<autodiff_order>(next_body_idx_ - 1);
     

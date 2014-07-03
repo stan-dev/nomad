@@ -13,17 +13,28 @@ namespace nomad {
   void test_operator_addition();
   void test_operator_division_assignment();
   void test_operator_division();
-  void test_operator_multiply();
-  void test_operator_plus_equals();
-  void test_operator_unary_negative();
+  void test_operator_multiplication_assignment();
+  void test_operator_multiplication();
+  void test_operator_subtraction_assignment();
+  void test_operator_subtraction();
+  void test_operator_unary_decrement();
+  void test_operator_unary_increment();
+  void test_operator_unary_minus();
+  void test_operator_unary_plus();
   
   void test_scalar_operators() {
     test_operator_addition_assignment();
     test_operator_addition();
     test_operator_division_assignment();
     test_operator_division();
-    test_operator_multiply();
-    test_operator_unary_negative();
+    test_operator_multiplication_assignment();
+    test_operator_multiplication();
+    test_operator_subtraction_assignment();
+    test_operator_subtraction();
+    test_operator_unary_decrement();
+    test_operator_unary_increment();
+    test_operator_unary_minus();
+    test_operator_unary_plus();
   }
 
   // operator_addition_assignment
@@ -47,16 +58,6 @@ namespace nomad {
     static std::string name() { return "operator_addition_assignment_vd"; }
   };
   
-  template <typename T>
-  struct operator_addition_assignment_dv_func {
-    T operator()(const Eigen::VectorXd& x) const {
-      T v = x[0];
-      return exp(0.3898 + v);
-      
-    }
-    static std::string name() { return "operator_addition_assignment_dv"; }
-  };
-  
   void test_operator_addition_assignment() {
     Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
     x1[0] *= 0.576;
@@ -68,7 +69,6 @@ namespace nomad {
     x2 *= 0.576;
     
     tests::test_function<operator_addition_assignment_vd_func>(x2);
-    tests::test_function<operator_addition_assignment_dv_func>(x2);
   }
   
   // operator_addition
@@ -132,20 +132,10 @@ namespace nomad {
   struct operator_division_assignment_vd_func {
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
-      return exp(v / 0.4847);
+      return exp(v /= 0.4847);
       
     }
     static std::string name() { return "operator_division_assignment_vd"; }
-  };
-  
-  template <typename T>
-  struct operator_division_assignment_dv_func {
-    T operator()(const Eigen::VectorXd& x) const {
-      T v = x[0];
-      return exp(0.3898 / v);
-      
-    }
-    static std::string name() { return "operator_division_assignment_dv"; }
   };
   
   void test_operator_division_assignment() {
@@ -159,7 +149,6 @@ namespace nomad {
     x2 *= 0.576;
     
     tests::test_function<operator_division_assignment_vd_func>(x2);
-    tests::test_function<operator_division_assignment_dv_func>(x2);
   }
   
   // operator_division
@@ -168,7 +157,7 @@ namespace nomad {
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
-      return v1 / v2;
+      return exp(v1 / v2);
       
     }
     static std::string name() { return "operator_division_vv"; }
@@ -208,41 +197,257 @@ namespace nomad {
     tests::test_function<operator_division_dv_func>(x2);
   }
   
-  // operator_multiply
+  // operator_multiplication_assignment
   template <typename T>
-  struct operator_multiply_func {
+  struct operator_multiplication_assignment_vv_func {
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
-      return v1 * exp(v1) * exp(v2) * v2;
-      
+      return exp(v1 *= v2);
     }
-    static std::string name() { return "operator_multiply"; }
+    static std::string name() { return "operator_multiplication_assignment_vv"; }
   };
   
-  void test_operator_multiply() {
-    Eigen::VectorXd x = Eigen::VectorXd::Ones(2);
-    x *= 0.576;
-    tests::test_function<operator_multiply_func>(x);
-  }
-    
-  // operator unary_negative
   template <typename T>
-  struct operator_unary_negative_func {
+  struct operator_multiplication_assignment_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(v *= 0.4847);
+      
+    }
+    static std::string name() { return "operator_multiplication_assignment_vd"; }
+  };
+  
+  void test_operator_multiplication_assignment() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<operator_multiplication_assignment_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<operator_multiplication_assignment_vd_func>(x2);
+  }
+  
+  // operator_multiplication
+  template <typename T>
+  struct operator_multiplication_vv_func {
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
-      return - exp(v1);
+      T v2 = x[1];
+      return exp(v1 * v2);
       
     }
-    static std::string name() { return "operator_unary_negative"; }
+    static std::string name() { return "operator_multiplication_vv"; }
   };
   
-  void test_operator_unary_negative() {
-    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
-    x *= 0.576;
-    tests::test_function<operator_unary_negative_func>(x);
+  template <typename T>
+  struct operator_multiplication_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(v * 0.4847);
+      
+    }
+    static std::string name() { return "operator_multiplication_vd"; }
+  };
+  
+  template <typename T>
+  struct operator_multiplication_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(0.3898 * v);
+      
+    }
+    static std::string name() { return "operator_multiplication_dv"; }
+  };
+  
+  void test_operator_multiplication() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<operator_multiplication_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<operator_multiplication_vd_func>(x2);
+    tests::test_function<operator_multiplication_dv_func>(x2);
+  }
+  
+  // operator_subtraction_assignment
+  template <typename T>
+  struct operator_subtraction_assignment_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return exp(v1 -= v2);
+    }
+    static std::string name() { return "operator_subtraction_assignment_vv"; }
+  };
+  
+  template <typename T>
+  struct operator_subtraction_assignment_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(v -= 0.4847);
+      
+    }
+    static std::string name() { return "operator_subtraction_assignment_vd"; }
+  };
+  
+  void test_operator_subtraction_assignment() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<operator_subtraction_assignment_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<operator_subtraction_assignment_vd_func>(x2);
+  }
+  
+  // operator_subtraction
+  template <typename T>
+  struct operator_subtraction_vv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      T v2 = x[1];
+      return exp(v1 - v2);
+      
+    }
+    static std::string name() { return "operator_subtraction_vv"; }
+  };
+  
+  template <typename T>
+  struct operator_subtraction_vd_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(v - 0.4847);
+      
+    }
+    static std::string name() { return "operator_subtraction_vd"; }
+  };
+  
+  template <typename T>
+  struct operator_subtraction_dv_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return exp(0.3898 - v);
+      
+    }
+    static std::string name() { return "operator_subtraction_dv"; }
+  };
+  
+  void test_operator_subtraction() {
+    Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+    x1[0] *= 0.576;
+    x1[1] *= -0.294;
+    
+    tests::test_function<operator_subtraction_vv_func>(x1);
+    
+    Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
+    x2 *= 0.576;
+    
+    tests::test_function<operator_subtraction_vd_func>(x2);
+    tests::test_function<operator_subtraction_dv_func>(x2);
   }
 
+  // operator_unary_decrement
+  template <typename T>
+  struct operator_unary_decrement_prefix_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(++v1);
+      
+    }
+    static std::string name() { return "operator_unary_decrement_prefix"; }
+  };
+  
+  template <typename T>
+  struct operator_unary_decrement_postfix_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(v1++);
+      
+    }
+    static std::string name() { return "operator_unary_decrement_postfix"; }
+  };
+  
+  void test_operator_unary_decrement() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<operator_unary_decrement_prefix_func>(x);
+    tests::test_function<operator_unary_decrement_postfix_func>(x);
+  }
+  
+  // operator_unary_increment
+  template <typename T>
+  struct operator_unary_increment_prefix_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(++v1);
+      
+    }
+    static std::string name() { return "operator_unary_increment_prefix"; }
+  };
+  
+  template <typename T>
+  struct operator_unary_increment_postfix_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(v1++);
+      
+    }
+    static std::string name() { return "operator_unary_increment_postfix"; }
+  };
+  
+  void test_operator_unary_increment() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<operator_unary_increment_prefix_func>(x);
+    tests::test_function<operator_unary_increment_postfix_func>(x);
+  }
+  
+  // operator_unary_minus
+  template <typename T>
+  struct operator_unary_minus_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(-v1);
+      
+    }
+    static std::string name() { return "operator_unary_minus"; }
+  };
+  
+  void test_operator_unary_minus() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<operator_unary_minus_func>(x);
+  }
+
+  // operator_unary_plus
+  template <typename T>
+  struct operator_unary_plus_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v1 = x[0];
+      return exp(+v1);
+      
+    }
+    static std::string name() { return "operator_unary_plus"; }
+  };
+  
+  void test_operator_unary_plus() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 0.576;
+    tests::test_function<operator_unary_plus_func>(x);
+  }
+
+  
 }
 
 #endif
