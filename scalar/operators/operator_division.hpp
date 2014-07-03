@@ -101,8 +101,6 @@ namespace nomad {
     push_inputs(v1.dual_numbers());
     
     if (autodiff_order >= 1) push_partials(y_inv);
-    if (autodiff_order >= 2) push_partials(0);
-    if (autodiff_order >= 3) push_partials(0);
     
     return var<autodiff_order>(next_body_idx_ - 1);
     

@@ -52,34 +52,6 @@ namespace nomad {
     return v1;
     
   }
-
-  template <short autodiff_order>
-  inline var<autodiff_order> operator/=(double x,
-                                        const var<autodiff_order>& v2) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-    unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
-    
-    double y_inv = 1.0 / v2.first_val();
-    double val = x * y_inv;
-    
-    push_dual_numbers<autodiff_order>(val);
-    
-    push_inputs(v2.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(val *= - y_inv);
-    if (autodiff_order >= 2) push_partials(val *= - 2 * y_inv);
-    if (autodiff_order >= 3) push_partials(val *= -3 * y_inv);
-    
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
   
   template <short autodiff_order>
   inline var<autodiff_order>& operator/=(var<autodiff_order>& v1,
@@ -102,8 +74,6 @@ namespace nomad {
     push_inputs(v1.dual_numbers());
     
     if (autodiff_order >= 1) push_partials(y_inv);
-    if (autodiff_order >= 2) push_partials(0);
-    if (autodiff_order >= 3) push_partials(0);
     
     v1.set_body(next_body_idx_ - 1);
     return v1;
