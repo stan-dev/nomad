@@ -1,135 +1,170 @@
-\chapter{Automatic Differentiation}
+\chapter{Dual Numbers and the Theory of Automatic Differentiation}
 
-\section{Dual Numbers and the Theory of Automatic Differentiation}
+Automatic differentiation is a tool for automating the chain rule when computing
+derivatives of complex functions.  In particular, automatic differentiation techniques
+utilize \textit{dual numbers} to factor analytic manipulations, i.e. the computation of
+partial derivatives, from the algebraic manipulations that can be programmatically
+automated.
 
-Notation!  Including an explanation of notation like $f \! \left( x_{i} \right)$.
+In this note we review the theory behind dual numbers and automatic differentiation
+and then explicitly derive the manipulations required for first, second, and third-order
+derivative calculations.
 
-Automatic differentiation (autodiff) is a tool for automating the chain rule when 
-computing derivatives of complex, composite functions.  As one moves to higher 
-derivatives the construction of autodiff becomes significantly more difficult and 
-obfuscates computationally efficient implementations.
+\section{Notation}
 
-In this note I will take advantage of the \textit{dual number} perspective of autodiff
-to simplify the construction and implementation of various higher-order derivations.
-After discussing the basics of dual numbers and how they can be used to derive
-automatic differentiation, I'll review first, second, and third-order implementations.
-
-\section*{Dual Numbers}
-
-Dual numbers are an extension of the real numbers, $\mathbb{R}$, given by the
-addition of a new element, $\mathbf{a}$,%
-%
-\footnote{In this note bold face will refer to the dual units while the regular
-typeface will correspond to elements of $\mathbb{R}$.  I will also reserve
-roman letters for real numbers and greek letters for dual numbers.}
-%
-which is nilpotent, $\mathbf{a}^{2} = 0$. I will refer to this new element as a \textit{dual unit}.
-
-This extended space of dual numbers forms a two-dimensional associative algebra 
-over the reals; in other words, the addition of the dual unit generates a two-dimensional
-space, $\mathbb{D}$, with elements
+Here frakturs refers to dual units,  roman letters are reserved for real numbers, and greek 
+letters are used for dual numbers.  Subscripts denote components while bold face denote 
+collections; for example, a many-to-one function,
 %
 \begin{equation*}
-\xi = x + \mathbf{a} \, \delta x; \, \xi \in \mathbb{D}, \, x, \delta x \in \mathbb{R}
+f : \mathbb{R}^{n} \rightarrow \mathbb{R},
 \end{equation*}
 %
-equipped with addition and multiplication operations,
+is written as
+%
+\begin{equation*}
+f \! \left( x_{1}, \ldots, x_{n} \right) \equiv f \! \left( \mathbf{x} \right),
+\end{equation*} 
+%
+while the components of a many-to-many function,
+%
+\begin{equation*}
+f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m},
+\end{equation*}
+%
+are written as
+%
+\begin{equation*}
+f_{j} \! \left( x_{1}, \ldots, x_{n} \right) \equiv f_{j} \! \left( \mathbf{x} \right), \, j \in 1, \ldots, m.
+\end{equation*} 
+
+\section{Dual Numbers}
+
+Dual numbers are an extension of the real numbers, $\mathbb{R}$, given by the
+addition of a new element, $\mathfrak{a}$, which is nilpotent, $\mathfrak{a}^{2} = 0$,
+and denoted a \textit{dual unit}.
+
+This extended space of dual numbers forms a two-dimensional associative algebra 
+over the reals.  In other words, the addition of the dual unit generates a two-dimensional
+space, $\mathbb{D}$, comprised of elements,
+%
+\begin{equation*}
+\xi = x + \mathfrak{a} \, \delta x; \, \xi \in \mathbb{D}, \, x, \delta x \in \mathbb{R},
+\end{equation*}
+%
+that are naturally equipped with addition and multiplication operations,
 %
 \begin{align*}
-\xi_{1} + \xi_{2} &= \left( x_{1} + \mathbf{a} \, \delta x_{1} \right) + \left( x_{2} + \mathbf{a} \,  \delta x_{2} \right) 
+\xi_{1} + \xi_{2} 
+&=
+ \left( x_{1} + \mathfrak{a} \, \delta x_{1} \right) 
+ + \left( x_{2} + \mathfrak{a} \,  \delta x_{2} \right) 
 \\
-&= \left( x_{1} + x_{2} \right) + \mathbf{a} \left( \delta x_{1} + \delta x_{2} \right) 
+&=
+\left( x_{1} + x_{2} \right) 
++ \mathfrak{a} \left( \delta x_{1} + \delta x_{2} \right) 
 \\
 \xi_{1} \cdot \xi_{2} 
-&= \left( x_{1} + \mathbf{a} \, \delta x_{1} \right) \cdot \left( x_{2} + \mathbf{a} \, \delta x_{2} \right) 
+&= 
+\left( x_{1} + \mathfrak{a} \, \delta x_{1} \right) 
+\cdot \left( x_{2} + \mathfrak{a} \, \delta x_{2} \right) 
 \\
-&= x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathbf{a} + \delta x_{1} \delta x_{2} \, \mathbf{a}^{2} 
+&= 
+x_{1} x_{2} + \left( x_{1} \delta x_{2} 
++ \delta x_{1} x_{2} \right) \mathfrak{a} 
++ \delta x_{1} \delta x_{2} \, \mathfrak{a}^{2} 
 \\
-&= x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathbf{a}.
+&= 
+x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathfrak{a}.
 \end{align*}  
-
-Note that, because the dual unit is nilpotent, we cannot define an inverse to multiplication.  
+%
+Because the dual unit is nilpotent, we cannot define an inverse to multiplication.  
 Mathematically this means that the dual numbers form only a local ring; compare this to 
 the complex numbers on which we can define division and whose associative algebra is a field.
 
 Dual numbers have many uses in mathematics and physics, but here we will focus on their
 relationship to functions.  Any smooth function $f : \mathbb{R} \rightarrow \mathbb{R}$ 
 induces a function on the dual numbers, $f : \mathbb{D} \rightarrow \mathbb{D}$, 
-via a Taylor series around any purely real point, $\xi_{0} = x_{0} + \mathbf{a} \, 0$,
+via a Taylor series around any purely real point, $\xi_{0} = x_{0} + \mathfrak{a} \, 0$,
 %
 \begin{align*}
 f \! \left( \xi \right) 
 &= 
 \sum_{n = 0}^{\infty} \frac{ \left( \xi - \xi_{0} \right)^{n} }{n!} 
-\frac{ \partial^{n} f }{ \partial \xi^{n} } \! \left( \xi = \xi_{0} \right) 
+\frac{ \partial^{n} f }{ \partial \xi^{n} } \! \left( \xi_{0} \right) 
 \\
 &= 
-\sum_{n = 0}^{\infty} \frac{ \left( \left( x - x_{0} \right) + \mathbf{a} \, \delta x \right)^{n} }{n!} 
+\sum_{n = 0}^{\infty} \frac{ \left( \left( x - x_{0} \right) + \mathfrak{a} \, \delta x \right)^{n} }{n!} 
 \frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right)
 \\
 &= 
 \sum_{n = 0}^{\infty} \frac{ \left( x - x_{0} \right)^{n} }{n!} 
 \frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right)
-+ \mathbf{a} \, \delta x \sum_{n = 0}^{\infty} \frac{ \left( x - x_{0} \right)^{n - 1} }{\left( n - 1 \right)!} 
++ \mathfrak{a} \, \delta x \sum_{n = 0}^{\infty} \frac{ \left( x - x_{0} \right)^{n - 1} }{\left( n - 1 \right)!} 
 \frac{ \partial^{n} f }{ \partial x^{n} } \! \left( x_{0} \right) 
 \\
 &= 
 f \! \left( x \right) 
-+ \mathbf{a} \, \delta x \frac{ \partial f }{ \partial x } \! \left( x \right).
++ \mathfrak{a} \, \delta x \frac{ \partial f }{ \partial x } \! \left( x \right).
 \end{align*}
 %
-Extending a function to dual numbers requires not just the value of the function
-but also its derivatives!  The second component of dual numbers formalizes
-the intuitive concept of an ``infinitesimal'' in that any product of more than one
-will vanish by construction.
+Evaluating a function at a dual number yields not just the value of the function but
+also its best linear approximation; the dual unit can be thought of as formalizing the 
+intuitive concept of an ``infinitesimal''.
 
 The generalization to multivariate functions is straightforward: any function 
 $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ is first decomposed into $m$
-functions $f_{i} : \mathbb{R}^{n} \rightarrow \mathbb{R}$ which generalize
+functions, $f_{i} : \mathbb{R}^{n} \rightarrow \mathbb{R}$, which generalize
 to dual numbers as
 %
 \begin{equation} \label{dualFunction}
-f_{i} \! \left( \xi_{j} \right) = f_{i} \! \left( x_{j} \right) 
-+ \mathbf{a} \sum_{j = 1}^{n} \delta x_{j} \frac{ \partial f_{i} \! \left( x_{j} \right) }{ \partial x_{j} }.
+f_{i} \! \left( \mbox{\boldmath{$\xi$}} \right) = f_{i} \! \left( \mathbf{x} \right) 
++ \mathfrak{a} \sum_{j = 1}^{n} 
+\delta x_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \mathbf{x} \right).
 \end{equation}
 %
-Note that in the general case the extension does not require the full Jacobian, 
-$ \partial f_{i} \! \left( x_{j} \right) \! / \partial x_{j}$, but rather its inner product with 
-$\delta x_{j}$.
+As in the univariate case, the dual component is given by the best linear approximation 
+of the function, or its \textit{directional derivative along $\delta \mathbf{x}$}.  This is a
+linear process, mapping the input vector $\delta \mathbf{x}$ through the Jacobian, 
+$J : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$, a linear map with components
+$J_{ij} = \partial f_{i} / \partial x_{j}$.
 
-The power of extending functions to dual numbers is the implicit incorporation of 
-the chain rule. A composition of the functions $f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ 
-and $g : \mathbb{R}^{m} \rightarrow \mathbb{R}^{p}$, for example, becomes
+This pattern continues to the composition of functions.  For example, if 
+$f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$ and 
+$g : \mathbb{R}^{m} \rightarrow \mathbb{R}^{p}$, then the composition $g \circ f$
+is given by the components,
 %
 \begin{align*}
-g_{i} \! \left( f_{j} \! \left( \xi_{k} \right) \right)
+g_{i} \! \left( \mathbf{f} \! \left( \mbox{\boldmath{$\xi$}} \right) \right)
 &= 
-g_{i} \! \left( f_{j} \! \left( x_{k} + \mathbf{a} \, \delta x_{k} \right) \right)
+g_{i} \! \left( \mathbf{f} \! \left( \mathbf{x} + \mathfrak{a} \, \delta \mathbf{x} \right) \right)
 \\
 &=
-g_{i} \! \left( f_{j} \! \left( x_{k} \right) 
-+ \mathbf{a} \, \sum_{k} \delta x_{k} \frac{ \partial f_{j} }{ \partial x_{k} } \! \left( x_{k} \right) \right)
+g_{i} \! \left( \mathbf{f} \! \left( \mathbf{x} \right) 
++ \mathfrak{a} \, \sum_{k} \delta x_{k} 
+\frac{ \partial \mspace{1mu} \mathbf{f} }{ \partial x_{k} } \! \left( \mathbf{x} \right) \right)
 \\
 &=
-g_{i} \! \left( f_{j} \! \left( x_{k} \right) \right)
-+ \mathbf{a} \, \sum_{k} \delta x_{k} 
-\frac{ \partial g_{i} }{ \partial f_{j} }  \! \left( f_{j} \! \left( x_{k} \right) \right)
-\frac{ \partial f_{j} }{ \partial x_{k} } \! \left( x_{k} \right):
+g_{i} \! \left( \mathbf{f} \! \left( \mathbf{x} \right) \right)
++ \mathfrak{a} \, \sum_{k} \delta x_{k} 
+\frac{ \partial g_{i} }{ \partial f_{j} }  \! \left( \mathbf{f} \! \left( \mathbf{x} \right) \right)
+\frac{ \partial f_{j} }{ \partial x_{k} } \! \left( \mathbf{x} \right).
 \end{align*}
 %
-the second component is just $\sum_{k} \delta x_{k} \partial g_{i} / \partial x_{k} $ 
-as would have been computed by the chain rule.  The real utility of dual numbers is 
-that they factor the chain rule into the purely differential operations (computing partial
-derivatives) and the purely algebraic operations (addition and multiplication), which 
-allows for a straightforward algorithmic implementation.
+As expected, the dual component of the composition is the best linear approximation
+of the composite function, mapping $\delta \mathbf{x}$ through the Jacobians of both
+functions.  It is also, however, exactly the result of evaluating the chain rule through
+the composition.  Any implementation of dual number-valued functions implicitly provides 
+an automated computation of the chain rule!
 
-\section*{First-Order Automatic Differentiation}
+\section{First-Order Automatic Differentiation}
 
-Automatic differentiation implements the propagation of dual numbers through a
-composite function and, consequently, the chain rule.  We begin by transforming
-a composite function into an \textit{expression graph}, where each node is given
-by a dual number intermediate to the calculation and edges denote the 
-dependencies of the functions (Figure \ref{fig:exprGraph}).
+Automatic differentiation implements dual number-valued functions and their 
+composition in order to automate the evaluation of the chain rule.  Here we take
+advantage of the fact that any function can be represented by an 
+\textit{expression graph}, with nodes designating dual numbers and edges denote 
+functional dependencies (Figure \ref{fig:exprGraph}), where the evaluation of the 
+function reduces to the propagation of the dual numbers through the graph.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -187,34 +222,27 @@ generates a three level graph.
 \label{fig:exprGraph} 
 \end{figure}
 
-Once the expression graph has been constructed the evaluation of the function
-reduces to propagating the values of the dual numbers along the edges.  The
-directionality of the messages at each node is not constrained, but in practice we 
-typically consider passing all messages \textit{forward} with the evaluation and passing
-all messages \textit{reverse} to the evaluation.
+In general the directionality of the propagation is not constrained, but in practice we 
+typically consider only propagating dual numbers \textit{forward} with the evaluation
+or \textit{reverse} to the evaluation.
 
-\subsection*{Forward Mode}
+\subsection{Forward Mode}
 
-Note that the second component of a dual number-valued function is really
-a directional derivative, mapping the input vector $\delta x_{j}$ to
-$\sum_{k} \delta x_{k} \partial f_{j} / \partial x_{k}$.  In other words,
-the Jacobian is a map $J: \mathbb{R}^{n} \rightarrow \mathbb{R}^{m}$.
-
-In forward mode autodiff we propagate $\delta x_{j}$ defined at the inputs
-forward through the expression graph using the Jacobian map at each
+In forward mode automatic differentiation, the components of $\delta x_{j}$ defined at 
+the roots are propagated forward through the expression graph using the Jacobian map at each
 node (Figure \ref{fig:directions}).  Following the literature we will refer to the components of the dual
 numbers as \textit{values},
 %
 \begin{equation*}
 \mathcal{V} \! \left( \xi \right) 
-= \mathcal{V} \! \left( x + \mathbf{a} \, \delta x \right) 
+= \mathcal{V} \! \left( x + \mathfrak{a} \, \delta x \right) 
 = x,
 \end{equation*}
 %
 and \textit{tangents} or \textit{perturbations},
 \begin{equation*}
 \mathcal{T} \! \left( \xi \right) 
-= \mathcal{T} \! \left( x + \mathbf{a} \, \delta x \right) 
+= \mathcal{T} \! \left( x + \mathfrak{a} \, \delta x \right) 
 = \delta x,
 \end{equation*}
 %
@@ -274,10 +302,10 @@ respectively.
 %
 \end{picture} 
 \caption{
-In forward mode autodiff the Jacobian propagates directional derivatives, 
-$\mathcal{T} \! \left( \xi \right)$ forward in the same direction as the
-values, $\mathcal{V} \! \left( \xi \right)$.  Reverse mode autodiff, on 
-the other hand, uses the adjoint Jacobian to propagate adjoint directional 
+In forward mode automatic differentiation the Jacobian propagates directional 
+derivatives, $\mathcal{T} \! \left( \xi \right)$ forward in the same direction as the
+values, $\mathcal{V} \! \left( \xi \right)$.  Reverse mode automatic differentiation, 
+on the other hand, uses the adjoint Jacobian to propagate adjoint directional 
 derivatives, $\mathcal{A} \! \left( \xi \right)$, backwards against the 
 values, $\mathcal{V} \! \left( \xi \right)$.
 }
@@ -303,14 +331,14 @@ numbers as denoted \textit{values},
 %
 \begin{equation*}
 \mathcal{V} \! \left( \xi \right) 
-= \mathcal{V} \! \left( x + \mathbf{a} \, \mathrm{d} x \right) 
+= \mathcal{V} \! \left( x + \mathfrak{a} \, \mathrm{d} x \right) 
 = x,
 \end{equation*}
 %
 and \textit{adjoints} or \textit{sensitivities},
 \begin{equation*}
 \mathcal{A} \! \left( \xi \right) 
-= \mathcal{A} \! \left( x + \mathbf{a} \, \mathrm{d} x \right) 
+= \mathcal{A} \! \left( x + \mathfrak{a} \, \mathrm{d} x \right) 
 = \mathrm{d} x,
 \end{equation*}
 %
@@ -344,11 +372,11 @@ One substantial advantage of dual numbers is that they dramatically ease the
 manipulation of higher-order variants of the chain rule.  In order to go to 
 higher-order, however, we need to introduce nested dual numbers.
 
-For example, let $\mathbf{a}$ and $\mathbf{b}$ be two distinct dual units.
+For example, let $\mathfrak{a}$ and $\mathfrak{b}$ be two distinct dual units.
 A first-order dual number,
 %
 \begin{equation*}
-\zeta_{i} = z_{i} + \mathbf{a} \, \delta z_{i},
+\zeta_{i} = z_{i} + \mathfrak{a} \, \delta z_{i},
 \end{equation*}
 %
 then becomes a second-order dual number by replacing the 
@@ -359,11 +387,11 @@ dual unit,
 \zeta_{i} 
 &=
 \xi_{i} 
-&&+ \mathbf{a} \, \eta_{i}
+&&+ \mathfrak{a} \, \eta_{i}
 \\
 &=
-\left( x_{i} + \mathbf{b} \, \delta x_{i} \right)
-&&+ \mathbf{a} \left( \delta y_{i} + \mathbf{b} \, \delta^{2} y_{i} \right).
+\left( x_{i} + \mathfrak{b} \, \delta x_{i} \right)
+&&+ \mathfrak{a} \left( \delta y_{i} + \mathfrak{b} \, \delta^{2} y_{i} \right).
 \end{alignat*}
 %
 I will refer to $x_{i}$ as the first value, $\delta x_{i}$ as the first gradient, 
@@ -431,11 +459,11 @@ first-order extension: given the dual number
 \zeta_{i} 
 &=
 \xi_{i} 
-&&+ \mathbf{a} \, \eta_{i}
+&&+ \mathfrak{a} \, \eta_{i}
 \\
 &=
-\left( x_{i} + \mathbf{b} \, \delta x_{i} \right)
-&&+ \mathbf{a} \left( \delta y_{i} + \mathbf{b} \, \delta^{2} y_{i} \right)
+\left( x_{i} + \mathfrak{b} \, \delta x_{i} \right)
+&&+ \mathfrak{a} \left( \delta y_{i} + \mathfrak{b} \, \delta^{2} y_{i} \right)
 \end{alignat*}
 %
 we have
@@ -444,35 +472,35 @@ we have
 f_{i} \! \left( \zeta_{j} \right)
 =&
 f_{i} \! \left( \xi_{j} \right) 
-+ \mathbf{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
++ \mathfrak{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
 \\
 =&
-f_{i} \! \left( x_{j} + \mathbf{b} \, \delta x_{j} \right) 
-+ \mathbf{a} \sum_{j} \left( \delta y_{j} + \mathbf{b} \, \delta^{2} y_{j} \right)
+f_{i} \! \left( x_{j} + \mathfrak{b} \, \delta x_{j} \right) 
++ \mathfrak{a} \sum_{j} \left( \delta y_{j} + \mathfrak{b} \, \delta^{2} y_{j} \right)
 \frac{ \partial f_{i} }{ \partial x_{j} } 
-\! \left( x_{j} + \mathbf{b} \, \delta x_{j} \right) 
+\! \left( x_{j} + \mathfrak{b} \, \delta x_{j} \right) 
 \\
 =&
 f_{i} \! \left( x_{j} \right) 
-+ \mathbf{b} \sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
++ \mathfrak{b} \sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
 \\
 &+ 
-\mathbf{a} \sum_{j} \left( \delta y_{j} + \mathbf{b} \, \delta^{2} y_{j} \right)
+\mathfrak{a} \sum_{j} \left( \delta y_{j} + \mathfrak{b} \, \delta^{2} y_{j} \right)
 \left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right) + 
-\mathbf{b} \, \sum_{k} \delta x_{k} 
+\mathfrak{b} \, \sum_{k} \delta x_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( x_{j} \right) \right) 
 \\
 =&
 \quad\quad\quad 
 f_{i} \! \left( x_{j} \right) 
 \quad\quad\quad\;\;\;
-+ \mathbf{b} \;\;\;
++ \mathfrak{b} \;\;\;
 \sum_{j} \delta x_{j}  \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
 \\
 &+ 
-\mathbf{a} \left( 
+\mathfrak{a} \left( 
 \sum_{j} \delta y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right) 
-+ \mathbf{b} \left(
++ \mathfrak{b} \left(
 \sum_{j} \delta^{2} y_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( x_{j} \right)
 + \sum_{jk} \delta x_{k} \, \delta y_{j}
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( x_{j} \right)
@@ -540,22 +568,22 @@ Continuing to third-order follows in kind.  Given a third-order dual number,
 \zeta_{i} 
 &=
 && \xi_{i} && && &&
-&&+ \mathbf{a} \, 
+&&+ \mathfrak{a} \, 
 && \eta_{i} && && &&
 \\
 &=
-( && \sigma_{i} && + \mathbf{b} && \tau_{i} &&)
-&&+ \mathbf{a} \,
-( && \upsilon_{i} && + \mathbf{b} && \nu_{i} && )
+( && \sigma_{i} && + \mathfrak{b} && \tau_{i} &&)
+&&+ \mathfrak{a} \,
+( && \upsilon_{i} && + \mathfrak{b} && \nu_{i} && )
 \\
 &=
-(( && s_{i} + \mathbf{c} \, \delta s_{i} )
-&& + \mathbf{b} \;
-( && \delta t_{i} + \mathbf{c} \, \delta^{2} t_{i}  ) &&)
-&&+ \mathbf{a} \;
-(( && \delta u_{i} + \mathbf{c} \, \delta^{2} u_{i} )
-&& + \mathbf{b} \;
-( && \delta^{2} v_{i} + \mathbf{c} \, \delta^{3} v_{i} ) &&)
+(( && s_{i} + \mathfrak{c} \, \delta s_{i} )
+&& + \mathfrak{b} \;
+( && \delta t_{i} + \mathfrak{c} \, \delta^{2} t_{i}  ) &&)
+&&+ \mathfrak{a} \;
+(( && \delta u_{i} + \mathfrak{c} \, \delta^{2} u_{i} )
+&& + \mathfrak{b} \;
+( && \delta^{2} v_{i} + \mathfrak{c} \, \delta^{3} v_{i} ) &&)
 \end{alignat*}
 %
 we have
@@ -565,91 +593,91 @@ f_{i} \! \left( \zeta_{j} \right)
 %
 =&
 f_{i} \! \left( \xi_{j} \right) 
-+ \mathbf{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
++ \mathfrak{a} \sum_{j} \eta_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \xi_{j} \right) 
 \\
 %
 =&
-f_{i} \! \left( \sigma_{j} + \mathbf{b} \, \tau_{j} \right) 
-+ \mathbf{a} \sum_{j} \left( \upsilon_{j} + \mathbf{b} \, \nu_{j} \right)
+f_{i} \! \left( \sigma_{j} + \mathfrak{b} \, \tau_{j} \right) 
++ \mathfrak{a} \sum_{j} \left( \upsilon_{j} + \mathfrak{b} \, \nu_{j} \right)
 \frac{ \partial f_{i} }{ \partial x_{j} } 
-\! \left( \sigma_{j} + \mathbf{b} \, \tau_{j} \right) 
+\! \left( \sigma_{j} + \mathfrak{b} \, \tau_{j} \right) 
 \\
 %
 =&
-f_{i} \! \left( \sigma_{j} \right) + \mathbf{b} 
+f_{i} \! \left( \sigma_{j} \right) + \mathfrak{b} 
 \sum_{j} \tau_{j} \frac{ \partial f_{i} }{ \partial x_{j} } 
 \! \left( \sigma_{j} \right)
-+ \mathbf{a} \sum_{j} \left( \upsilon_{j} + \mathbf{b} \, \nu_{j} \right)
++ \mathfrak{a} \sum_{j} \left( \upsilon_{j} + \mathfrak{b} \, \nu_{j} \right)
 \left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
-+ \mathbf{b} \sum_{k} \tau_{k}
++ \mathfrak{b} \sum_{k} \tau_{k}
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( \sigma_{j} \right) \right) 
 \\
 %
 =&
-f_{i} \! \left( \sigma_{j} \right) + \mathbf{b} 
+f_{i} \! \left( \sigma_{j} \right) + \mathfrak{b} 
 \sum_{j} \tau_{j} \frac{ \partial f_{i} }{ \partial x_{j} } 
 \! \left( \sigma_{j} \right)
-+ \mathbf{a} \sum_{j}
++ \mathfrak{a} \sum_{j}
 \upsilon_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
 \\
-& + \mathbf{a} \, \mathbf{b} \sum_{j}
+& + \mathfrak{a} \, \mathfrak{b} \sum_{j}
  \nu_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( \sigma_{j} \right)
-+ \mathbf{a} \, \mathbf{b} \, \sum_{jk} \upsilon_{j} \tau_{k}
++ \mathfrak{a} \, \mathfrak{b} \, \sum_{jk} \upsilon_{j} \tau_{k}
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( \sigma_{j} \right)
 \\
 %
 =&
-f_{i} \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right) + \mathbf{b} 
-\sum_{j} \left( \delta t_{j} + \mathbf{c} \, \delta^{2} t_{j} \right) 
-\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+f_{i} \! \left( s_{j} + \mathfrak{c} \, \delta s_{j} \right) + \mathfrak{b} 
+\sum_{j} \left( \delta t_{j} + \mathfrak{c} \, \delta^{2} t_{j} \right) 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathfrak{c} \, \delta s_{j} \right)
 \\
 &+ 
-\mathbf{a} \sum_{j}
-\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
-\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\mathfrak{a} \sum_{j}
+\left( \delta u_{j} + \mathfrak{c} \, \delta^{2} u_{j} \right) 
+\frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathfrak{c} \, \delta s_{j} \right)
 \\
-& + \mathbf{a} \, \mathbf{b} \sum_{j}
-\left( \delta^{2} v_{j} + \mathbf{c} \, \delta^{3} v_{j} \right) \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+& + \mathfrak{a} \, \mathfrak{b} \sum_{j}
+\left( \delta^{2} v_{j} + \mathfrak{c} \, \delta^{3} v_{j} \right) \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} + \mathfrak{c} \, \delta s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
-\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
-\left( \delta t_{k} + \mathbf{c} \, \delta^{2} t_{k} \right)
-\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} + \mathbf{c} \, \delta s_{j} \right)
+\mathfrak{a} \, \mathfrak{b} \, \sum_{jk} 
+\left( \delta u_{j} + \mathfrak{c} \, \delta^{2} u_{j} \right) 
+\left( \delta t_{k} + \mathfrak{c} \, \delta^{2} t_{k} \right)
+\frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} + \mathfrak{c} \, \delta s_{j} \right)
 \\
 %
 =&
-f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+f_{i} \! \left( s_{j} \right) + \mathfrak{c} \sum_{j} \delta s_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{b}
-\sum_{j} \left( \delta t_{j} + \mathbf{c} \, \delta^{2} t_{j} \right) 
+\mathfrak{b}
+\sum_{j} \left( \delta t_{j} + \mathfrak{c} \, \delta^{2} t_{j} \right) 
 \left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+  \mathbf{c} \sum_{k} \delta s_{k} 
++  \mathfrak{c} \sum_{k} \delta s_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
 \\
 &+ 
-\mathbf{a} \sum_{j}
-\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
+\mathfrak{a} \sum_{j}
+\left( \delta u_{j} + \mathfrak{c} \, \delta^{2} u_{j} \right) 
 \left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{c} \sum_{k} \delta s_{k} 
++ \mathfrak{c} \sum_{k} \delta s_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
 \\
-& + \mathbf{a} \, \mathbf{b} \sum_{j}
-\left( \delta^{2} v_{j} + \mathbf{c} \, \delta^{3} v_{j} \right) 
+& + \mathfrak{a} \, \mathfrak{b} \sum_{j}
+\left( \delta^{2} v_{j} + \mathfrak{c} \, \delta^{3} v_{j} \right) 
 \left( \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{c} \sum_{k} \delta s_{k} 
++ \mathfrak{c} \sum_{k} \delta s_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
-\left( \delta u_{j} + \mathbf{c} \, \delta^{2} u_{j} \right) 
-\left( \delta t_{k} + \mathbf{c} \, \delta^{2} t_{k} \right)
+\mathfrak{a} \, \mathfrak{b} \, \sum_{jk} 
+\left( \delta u_{j} + \mathfrak{c} \, \delta^{2} u_{j} \right) 
+\left( \delta t_{k} + \mathfrak{c} \, \delta^{2} t_{k} \right)
 \\
 & \quad\quad\quad\quad \times \left(
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
-+ \mathbf{c} \sum_{l} \delta s_{l} 
++ \mathfrak{c} \sum_{l} \delta s_{l} 
 \frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
 \right)
 \\
@@ -660,81 +688,81 @@ f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j}
 f_{i} \! \left( \zeta_{j} \right)
 %
 =&
-f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+f_{i} \! \left( s_{j} \right) + \mathfrak{c} \sum_{j} \delta s_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\mathfrak{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{2} t_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
++ \mathfrak{b} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\mathfrak{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{a} \, \mathfrak{c} \sum_{j} \delta^{2} u_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
++ \mathfrak{a} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \sum_{j} \delta^{2} v_{j} 
+\mathfrak{a} \, \mathfrak{b} \sum_{j} \delta^{2} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
++ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{3} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
++ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\mathfrak{a} \, \mathfrak{b} \, \sum_{jk} 
 \left( \delta u_{j} \delta t_{k}
-+ \mathbf{c} \left(
++ \mathfrak{c} \left(
 \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k} 
 \right) \right)
 \\
 & \quad\quad\quad\quad \times \left(
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
-+ \mathbf{c} \sum_{l} \delta s_{l} 
++ \mathfrak{c} \sum_{l} \delta s_{l} 
 \frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
 \right)
 \\
 %
 =&
-f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+f_{i} \! \left( s_{j} \right) + \mathfrak{c} \sum_{j} \delta s_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\mathfrak{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{2} t_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
++ \mathfrak{b} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\mathfrak{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{a} \, \mathfrak{c} \sum_{j} \delta^{2} u_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
++ \mathfrak{a} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \sum_{j} \delta^{2} v_{j} 
+\mathfrak{a} \, \mathfrak{b} \sum_{j} \delta^{2} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
++ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{3} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
++ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta^{2} v_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} \, \sum_{jk} 
+\mathfrak{a} \, \mathfrak{b} \, \sum_{jk} 
 \delta u_{j} \delta t_{k} \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
-&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk}
+&+ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jk}
 \left( \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
 \\
 &+
-\mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jkl}
+\mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jkl}
 \delta u_{j} \delta t_{k} \, \delta s_{l} 
 \frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
 \\
@@ -745,41 +773,41 @@ f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j}
 f_{i} \! \left( \zeta_{j} \right)
 %
 =&
-f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j} 
+f_{i} \! \left( s_{j} \right) + \mathfrak{c} \sum_{j} \delta s_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{2} t_{j} 
+\mathfrak{b} \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{2} t_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{b} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
++ \mathfrak{b} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta t_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{a} \, \mathbf{c} \sum_{j} \delta^{2} u_{j} 
+\mathfrak{a} \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
++ \mathfrak{a} \, \mathfrak{c} \sum_{j} \delta^{2} u_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
-+ \mathbf{a} \, \mathbf{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
++ \mathfrak{a} \, \mathfrak{c} \sum_{jk} \delta s_{k} \, \delta u_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 &+ 
-\mathbf{a} \, \mathbf{b} 
+\mathfrak{a} \, \mathfrak{b} 
 \left( 
 \sum_{j} \delta^{2} v_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \delta u_{j} \delta t_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \right)
 \\
-&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{j} \delta^{3} v_{j} 
+&+ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{j} \delta^{3} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
 \\
-&+ \mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jk}
+&+ \mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jk}
 \left( 
 \delta s_{k} \, \delta^{2} v_{j} + \delta u_{j} \, \delta^{2} t_{k} + \delta^{2} u_{j} \, \delta t_{k}  \right)
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) 
 \\
 &+
-\mathbf{a} \, \mathbf{b} \, \mathbf{c} \sum_{jkl}
+\mathfrak{a} \, \mathfrak{b} \, \mathfrak{c} \sum_{jkl}
 \delta u_{j} \delta t_{k} \, \delta s_{l} 
 \frac{ \partial^{3} f_{i} }{ \partial x_{j} \partial x_{k} \partial_{l} } \! \left( s_{j} \right)
 \\
@@ -787,39 +815,39 @@ f_{i} \! \left( s_{j} \right) + \mathbf{c} \sum_{j} \delta s_{j}
 =& \hspace{26mm} 
 f_{i} \! \left( s_{j} \right) 
 \hspace{9mm}
-+ \mathbf{c} 
++ \mathfrak{c} 
 \hspace{3mm}
 \sum_{j} \delta s_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \\
 & \hspace{8mm} + 
-\mathbf{b} \left( \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
+\mathfrak{b} \left( \sum_{j} \delta t_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \hspace{1mm}
-+ \mathbf{c} \left( 
++ \mathfrak{c} \left( 
 \sum_{j} \delta^{2} t_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
 + \sum_{jk} \delta s_{k} \, \delta t_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right) \right)
 \\
 &+ 
-\mathbf{a} \Bigg( 
+\mathfrak{a} \Bigg( 
 \hspace{9mm}
 \sum_{j} \delta u_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
-+ \mathbf{c} \left( \sum_{j} \delta^{2} u_{j} 
++ \mathfrak{c} \left( \sum_{j} \delta^{2} u_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
 + \sum_{jk} \delta s_{k} \, \delta u_{j} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right) \right)
 \\
 & 
 \hspace{8mm} 
-+ \mathbf{b} \Bigg(
++ \mathfrak{b} \Bigg(
 \hspace{0.5mm}
 \sum_{j} \delta^{2} v_{j} \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right)
 \delta u_{j} \delta t_{k} 
 \frac{ \partial^{2} f_{i} }{ \partial x_{j} \partial x_{k} } \! \left( s_{j} \right)
 \\
 & \hspace{34mm} 
-+ \mathbf{c} \Bigg(
++ \mathfrak{c} \Bigg(
 \sum_{j} \delta^{3} v_{j} 
 \frac{ \partial f_{i} }{ \partial x_{j} } \! \left( s_{j} \right) 
 \\
