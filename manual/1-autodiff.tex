@@ -1,42 +1,143 @@
-\chapter{Dual Numbers and the Theory of Automatic Differentiation}
+\chapter{The Theory of \\ Automatic Differentiation}
 
-Automatic differentiation is a tool for automating the chain rule when computing
-derivatives of complex functions.  In particular, automatic differentiation techniques
+Automatic differentiation is a tool for automating the evaluation of linear differential
+operators on complex functions.  In particular, automatic differentiation techniques
 utilize \textit{dual numbers} to factor analytic manipulations, i.e. the computation of
 partial derivatives, from the algebraic manipulations that can be programmatically
 automated.
 
-In this note we review the theory behind dual numbers and automatic differentiation
-and then explicitly derive the manipulations required for first, second, and third-order
-derivative calculations.
+In this chapter we review the theory behind linear differential operators, dual numbers,
+and automatic differentiation beginning with first-order evaluations and then generalizing 
+to higher-order manipulations.
 
-\section{Notation}
-
-Here frakturs refers to dual units,  roman letters are reserved for real numbers, and greek 
-letters are used for dual numbers.  Subscripts denote components while bold face denote 
-collections; for example, a many-to-one function,
+Firstly, a quick note on notation.  Here frakturs refers to dual units, roman letters are 
+reserved for real numbers, and greek letters are used for dual numbers.  We consider 
+only maps between Euclidean spaces, $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ 
+for some dimensions $N$ and $M$, with subscripts denoting the coordinates of a point
+and bold face denoting the point itself. For example, a many-to-one function,
 %
 \begin{equation*}
-f : \mathbb{R}^{n} \rightarrow \mathbb{R},
+f : \mathbb{R}^{N} \rightarrow \mathbb{R},
 \end{equation*}
 %
 is written as
 %
 \begin{equation*}
-f \! \left( x_{1}, \ldots, x_{n} \right) \equiv f \! \left( \mathbf{x} \right),
+f \! \left( x_{1}, \ldots, x_{N} \right) \equiv f \! \left( \mathbf{x} \right),
 \end{equation*} 
 %
 while the components of a many-to-many function,
 %
 \begin{equation*}
-f : \mathbb{R}^{n} \rightarrow \mathbb{R}^{m},
+f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M},
 \end{equation*}
 %
 are written as
 %
 \begin{equation*}
-f_{j} \! \left( x_{1}, \ldots, x_{n} \right) \equiv f_{j} \! \left( \mathbf{x} \right), \, j \in 1, \ldots, m.
+f_{m} \! \left( x_{1}, \ldots, x_{N} \right) \equiv f_{m} \! \left( \mathbf{x} \right), \, m \in 1, \ldots, M.
 \end{equation*} 
+
+\section{Linear Differential Operators}
+
+Intuitively, linear differential operators quantify the sensitivity of a function, 
+$f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$, to the perturbation of its inputs.  
+A first-order linear differential operator, for example, maps a function to its \textit{Jacobian},
+%
+\begin{equation*}
+J_{ij} \equiv \frac{ \partial f_{i} }{ \partial x_{j} },
+\end{equation*}
+%
+which then maps a \textit{first-order perturbation} of the inputs, $\delta \mathbf{x}$, 
+to a first-order perturbation of the outputs,
+%
+\begin{align*}
+\delta f_{m} 
+&=
+\sum_{n= 1}^{N} J_{mn} \delta x_{n}
+\\
+&= 
+\sum_{n= 1}^{N} \frac{ \partial f_{m} }{ \partial x_{n} } \delta x_{n}, \, m \in 1, \ldots, M.
+\end{align*} 
+%
+Alternatively we can use the \textit{adjoint Jacobian} to map \textit{first-order sensitivities}
+of the outputs into first-order sensitivities of the inputs,
+%
+\begin{align*}
+\mathrm{d} x_{n} 
+&= 
+\sum_{m = 1}^{M} J^{T}_{nm} \mathrm{d} f_{m}
+\\
+&=
+\sum_{m = 1}^{M} J_{mn} \mathrm{d} f_{m}
+\\
+&=
+\sum_{m = 1}^{M} \frac{ \partial f_{m} }{ \partial x_{n} } \mathrm{d} f_{m}, \, n \in 1, \ldots, N.
+\end{align*}
+
+At second-order we have to consider not just second-order perturbations but also the 
+contributions arising from the interaction of first-order perturbations.  The resulting 
+maps become substantially more cumbersome, such as
+%
+\begin{equation*}
+\delta^{2} f_{m} 
+= \sum_{n = 1}^{N} \frac{ \partial f_{m} }{ \partial x_{n} } \delta^{2} x_{n} 
++ \sum_{n = 1}^{N} \sum_{n' = 1}^{N} 
+\frac{ \partial^{2} f_{m} }{ \partial x_{n} \partial x_{n'} } 
+\delta x_{n} \delta x_{n'}.
+\end{equation*}
+
+In practice these operations are incredibly useful because they provide a means of
+constructing differential objects, such as direction derivatives, gradients, and Hessians, 
+that are ubiquitous in many fields.  For instance, given a many-to-one function,
+$f : \mathbb{R}^{N} \rightarrow \mathbb{R}$, the propagation of first-order perturbations
+gives a directional derivative,
+%
+\begin{equation*}
+\delta f = \sum_{n = 1}^{N} \frac{ \partial f }{ \partial x_{n} } \delta x_{n},
+\end{equation*}
+%
+while the adjoint mapping of first-order sensitivities yields the components of the gradient,
+%
+\begin{equation*}
+\mathrm{d} x_{i} = \frac{ \partial f }{ \partial x_{i} } \mathrm{d} f.
+\end{equation*}
+
+Although conceptually straightforward, the computation and propagation of perturbations and 
+sensitivities for complex, composite functions is an arduous and error-prone undertaking, especially
+when we consider higher-order operators.  Fortunately, dual numbers implicitly incorporate these 
+manipulations and allows for their automation.
+
+\begin{tcolorbox}[colback=gray90,colframe=gray90, coltitle=black,
+title=\textbf{Geometric Interpretation of Linear Differential Operators}]
+
+In the previous discussion the difference between perturbations and sensitivities, and 
+consequently Jacobians and their adjoints, was subtle, and this can often be
+confusing to those unfamiliar with the automatic differentiation literature.  Once we
+generalize beyond Euclidean spaces the differences become much more apparent.
+
+\parindent=15pt
+
+Linear differential operators naturally arise on smooth manifolds,
+in particular let $\mathcal{M}$ and $\mathcal{N}$ be smooth manifolds with 
+$f : \mathcal{M} \rightarrow \mathcal{N}$ a smooth function between them.  Geometrically,
+first-order perturbations are elements of the tangent bundle, $T \mathcal{M}$, and the 
+pushforward of $f$, $ \left( \mathrm{d} f \right)_{*} : T\mathcal{M} \rightarrow T \mathcal{N}$ 
+propagates them to perturbations on $T \mathcal{N}$.  Conversely, first-order sensitivities are
+elements of the cotangent bundle, $T^{*} \mathcal{N}$, and the adjoint map that propagates
+them to input sensitivities is given by the pull back,
+$ \left( \mathrm{d} f \right)^{*} : T^{*} \mathcal{N} \rightarrow T^{*} \mathcal{N}$.
+
+In the special case of a Euclidean space, the manifold, its tangent spaces, and its cotangent
+spaces are naturally identified by the canonical metric,
+%
+\begin{equation*}
+\mathcal{M} \cong T \mathcal{M} \cong T^{*} \mathcal{M},
+\end{equation*}
+%
+which explains why the objects appear largely interchangeable.
+
+\end{tcolorbox}
 
 \section{Dual Numbers}
 
