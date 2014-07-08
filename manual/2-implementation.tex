@@ -1,15 +1,90 @@
 \chapter{Implementation}
 
+Code-generation and operator overloading.  References.
+
+Existing approaches.  Reverse and forward mode types,
+computation of partials on the fly.  Slooooooooow at higher-order.  
+
+Nomad represents expression graph as a series of stacks,
+storing intermediate evaluations like partial derivatives and
+dual number components to optimize higher-order calculations.
+
 \section{Architecture}
 
-Representation of node with varbody.
+Need to represent expression graph, namely the dual numbers
+at each node and the dependencies between them.
 
-Stacks.
+\subsection{Representing the Expression Graph With Stacks}
 
-var body, indices and methods
+Once topologically sorted the nodes can be readily stored in
+a linear stack, with each node storing its dual number, addresses
+to inputs, and the partial derivatives.
 
-dual numbers, multiplicities as a function of autodiff order
+Pictorial example of topological sort of expression graph used
+in autodiff section.
 
-inputs as indices to dual numbers
+Forward and reverse sweeps are then readily implemented by
+running up and down the stack, propagating the dual numbers.
 
-partials and sparse storage.
+Only problem is that the storage will be dynamic, depending on the
+function each node represents, the autodiff order, etc.  Instead
+we separate out the storage into separate stacks that can more
+easily handle the dynamic memory.
+
+\subsubsection{Dual Number Stack}
+
+Dual number multiplicities as function of autodiff order.
+
+Storage examples for first and second order.
+
+x1, dx1, x2, dx2
+
+x1, dx2, dy1, d2y1, x2, dx2, dy2, d2y2.
+
+\subsubsection{Input Stack}
+
+Points to dual numbers of inputs nodes.
+
+Example for two cases above.
+
+\subsubsection{Partials Stack}
+
+Store first, second, and third-order partial derivatives if
+necessary (may not be).
+
+Sparse storage pattern.
+
+\subsubsection{Var Body Stack}
+
+Pointers to dual numbers, inputs, and partials, number of inputs.
+
+Methods for propagating perturbations and sensitivities.
+
+Possible specializations for optimized propagation routines.
+
+Image of architecture.
+
+\subsection{Building the Expression Graph}
+
+The var class.
+
+User-facing class, points to corresponding varbody,
+responsible for pushing relevant values onto each stack.
+
+Push varbody using an arena-based memory allocation.
+Allocation space for storage stacks as well, if necessary.
+
+Leaf example.
+
+Function example.
+
+\section{User Interface}
+
+Functional/functor pattern.
+
+User defines a functor as a stateless template class implementing T operator().
+
+Differential operations are implemented as functionals,
+calling the overloaded() with the appropriate var template specialization
+to build the expression graph and then sweep to compute the desired
+operation.
