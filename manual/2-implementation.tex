@@ -20,8 +20,72 @@ Once topologically sorted the nodes can be readily stored in
 a linear stack, with each node storing its dual number, addresses
 to inputs, and the partial derivatives.
 
-Pictorial example of topological sort of expression graph used
-in autodiff section.
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 20)
+%
+%\put(0, 0) { \framebox(50, 20){} }
+%\put(25, 0) { \framebox(25, 30){} }
+%\put(25, 0) { \framebox(6.25, 30){} }
+%\put(25, 0) { \framebox(12.5, 30){} }
+%\put(25, 0) { \framebox(18.75, 30){} }
+%
+%\put(25, 0) { \framebox(3.125, 30){} }
+%\put(25, 0) { \framebox(9.375, 30){} }
+%\put(25, 0) { \framebox(15.625, 30){} }
+%
+% Expression Graph
+%
+\put(6.25, 2.5) { \circle{4} }
+\put(6.25, 2.5) { \makebox(0, 0) {$ x_{1} $} }
+%
+\put(12.5, 2.5) { \circle{4} }
+\put(12.5, 2.5) { \makebox(0, 0) { $ x_{2} $ } }
+%
+\put(18.75, 2.5) { \circle{4} }
+\put(18.75, 2.5) { \makebox(0, 0) { $ x_{3} $ } }
+%
+\put(6.25, 4.5) { \vector(3, 4){2.75} }
+\put(12.5, 4.5) { \vector(-3, 4){2.75} }
+\put(12.5, 4.5) { \vector(3, 4){2.75} }
+\put(18.75, 4.5) { \vector(-3, 4){2.75} }
+%
+\put(10, 10) {\circle{4} } % Tweaked to the right
+\put(9.375, 10) { \makebox(0, 0) { $y_{1}$ } }
+%
+\put(16.25, 10) {\circle{4} } % Tweaked to the right
+\put(15.625, 10) { \makebox(0, 0) { $y_{2}$ } }
+%
+\put(9.375, 12) { \vector(3, 4){2.75} }
+\put(15.625, 12) { \vector(-3, 4){2.75} }
+%
+\put(13, 17.5) {\circle{4} } % Tweaked to the right
+\put(12.5, 17.5) { \makebox(0, 0) { $ z $ } }
+%
+% Middle Arrow
+%
+\put(21.875, 10) { \thicklines \vector(1, 0){6.25} }
+%
+% Stack
+%
+\put(33.5, 4) { \framebox(8, 2){ $x_{1}$} }
+\put(33.5, 6) { \framebox(8, 2){ $x_{2}$ } }
+\put(33.5, 8) { \framebox(8, 2){ $x_{3}$ } }
+\put(33.5, 10) { \framebox(8, 2){ $y_{1}$ } }
+\put(33.5, 12) { \framebox(8, 2){ $y_{2}$ } }
+\put(33.5, 14) { \framebox(8, 2){ $z$ } }
+%
+\end{picture} 
+\caption{
+Topological sort ensures that when sweeping across the stack a node will not
+be processed until all dependent nodes have been processed.  From a message
+passing perspective this ensures that once a node is reached it will have
+received all messages from its inputs.  Note that this is only one possible
+topological sort -- it's not unique.
+}
+\label{fig:topologicalSort} 
+\end{figure}
 
 Forward and reverse sweeps are then readily implemented by
 running up and down the stack, propagating the dual numbers.
@@ -63,6 +127,87 @@ Methods for propagating perturbations and sensitivities.
 Possible specializations for optimized propagation routines.
 
 Image of architecture.
+
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 30)
+%
+%\put(0, 0) { \framebox(50, 30){} }
+%
+%\put(0, 0) { \framebox(12.5, 30){} }
+%\put(0, 0) { \framebox(25, 30){} }
+%\put(0, 0) { \framebox(37.5, 30){} }
+%
+%\put(0, 0) { \framebox(50, 7.5){} }
+%\put(0, 0) { \framebox(50, 15){} }
+%\put(0, 0) { \framebox(50, 22.5){} }
+%
+% Var Body
+%
+\put(8.5, 2) { \makebox(8, 2){Var Body} }
+\put(8.5, 6) { \framebox(8, 2){} }
+\put(8.5, 8) { \framebox(8, 2){} }
+\put(8.5, 10) { \framebox(8, 2){} }
+\put(8.5, 12) { \framebox(8, 2){} }
+\put(8.5, 14) { \framebox(8, 2){} }
+\put(8.5, 16) { \framebox(8, 2){} }
+\put(8.5, 18) { \framebox(8, 2){} }
+\put(8.5, 20) { \framebox(8, 2){} }
+\put(8.5, 22) { \framebox(8, 2){} }
+\put(8.5, 24) { \framebox(8, 2){} }
+%
+% Inputs
+%
+\put(39, 24) { \makebox(8, 2){Inputs} }
+\put(25, 22) { \framebox(2, 6){} }
+\put(27, 22) { \framebox(2, 6){} }
+\put(29, 22) { \framebox(2, 6){} }
+\put(31, 22) { \framebox(2, 6){} }
+\put(33, 22) { \framebox(2, 6){} }
+\put(35, 22) { \framebox(2, 6){} }
+\put(37, 22) { \framebox(2, 6){} }
+%
+% Dual Numbers
+%
+\put(39, 15) { \makebox(8, 2){Dual} }
+\put(39, 13) { \makebox(8, 2){Numbers} }
+\put(25, 12) { \framebox(2, 6){} }
+\put(27, 12) { \framebox(2, 6){} }
+\put(29, 12) { \framebox(2, 6){} }
+\put(31, 12) { \framebox(2, 6){} }
+\put(33, 12) { \framebox(2, 6){} }
+\put(35, 12) { \framebox(2, 6){} }
+\put(37, 12) { \framebox(2, 6){} }
+%
+% Partials
+%
+\put(39, 4) { \makebox(8, 2){Partials} }
+\put(25, 2) { \framebox(2, 6){} }
+\put(27, 2) { \framebox(2, 6){} }
+\put(29, 2) { \framebox(2, 6){} }
+\put(31, 2) { \framebox(2, 6){} }
+\put(33, 2) { \framebox(2, 6){} }
+\put(35, 2) { \framebox(2, 6){} }
+\put(37, 2) { \framebox(2, 6){} }
+%
+% Arrows
+%
+\thicklines
+\put(32, 22) { \vector(-1, -1){4} }
+\put(34, 22) { \vector(0, -1){4} }
+%
+\put(16.5, 16) { \vector(4, 3){15.5} }
+\put(16.5, 16) { \vector(1, 0){19.5} }
+\put(16.5, 16) { \vector(2, -1){17.5} }
+%
+\end{picture} 
+\caption{
+Some sweet architecture.
+}
+\label{fig:architecture} 
+\end{figure}
+
 
 \subsection{Building the Expression Graph}
 
