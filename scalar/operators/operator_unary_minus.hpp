@@ -2,7 +2,7 @@
 #define nomad__scalar__operators__operator_unary_negative_hpp
 
 #include <var/var.hpp>
-#include <var/derived/unary_plus_var_body.hpp>
+#include <var/derived/unary_minus_var_body.hpp>
 
 namespace nomad {
 

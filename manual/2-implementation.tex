@@ -1,24 +1,77 @@
 \chapter{Implementation}
 
-Code-generation and operator overloading.  References.
+The treatment of automatic differentiation as a consequence of
+defining dual number-valued functions naturally motivates an
+\textit{operator overloading} implementation \textbf{references},
+where we introduce dual number types and overload common
+operations and functions to accept these types.  \nomad is a C++
+\textbf{reference} implementation of this strategy that heavily 
+leverages template metaprogramming to optimize performance 
+\textbf{reference}.
 
-Existing approaches.  Reverse and forward mode types,
-computation of partials on the fly.  Slooooooooow at higher-order.  
+One complication to the implementation is that reverse mode
+methods require the expression graph to be stored in memory.
+\nomad builds the expression graph of the fly, storing nodes
+in topological order via an arena-based memory allocation.
 
-Nomad represents expression graph as a series of stacks,
-storing intermediate evaluations like partial derivatives and
-dual number components to optimize higher-order calculations.
+In this chapter we review the architecture and construction of
+an expression graph in \nomad and investigate the resulting
+user interface.
 
 \section{Architecture}
 
-Need to represent expression graph, namely the dual numbers
-at each node and the dependencies between them.
+\nomad defines a templated automatic differentiation type
+%
+\begin{verbatim}
+<template short autodiff_order>
+class var
+\end{verbatim}
+%
+where \verb|autodiff_order| defines the order of the underlying
+dual numbers.  If we needed to consider only methods that
+could be implemented with forward mode automatic differentiation
+then we could simply store the dual numbers as members of
+\verb|var| and propagate them forward by overloading operators
+and functions.
+
+For example, a first-order automatic differentiation variable
+might be implemented as
+%
+\begin{verbatim}
+class var {
+  var(double v, double g): first_val(v), first_grad(g) {}
+  double first_val;
+  double first_grad;
+};
+\end{verbatim}
+%
+with a function like the exponential overloaded as
+%
+\begin{verbatim}
+var exp(const var& v) {
+  return var( std::exp(v.first_val), std::exp(v.first_val) * v.first_grad);
+}
+\end{verbatim}
+
+Although this approach works fine for first-order forward automatic
+differentiation it does not scale well to higher-order methods that
+require the backward propagation of sensitivities.  Instead of storing
+the dual numbers directly, \verb|var| wraps a \verb|var_body| object
+that represents and node of the expression graph and is stored
+in global memory.
+
+In the remainder of the section we will discuss how the expression
+graph is represented in \nomad and how it is constructed by the
+\verb|var| objects.
 
 \subsection{Representing the Expression Graph With Stacks}
 
-Once topologically sorted the nodes can be readily stored in
-a linear stack, with each node storing its dual number, addresses
-to inputs, and the partial derivatives.
+Each node of the expression graph, including edges to input nodes
+and dual numbers, is represented by a \verb|var_body| object, and
+the graph itself is represented by a topological sort of the \verb|var_body|
+objects into a stack.  The topological sort insures that when traversing
+the stack sequentially all of the input nodes will have been processed
+before a dependent node is reached (Figure \ref{fig:topologicalSort}).
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -87,46 +140,25 @@ topological sort -- it's not unique.
 \label{fig:topologicalSort} 
 \end{figure}
 
-Forward and reverse sweeps are then readily implemented by
-running up and down the stack, propagating the dual numbers.
-
-Only problem is that the storage will be dynamic, depending on the
-function each node represents, the autodiff order, etc.  Instead
-we separate out the storage into separate stacks that can more
-easily handle the dynamic memory.
-
-\subsubsection{Dual Number Stack}
-
-Dual number multiplicities as function of autodiff order.
-
-Storage examples for first and second order.
-
-x1, dx1, x2, dx2
-
-x1, dx2, dy1, d2y1, x2, dx2, dy2, d2y2.
-
-\subsubsection{Input Stack}
-
-Points to dual numbers of inputs nodes.
-
-Example for two cases above.
-
-\subsubsection{Partials Stack}
-
-Store first, second, and third-order partial derivatives if
-necessary (may not be).
-
-Sparse storage pattern.
+\textbf{Okay, need a reasonable argument here for why we use separate
+stacks for the storage.  Dynamic sizing is bad -- do the stacks just make
+an arena-based allocation easier?}
 
 \subsubsection{Var Body Stack}
 
-Pointers to dual numbers, inputs, and partials, number of inputs.
+Nodes in the expression graph are represented by \texttt{var\_body}
+objects, which address the necessary storage and implement
+methods for propagating perturbations and sensitivities.
 
-Methods for propagating perturbations and sensitivities.
+Dual numbers, inputs, and partials are stored in separate stacks,
+allowing dynamic storage with the same \texttt{var\_body} class.
+\texttt{var\_body} itself simply stores the addresses of the relevant
+data within those stacks (Figure \ref{fig:architecture}).
 
-Possible specializations for optimized propagation routines.
-
-Image of architecture.
+In the case of heavily-used functions, especially those with sparse 
+partial derivatives, significant computations gains can be found in
+optimizing the propagation routines and partial storage.  For these
+heavily-used functions we implement \texttt{var\_body} derivations.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -197,17 +229,148 @@ Image of architecture.
 \put(32, 22) { \vector(-1, -1){4} }
 \put(34, 22) { \vector(0, -1){4} }
 %
-\put(16.5, 16) { \vector(4, 3){15.5} }
-\put(16.5, 16) { \vector(1, 0){19.5} }
-\put(16.5, 16) { \vector(2, -1){17.5} }
+\put(16.5, 15) { \vector(4, 3){15.5} }
+\put(16.5, 15) { \vector(1, 0){19.5} }
+\put(16.5, 15) { \vector(2, -1){17.5} }
 %
 \end{picture} 
-\caption{
-Some sweet architecture.
+\caption{ 
+Each node in the expression graph is represented by a 
+\texttt{var\_body} object stored in the \texttt{var\_body} stack.  
+Storage of the inputs, dual numbers, and
+partial derivatives is split out from this representation, with each \texttt{var\_body}
+storing only addresses to the relevant stacks.  Note that the inputs address not
+the input \texttt{var\_body} objects themselves but rather their dual numbers, 
+allowing the direct access needed for computations and avoiding any overhead
+from indirection. 
 }
 \label{fig:architecture} 
 \end{figure}
 
+\subsubsection{Dual Number Stack}
+
+The dual number stack stores the values and gradients of the dual
+numbers at each node.  For example, a first-order expression graph
+will need only two elements for each node while a third-order expression 
+graph will need eight (Figure \ref{fig:dualNumberStorage}).  In general
+$2^{n}$ addresses must be reserved for each node of an $n$-th
+order expression graph.
+
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 20)
+%
+%\put(0, 0) { \framebox(50, 20){} }
+%
+% First-Order
+%
+\put(0, 15) { \makebox(8, 2){First-} }
+\put(0, 13) { \makebox(8, 2){Order} }
+\put(9, 12) { \framebox(4, 6){ $x $ } }
+\put(13, 12) { \framebox(4, 6){ $ \delta x $ } }
+\put(17, 17) { \makebox(2, 2){ $\ldots$ } }
+\put(17, 11) { \makebox(2, 2){ $\ldots$ } }
+%
+% Second-Order
+%
+\put(0, 5) { \makebox(8, 2){Third-} }
+\put(0, 3) { \makebox(8, 2){Order} }
+\put(9, 2) { \framebox(4, 6){ $s$ } }
+\put(13, 2) { \framebox(4, 6){ $\delta s$ } }
+\put(17, 2) { \framebox(4, 6){ $\delta t$ } }
+\put(21, 2) { \framebox(4, 6){ $\delta^{2} t$ } }
+\put(25, 2) { \framebox(4, 6){ $\delta u$ } }
+\put(29, 2) { \framebox(4, 6){ $\delta^{2} u$ } }
+\put(33, 2) { \framebox(4, 6){ $\delta^{2} v$ } }
+\put(37, 2) { \framebox(4, 6){ $\delta^{3} v$ } }
+\put(41, 7) { \makebox(2, 2){ $\ldots$ } }
+\put(41, 1) { \makebox(2, 2){ $\ldots$ } }
+%
+\end{picture} 
+\caption{
+A separate dual number stack is able to accommodate storage
+of dual numbers of any order.  For example, first-order dual numbers
+require only two elements while third-order dual numbers require
+eight elements.
+}
+\label{fig:dualNumberStorage} 
+\end{figure}
+
+\subsubsection{Input Stack}
+
+The input stack stores the edges to any dependent nodes.  For
+optimal performance the edges index the dual numbers of those
+nodes directly and avoid indirect access through the nodes
+themselves.
+
+\subsubsection{Partials Stack}
+
+A common approach in many automatic differentiation implementations
+is to compute partial derivatives on the fly and avoid storing them in
+the expression graph.  In order to compute higher-order differential operations,
+however, the partials are reused in every sweep and their repeated computation
+can be a significant computational burden.
+
+Given its focus on higher-order methods, \nomad explicitly stores partial 
+derivatives in a dedicated partials stack.  When constructing an $n$th-order
+expression graph only the $n$th-order partial derivatives and lower are
+stored, and only if the partial derivatives are non-zero.  For example, 
+a second-order expression graph will calculate and store the first and
+second-order partial derivatives.
+
+To avoid redundant calculations and storage, \nomad leverages the commutation
+of partial derivatives and considers only the unique higher-order values.  
+For a node representing a function $f \! \left( x_{1}, \ldots, x_{N} \right)$, 
+at second-order the stack will store
+%
+\begin{equation*}
+\frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} }, \, i \in 1, \ldots, N, j \in 1, \ldots i.
+\end{equation*}
+%
+and at third-order
+%
+\begin{equation*}
+\frac{ \partial^{3} f }{ \partial x_{i} \partial x_{j} \partial x_{k} }, \, 
+i \in 1, \ldots, N, j \in 1, \ldots i, k \in 1, \ldots, j.
+\end{equation*}
+%
+For example, the storage for a binary function $f \! \left(x, y \right)$
+is given in Figure \ref{fig:partialsStorage}.
+
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 10)
+%
+%\put(0, 0) { \framebox(50, 10){} }
+%
+% Second-Order
+%
+\put(7, 2) { \framebox(4, 6){ $ \frac{ \partial f }{ \partial x} $ } }
+\put(11, 2) { \framebox(4, 6){ $ \frac{ \partial f }{ \partial y} $ } }
+\put(15, 2) { \framebox(4, 6){ $ \frac{ \partial^{2} f }{ \partial x^{2}} $ } }
+\put(19, 2) { \framebox(4, 6){ $ \frac{ \partial^{2} f }{ \partial x \partial y} $ } }
+\put(23, 2) { \framebox(4, 6){ $ \frac{ \partial^{2} f }{ \partial y^{2}} $ } }
+\put(27, 2) { \framebox(4, 6){ $ \frac{ \partial^{3} f }{ \partial x^{3}} $ } }
+\put(31, 2) { \framebox(4, 6){ $ \frac{ \partial^{3} f }{ \partial x^{2} \partial y} $ } }
+\put(35, 2) { \framebox(4, 6){ $ \frac{ \partial^{3} f }{ \partial x \partial y^{3}} $ } }
+\put(39, 2) { \framebox(4, 6){ $ \frac{ \partial^{3} f }{ \partial y^{3}} $ } }
+\put(43, 7) { \makebox(2, 2){ $\ldots$ } }
+\put(43, 1) { \makebox(2, 2){ $\ldots$ } }
+%
+\end{picture} 
+\caption{
+Only unique partial derivatives are stored in the partials stack,
+as demonstrated here for node representing a binary function 
+$f \! \left( x, y \right)$ in a third-order expression graph.
+}
+\label{fig:partialsStorage} 
+\end{figure}
+
+In general a function with $N$ inputs and non-vanishing derivatives at
+all orders will require $\binom{N + M}{M}$ elements to store the unique
+$M$th-order partial derivatives.
 
 \subsection{Building the Expression Graph}
 
@@ -225,11 +388,61 @@ Function example.
 
 \section{User Interface}
 
-Functional/functor pattern.
+Linear differential operators are implemented in a functor-functional
+pattern \textbf{reference}.
 
-User defines a functor as a stateless template class implementing T operator().
+Functors are specified with any stateless class implementing
+%
+\begin{verbatim}
+T operator()(const Eigen::VectorXd& x) const,
+\end{verbatim}
+%
+where \verb|T| is any automatic differentiation variable and \verb|x|
+contains the input values to the function.  Letting \verb|T| be
+a template parameter is often more convenient than explicitly
+defining the type.  For example, a functor implementing the function
+%
+\begin{equation*}
+f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
+\end{equation*}
+%
+would be defined as
+%
+\begin{verbatim}
+template <typename T>
+class example_functor {
+  T operator()(const Eigen::VectorXd& x) const {
+    T v1 = x[0];
+    T v2 = x[1];
+    T v3 = x[2];
+    return cos( exp(v1) + exp(v2) ) / v3;  
+  }
+};
+\end{verbatim}
 
-Differential operations are implemented as functionals,
-calling the overloaded() with the appropriate var template specialization
-to build the expression graph and then sweep to compute the desired
-operation.
+The linear differential operations themselves are implemented as
+template functions taking functors as their first argument.  The 
+gradient, for example, has the signature
+%
+\begin{verbatim}
+  template <typename F>
+  void gradient(const F& f,
+                const Eigen::VectorXd& x,
+                Eigen::VectorXd& g)
+\end{verbatim}
+%
+and would be called as
+%
+\begin{verbatim}
+Eigen::VectorXd& x = ...;
+Eigen::VectorXd& g = Eigen::VectorXd::Ones(x.size());
+gradient(example_functor<var<1U>>, x, g);
+\end{verbatim}
+%
+Note the specialization of \verb|example_functor| to a first-order
+automatic differentiation variable.  Any higher-order automatic
+differentiation variable would also work.
+
+Internally each functional calls \verb|F::operator()| to build up
+the expression graph and then propagates perturbations and
+sensitivities as necessary.
