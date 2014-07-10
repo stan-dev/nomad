@@ -18,7 +18,7 @@ In this chapter we review the architecture and construction of
 an expression graph in \nomad and investigate the resulting
 user interface.
 
-\section{Architecture}
+\section{Architecture} \label{sec:architecture}
 
 \nomad defines a templated automatic differentiation type
 %
@@ -144,7 +144,7 @@ topological sort -- it's not unique.
 stacks for the storage.  Dynamic sizing is bad -- do the stacks just make
 an arena-based allocation easier?}
 
-\subsubsection{Var Body Stack}
+\subsubsection{Var Body Stack} \label{subsubsec:var_body}
 
 Nodes in the expression graph are represented by \texttt{var\_body}
 objects, which address the necessary storage and implement
@@ -302,7 +302,7 @@ eight elements.
 The input stack stores the edges to any dependent nodes.  For
 optimal performance the edges index the dual numbers of those
 nodes directly and avoid indirect access through the nodes
-themselves.
+themselves (Figure \ref{fig:architecture}).
 
 \subsubsection{Partials Stack}
 
@@ -374,19 +374,80 @@ $M$th-order partial derivatives.
 
 \subsection{Building the Expression Graph}
 
-The var class.
+The \verb|var| class is responsible for building the internal representation
+of the expression graph, either when constructed explicitly or implicitly
+when a function is called.  Pushing a node onto the expression graph 
+proceeds in three stages.
 
-User-facing class, points to corresponding varbody,
-responsible for pushing relevant values onto each stack.
+Firstly two global variables, \verb|next_inputs_delta| and 
+\verb|next_partials_delta| have to be set, informing the stack of the memory
+needed for the new node.  The \verb|var_body| class has a special
+member dedicated to computing the number of partial derivatives needed
+and is called as
+%
+\begin{verbatim}
+next_inputs_delta = n_inputs;
+next_partials_delta =
+  var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+\end{verbatim}
 
-Push varbody using an arena-based memory allocation.
-Allocation space for storage stacks as well, if necessary.
+Once these variables have been set the node can be pushed by constructing
+a \verb|var_body| with an overloaded \verb|operator new|,
+%
+\begin{verbatim}
+new var_body<autodiff_order, partials_order>(n_inputs);
+\end{verbatim}
+%
+The overloaded \verb|operator new| checks if the current memory is large 
+enough for the new node, allocating more if necessary, and then constructs 
+the node at the top of the stack.  During construction addresses to the top of 
+the dual numbers, inputs, and partial stack are set.
 
-Leaf example.
+Once the node has been pushed, the state of the node can be pushed onto
+the individual stacks.  Values are pushed onto the autodiff stack with the
+command,
+%
+\begin{verbatim}
+push_dual_numbers<autodiff_order>(value));
+\end{verbatim},
+%
+which pushes $2^{\mathrm{autodiff\_order}}$ elements, the first being set to
+value and the rest to zero.  Inputs are pushed with an address to the dual
+number stack, for example,
+%
+\begin{verbatim}
+push_inputs(input.dual_numbers());
+\end{verbatim}
+%
+Finally partial derivatives are pushed one at a time using the sparse storage
+pattern discussed above.  A binary function, for example, would require
 
-Function example.
+%
+\begin{verbatim}
+    if (autodiff_order >= 1) {
+      push_partials(df_dx);
+      push_partials(df_dy);
+    }
+    if (autodiff_order >= 2) {
+      push_partials(d2f_dx2);
+      push_partials(d2f_dxdy);
+      push_partials(d2f_dy2);
+    }
+    if (autodiff_order >= 3) {
+      push_partials(df3_dx3);
+      push_partials(df3_dx2dy);
+      push_partials(df3_dxdy2);
+      push_partials(df3_dy3);
+    }
+\end{verbatim}
 
-\section{User Interface}
+Optimized derivations of \verb|var_body| may not use every stack and so may
+not require each step.  Binary addition, for example, is able to efficiently 
+compute partial derivatives on the fly and so does not need to worry about
+storing any partials, let alone checking and expanding the partial derivative 
+stack.
+
+\section{User Interface} \label{sec:user_interface}
 
 Linear differential operators are implemented in a functor-functional
 pattern \textbf{reference}.

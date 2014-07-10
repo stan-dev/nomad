@@ -1,28 +1,536 @@
 \chapter{Using Nomad}
 
+In this chapter we review the basics of using \nomad to in practice, 
+from installation to computing differential operations to implementing
+new functions into the language.
+
 \section{Installation}
 
-Header only (for now).  
+\nomad is a header library, meaning there is nothing to compile
+before compiling an executable itself \textbf{this should probably change
+to put all of the globals into a translation unit -- not exactly header
+only but still nothing to compile before the executable}.
 
-Dependencies (Eigen, C++11).
+When incorporating \nomad into an executable there are two
+dependencies.  Firstly, \nomad requires a compiler supporting C++11 
+\textbf{reference}, including but not limited to \verb|clang++ 3.4|,
+\verb|g++ 4.8|, and any more recent versions.  The second is Eigen,
+the header library implementing a wide array of efficient linear algebra
+routines \textbf{reference}.
 
-Linking instructions.  
+For example, if you wish to incorporate \nomad into an executable
+that compiles as
+%
+\begin{verbatim}
+./compiler -03 main main.cpp
+\end{verbatim}
+%
+then including \nomad nominally requires only the addition of the 
+appropriate paths,
+%
+\begin{verbatim}
+./compiler -03 -I/path/to/Nomad -I/path/to/Eigen main main.cpp
+\end{verbatim}
+%
+Note that some compilers do not implement C++11 by default.  In
+this case you may have to explicit enable C++11 and the updated
+Standard Library with
+%
+\begin{verbatim}
+./compiler -03 -std=c++11 -stdlib=libc++ -I/path/to/Nomad -I/path/to/Eigen main main.cpp
+\end{verbatim}
 
 \section{Computing Differential Operations}
 
-Functional/functor pattern.
+As noted in Section \ref{sec:user_interface}, differential operations are
+implemented with a functor-functional pattern, with functions wrapped
+in functors and differential operations implemented as functionals.
 
-Constructing a functor.  Compile-time fail is unsupported functions
-used.  Note functions implemented in reference guide.
+Here a functor is any class implementing
+%
+\begin{verbatim}
+T operator()(const Eigen::VectorXd& x) const,
+\end{verbatim}
+%
+where \verb|T| is any automatic differentiation variable.  For example,
+if we wanted to compute the gradient of the function
+%
+\begin{verbatim}
+double example_function(const Eigen::VectorXd& x) {
+  double x1 = x[0];
+  double x2 = x[1];
+  double x3 = x[2];
+  return exp( cos(x1) + sin(x2) ) / x3;
+}
+\end{verbatim}
+%
+we would need to define the class
+%
+\begin{verbatim}
+class example_functor {
+  var<1U> operator()(const Eigen::VectorXd& x) const {
+    var<1U> x1 = x[0];
+    var<1U> x2 = x[1];
+    var<1U> x3 = x[2];
+    return exp( cos(x1) + sin(x2) ) / x3;
+  }
+};
+\end{verbatim}
+%
+The full list of functions that have been implemented for automatic
+differentiation variables can be found in Section \ref{sec:operators_and_functions}.
 
-Functionals implemented.
+Specifying a functor for each automatic differentiation variable can be
+burdensome and it is usually easier to define a template class.  For
+example, the above would become
+%
+\begin{verbatim}
+template <typename T>
+class example_functor {
+  T operator()(const Eigen::VectorXd& x) const {
+    T x1 = x[0];
+    T x2 = x[1];
+    T x3 = x[2];
+    return exp( cos(x1) + sin(x2) ) / x3;
+  }
+};
+\end{verbatim}
+%
+with
+%
+\begin{verbatim}
+example_functor<var<1U>>
+example_functor<var<2U>>
+example_functor<var<3U>>
+\end{verbatim}
+%
+defining classes for first, second, and third-order automatic differentiation
+variables, respectively.
 
-First, second, and third-order examples.
+Differential operators are implemented as functionals which take
+the functors as arguments.  A gradient, for example, can be computed
+as
+%
+\begin{verbatim}
+Eigen::VectorXd& x = ...;
+Eigen::VectorXd& g = Eigen::VectorXd::Zero(x.size());
+gradient(example_functor<var<1U>>, x, g);
+\end{verbatim}
+%
+and the Hessian as
+%
+\begin{verbatim}
+Eigen::VectorXd& x = ...;
+Eigen::VectorXd& H = Eigen::VectorXd::Zero(x.size(), x.size());
+hessian(example_functor<var<2U>>, x, H);
+\end{verbatim}
+%
+All linear differential operations implanted in \nomad are detailed in \ref{sec:differential_operations}.
 
 \section{Implementing Functions}
 
-Generic example.  Explanation of each step.
+Although \nomad has variety of functions available difficult applications often
+require the addition of new functions specific to the problem at hand.  The
+implementation of new functions in \nomad is straightforward.
 
-Using binary var body.  Explanation of each step.
+The biggest complication in implementing a new function is in properly
+managing the global stack that represents the expression graph.  In particular,
+a function has to define the number of inputs and partials it will be using
+so that the stack can expand if necessary, create a node on the expression
+graph for the function, and then push the necessary inputs, dual numbers,
+and partials onto the stack.  For details on how the stacks are implemented
+see Section \ref{sec:architecture}.
 
-Discussion of creating custom var body.
+\subsection{Generic Unary Function}
+
+A unary function, for example, might be implemented in \verb|new_function.hpp|
+as
+%
+\begin{verbatim}
+#ifndef new_funcion_hpp
+#define new_function_hpp
+
+#include <var/var.hpp>
+
+namespace nomad {
+
+  inline double new_function(double x) { return ...; }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_function(const var<autodiff_order>& input) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+    
+    new var_body<autodiff_order, partials_order>(n_inputs);
+
+    const double x = input.first_val();
+    push_dual_numbers<autodiff_order>(new_function(x));
+    
+    push_inputs(input.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dx);
+    if (autodiff_order >= 2) push_partials(d2f_dx2);
+    if (autodiff_order >= 3) push_partials(d3f_dx3);
+
+    return var<autodiff_order>(next_body_idx_ - 1);
+  }
+}
+#endif
+\end{verbatim}
+
+Firstly we define the double-valued function,
+%
+\begin{verbatim}
+ double new_function(double x).
+\end{verbatim}
+%
+although this isn't strictly necessary it can be convenient in some cases.
+
+Next we implement the automatic differentiation viable-valued function,
+%
+\begin{verbatim}
+  template <short autodiff_order>
+  inline var<autodiff_order> new_function(const var<autodiff_order>& input)
+\end{verbatim}
+%
+Note the use of templates to avoid defining the function for each different
+automatic differentiation variable.  The first critical step in defining this
+function is informing the stack about how much space the function will need,
+%
+\begin{verbatim}
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+\end{verbatim}
+%
+With the stack ready we can create a new node for the function on the
+expression graph,
+%
+\begin{verbatim}
+    new var_body<autodiff_order, partials_order>(n_inputs);
+\end{verbatim}
+%
+Here \verb|operator new| has been overloaded, so that this call creates
+a new node on the top of the node stack.
+
+With the node pushed onto the stack we just have to set the dual numbers,
+inputs, and partials,
+%
+\begin{verbatim}
+    const double x = input.first_val();
+    push_dual_numbers<autodiff_order>(new_function(x));
+    
+    push_inputs(input.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dx);
+    if (autodiff_order >= 2) push_partials(d2f_dx2);
+    if (autodiff_order >= 3) push_partials(d3f_dx3);
+\end{verbatim}
+%
+before returning a new automatic differentiation variable pointing to the new
+node,
+%
+\begin{verbatim}
+    return var<autodiff_order>(next_body_idx_ - 1);
+\end{verbatim}
+
+If not all partial derivatives can be implemented for the new function then the
+higher-order implementations should throw an exception.  For example, we
+specify that we have only first-order partials and then throw exceptions for
+if second or third-order partials are requested,
+%
+\begin{verbatim}
+#ifndef new_funcion_hpp
+#define new_function_hpp
+
+#include <var/var.hpp>
+#include <autodiff/exceptions.hpp>
+
+namespace nomad {
+
+  inline double new_function(double x) { return ...; }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_function(const var<autodiff_order>& input) {
+    
+    const short partials_order = 1;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+    
+    new var_body<autodiff_order, partials_order>(n_inputs);
+
+    const double x = input.first_val();
+    push_dual_numbers<autodiff_order>(new_function(x));
+    
+    push_inputs(input.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dx);
+    if (autodiff_order >= 2) {
+      throw partial_fail_ex("Only first-order partials have "
+                            "been implemented for new_function");
+    }
+    if (autodiff_order >= 3) {
+      throw partial_fail_ex("Only first-order partials have "
+                            "been implemented for new_function");
+    }
+
+    return var<autodiff_order>(next_body_idx_ - 1);
+  }
+}
+#endif
+\end{verbatim}
+
+\subsection{Generic Binary Function}
+
+The same pattern holds if we include a binary function, only now we have
+to consider all three-possible combinations of double and automatic
+differentiation variable arguments,
+%
+\begin{verbatim}
+#ifndef new_binary_function_hpp
+#define new_binary_function_hpp
+
+#include <math.h>
+#include <var/var.hpp>
+
+namespace nomad {
+  
+  inline double new_binary_function(double x, double y) {
+    return ...;
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
+                                                 const var<autodiff_order>& v2) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 2;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+    
+    new var_body<autodiff_order, partials_order>(n_inputs);
+
+    double x = v1.first_val();
+    double y = v2.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v1.dual_numbers());
+    push_inputs(v2.dual_numbers());
+
+    if (autodiff_order >= 1) {
+      push_partials(df_dx);
+      push_partials(df_dy);
+    }
+    if (autodiff_order >= 2) {
+      push_partials(d2f_dx2);
+      push_partials(d2f_dxdy);
+      push_partials(d2f_dy2);
+    }
+    if (autodiff_order >= 3) {
+      push_partials(df3_dx3);
+      push_partials(df3_dx2dy);
+      push_partials(df3_dxdy2);
+      push_partials(df3_dy3);
+    }
+
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(double x,
+                                                 const var<autodiff_order>& v2) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+    
+    new var_body<autodiff_order, partials_order>(n_inputs);
+    
+    double y = v2.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v2.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dy);
+    if (autodiff_order >= 2) push_partials(df2_dy2);
+    if (autodiff_order >= 3) push_partials(df3_dy3);
+    
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
+                                                 double y) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+    
+    new var_body<autodiff_order, partials_order>(n_inputs);
+    
+    double x = v1.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v1.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dx);
+    if (autodiff_order >= 2) push_partials(d2f_dx2);
+    if (autodiff_order >= 3) push_partials(d3f_dx3);
+    
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+
+}
+#endif
+\end{verbatim}
+
+\subsection{Custom Node Types}
+
+As noted in Section \ref{subsubsec:var_body}, some functions may benefit
+from custom propagation routines defined in custom \verb|var_body|
+implementations.  For example, \nomad defines special unary and binary
+function types with optimized propagation functions.  Using these the binary
+example above would become
+%
+\begin{verbatim}
+#ifndef new_binary_function_hpp
+#define new_binary_function_hpp
+
+#include <math.h>
+#include <var/var.hpp>
+#include <var/derived/unary_var_body.hpp>
+#include <var/derived/binary_var_body.hpp>
+
+namespace nomad {
+  
+  inline double new_binary_function(double x, double y) {
+    return ...;
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
+                                                 const var<autodiff_order>& v2) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 2;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      binary_var_body<autodiff_order, partials_order>::n_partials();
+    
+    new binary_var_body<autodiff_order, partials_order>();
+
+    double x = v1.first_val();
+    double y = v2.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v1.dual_numbers());
+    push_inputs(v2.dual_numbers());
+
+    if (autodiff_order >= 1) {
+      push_partials(df_dx);
+      push_partials(df_dy);
+    }
+    if (autodiff_order >= 2) {
+      push_partials(d2f_dx2);
+      push_partials(d2f_dxdy);
+      push_partials(d2f_dy2);
+    }
+    if (autodiff_order >= 3) {
+      push_partials(df3_dx3);
+      push_partials(df3_dx2dy);
+      push_partials(df3_dxdy2);
+      push_partials(df3_dy3);
+    }
+
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(double x,
+                                                 const var<autodiff_order>& v2) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      unary_var_body<autodiff_order, partials_order>::n_partials();
+    
+    new unary_var_body<autodiff_order, partials_order>();
+    
+    double y = v2.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v2.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dy);
+    if (autodiff_order >= 2) push_partials(df2_dy2);
+    if (autodiff_order >= 3) push_partials(df3_dy3);
+    
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+  
+  template <short autodiff_order>
+  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
+                                                 double y) {
+    
+    const short partials_order = 3;
+    const unsigned int n_inputs = 1;
+    
+    next_inputs_delta = n_inputs;
+    next_partials_delta =
+      unary_var_body<autodiff_order, partials_order>::n_partials();
+    
+    new unary_var_body<autodiff_order, partials_order>();
+    
+    double x = v1.first_val();
+    
+    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
+    
+    push_inputs(v1.dual_numbers());
+    
+    if (autodiff_order >= 1) push_partials(df_dx);
+    if (autodiff_order >= 2) push_partials(d2f_dx2);
+    if (autodiff_order >= 3) push_partials(d3f_dx3);
+    
+    return var<autodiff_order>(next_body_idx_ - 1);
+    
+  }
+
+}
+#endif
+\end{verbatim}
+
+Defining new \verb|var_body| specializations is a substantial task and anyone
+interesting in introducing a new specialization should contact the development
+team directly.
