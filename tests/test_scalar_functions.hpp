@@ -32,6 +32,7 @@ namespace nomad {
   void test_inv_sqrt();
   void test_inv_square();
   void test_inv();
+  void test_lgamma();
   void test_log_diff_exp();
   void test_log_sum_exp();
   void test_log();
@@ -45,6 +46,7 @@ namespace nomad {
   void test_square();
   void test_tan();
   void test_tanh();
+  void test_tgamma();
   void test_trinary_prod_cubes();
   
   void test_scalar_functions() {
@@ -71,6 +73,7 @@ namespace nomad {
     test_inv_sqrt();
     test_inv_square();
     test_inv();
+    test_lgamma();
     test_log_diff_exp();
     test_log_sum_exp();
     test_log();
@@ -84,6 +87,7 @@ namespace nomad {
     test_square();
     test_tan();
     test_tanh();
+    test_tgamma();
     test_trinary_prod_cubes();
   }
   
@@ -542,6 +546,23 @@ namespace nomad {
     tests::test_function<inv_func>(x);
   }
   
+  // lgamma
+  template <typename T>
+  struct lgamma_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return lgamma(v);
+      
+    }
+    static std::string name() { return "lgamma"; }
+  };
+  
+  void test_lgamma() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 4.584;
+    tests::test_function<lgamma_func>(x);
+  }
+  
   // log_diff_exp
   template <typename T>
   struct log_diff_exp_vv_func {
@@ -944,6 +965,23 @@ namespace nomad {
     Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
     x *= 0.576;
     tests::test_function<tanh_func>(x);
+  }
+  
+  // tgamma
+  template <typename T>
+  struct tgamma_func {
+    T operator()(const Eigen::VectorXd& x) const {
+      T v = x[0];
+      return tgamma(v);
+      
+    }
+    static std::string name() { return "tgamma"; }
+  };
+  
+  void test_tgamma() {
+    Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
+    x *= 1.2483;
+    tests::test_function<tgamma_func>(x);
   }
   
   // trinary_prod_cubes

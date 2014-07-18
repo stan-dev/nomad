@@ -25,6 +25,7 @@
 #include <scalar/functions/inv_sqrt.hpp>
 #include <scalar/functions/inv_square.hpp>
 #include <scalar/functions/inv.hpp>
+#include <scalar/functions/lgamma.hpp>
 #include <scalar/functions/log_diff_exp.hpp>
 #include <scalar/functions/log_sum_exp.hpp>
 #include <scalar/functions/log.hpp>
@@ -41,6 +42,7 @@
 #include <scalar/functions/square.hpp>
 #include <scalar/functions/tan.hpp>
 #include <scalar/functions/tanh.hpp>
+#include <scalar/functions/tgamma.hpp>
 #include <scalar/functions/trinary_prod_cubes.hpp>
 #include <scalar/functions/value_of.hpp>
 
