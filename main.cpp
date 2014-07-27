@@ -7,8 +7,8 @@
 #include <matrix/functions.hpp>
 
 #include <tests/validate_exceptions.hpp>
-#include <tests/test_scalar_functions.hpp>
-#include <tests/test_scalar_operators.hpp>
+//#include <tests/test_scalar_functions.hpp>
+//#include <tests/test_scalar_operators.hpp>
 
 using namespace nomad;
 
@@ -21,7 +21,8 @@ void validate_dot();
 void time_dot();
 
 template <typename T, int N>
-struct funnel_func {
+class funnel_func: public base_functor<T> {
+public:
   T operator()(const Eigen::VectorXd& x) const {
     
     T v = x[0];
@@ -45,10 +46,11 @@ struct funnel_func {
 };
 
 template <typename T>
-struct f_matrix {
+class f_matrix: public base_functor<T> {
+public:
   T operator()(const Eigen::VectorXd& x) const {
     
-    eigen_idx_t N = static_cast<eigen_idx_t>(sqrt(x.size()));
+    eigen_idx_t N = static_cast<eigen_idx_t>(std::sqrt(x.size()));
     
     Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic> M(N, N);
     
@@ -63,7 +65,8 @@ struct f_matrix {
 };
 
 template <typename T>
-struct f_dot {
+class f_dot: public base_functor<T> {
+public:
   T operator()(const Eigen::VectorXd& x) const {
     
     eigen_idx_t N = x.size() / 2;
@@ -328,11 +331,10 @@ void time_dot() {
   
 }
 
-
 int main(int argc, const char * argv[]) {
   //validate_exceptions();
   
-  //validate_funnel();
+  validate_funnel();
   //time_funnel();
   
   //validate_matrix();
@@ -341,8 +343,8 @@ int main(int argc, const char * argv[]) {
   //validate_dot();
   //time_dot();
   
-  test_scalar_functions();
-  test_scalar_operators();
+  //test_scalar_functions();
+  //test_scalar_operators();
   
   return 0;
 }

@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <autodiff/base_functor.hpp>
 #include <scalar/operators.hpp>
 #include <tests/finite_difference.hpp>
 
@@ -39,7 +40,8 @@ namespace nomad {
 
   // operator_addition_assignment
   template <typename T>
-  struct operator_addition_assignment_vv_func {
+  class operator_addition_assignment_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -49,7 +51,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_addition_assignment_vd_func {
+  class operator_addition_assignment_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v + 0.4847);
@@ -73,7 +76,8 @@ namespace nomad {
   
   // operator_addition
   template <typename T>
-  struct operator_addition_vv_func {
+  class operator_addition_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -84,7 +88,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_addition_vd_func {
+  class operator_addition_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v + 0.4847);
@@ -94,7 +99,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_addition_dv_func {
+  class operator_addition_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(0.3898 + v);
@@ -119,7 +125,8 @@ namespace nomad {
 
   // operator_division_assignment
   template <typename T>
-  struct operator_division_assignment_vv_func {
+  class operator_division_assignment_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -129,7 +136,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_division_assignment_vd_func {
+  class operator_division_assignment_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v /= 0.4847);
@@ -153,7 +161,8 @@ namespace nomad {
   
   // operator_division
   template <typename T>
-  struct operator_division_vv_func {
+  class operator_division_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -164,7 +173,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_division_vd_func {
+  class operator_division_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v / 0.4847);
@@ -174,7 +184,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_division_dv_func {
+  class operator_division_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(0.3898 / v);
@@ -199,7 +210,8 @@ namespace nomad {
   
   // operator_multiplication_assignment
   template <typename T>
-  struct operator_multiplication_assignment_vv_func {
+  class operator_multiplication_assignment_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -209,7 +221,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_multiplication_assignment_vd_func {
+  class operator_multiplication_assignment_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v *= 0.4847);
@@ -233,7 +246,8 @@ namespace nomad {
   
   // operator_multiplication
   template <typename T>
-  struct operator_multiplication_vv_func {
+  class operator_multiplication_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -244,7 +258,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_multiplication_vd_func {
+  class operator_multiplication_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v * 0.4847);
@@ -254,7 +269,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_multiplication_dv_func {
+  class operator_multiplication_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(0.3898 * v);
@@ -279,7 +295,8 @@ namespace nomad {
   
   // operator_subtraction_assignment
   template <typename T>
-  struct operator_subtraction_assignment_vv_func {
+  class operator_subtraction_assignment_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -289,7 +306,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_subtraction_assignment_vd_func {
+  class operator_subtraction_assignment_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v -= 0.4847);
@@ -313,7 +331,8 @@ namespace nomad {
   
   // operator_subtraction
   template <typename T>
-  struct operator_subtraction_vv_func {
+  class operator_subtraction_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -324,7 +343,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_subtraction_vd_func {
+  class operator_subtraction_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v - 0.4847);
@@ -334,7 +354,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_subtraction_dv_func {
+  class operator_subtraction_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(0.3898 - v);
@@ -359,7 +380,8 @@ namespace nomad {
 
   // operator_unary_decrement
   template <typename T>
-  struct operator_unary_decrement_prefix_func {
+  class operator_unary_decrement_prefix_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(++v1);
@@ -369,7 +391,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_unary_decrement_postfix_func {
+  class operator_unary_decrement_postfix_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(v1++);
@@ -387,7 +410,8 @@ namespace nomad {
   
   // operator_unary_increment
   template <typename T>
-  struct operator_unary_increment_prefix_func {
+  class operator_unary_increment_prefix_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(++v1);
@@ -397,7 +421,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct operator_unary_increment_postfix_func {
+  class operator_unary_increment_postfix_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(v1++);
@@ -415,7 +440,8 @@ namespace nomad {
   
   // operator_unary_minus
   template <typename T>
-  struct operator_unary_minus_func {
+  class operator_unary_minus_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(-v1);
@@ -432,7 +458,8 @@ namespace nomad {
 
   // operator_unary_plus
   template <typename T>
-  struct operator_unary_plus_func {
+  class operator_unary_plus_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       return exp(+v1);

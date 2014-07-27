@@ -25,53 +25,38 @@ namespace nomad {
   }
 
   template <typename F>
-  void hessian(const F& functional,
-               const Eigen::VectorXd& x,
-               double& f,
-               Eigen::VectorXd& g,
-               Eigen::MatrixXd& H) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 2, void >::type
+  hessian(const F& functional,
+          const Eigen::VectorXd& x,
+          double& f,
+          Eigen::VectorXd& g,
+          Eigen::MatrixXd& H) {
     
     reset();
     
     eigen_idx_t d = x.size();
     
-    try {
+    auto f_var = functional(x);
+    f = f_var.first_val();
+    
+    // First-order
+    first_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_bodies_[i + 1].first_grad();
+    
+    // Second-order
+    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      auto f_var = functional(x);
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
       
-      if (f_var.order() < 2) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the hessian");
-      }
+      second_order_forward_val(f_var);
+      second_order_reverse_adj(f_var);
       
-      f = f_var.first_val();
+      for (eigen_idx_t j = 0; j < d; ++j)
+        H(i, j) = var_bodies_[j + 1].second_grad();
       
-      // First-order
-      first_order_reverse_adj(f_var);
-      
-      for (eigen_idx_t i = 0; i < d; ++i)
-        g(i) = var_bodies_[i + 1].first_grad();
-      
-      // Second-order
-      for (eigen_idx_t i = 0; i < d; ++i) {
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
-        
-        second_order_forward_val(f_var);
-        second_order_reverse_adj(f_var);
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          H(i, j) = var_bodies_[j + 1].second_grad();
-        
-      }
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
     }
     
     reset();
@@ -92,33 +77,17 @@ namespace nomad {
   }
   
   template <typename F>
-  void finite_diff_hessian(const F& functional,
-                           const Eigen::VectorXd& x,
-                           Eigen::MatrixXd& H,
-                           const double epsilon = 1e-6) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 1, void >::type
+  finite_diff_hessian(const F& functional,
+                      const Eigen::VectorXd& x,
+                      Eigen::MatrixXd& H,
+                      const double epsilon = 1e-6) {
     
     eigen_idx_t d = x.size();
     
     Eigen::VectorXd x_dynam(x);
     Eigen::VectorXd g_auto(d);
-    
-    try {
-      
-      auto f_var = functional(x);
-      reset();
-      
-      if (f_var.order() < 1) {
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the finite difference hessian");
-      }
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Finite difference hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
-    }
-    
+
     for (eigen_idx_t i = 0; i < d; ++i) {
       
       Eigen::VectorXd g_diff = Eigen::VectorXd::Zero(d);
@@ -207,51 +176,36 @@ namespace nomad {
   }
   
   template <typename F>
-  void hessian_dot_vector(const F& functional,
-                          const Eigen::VectorXd& x,
-                          const Eigen::VectorXd& v,
-                          double& f,
-                          Eigen::VectorXd& g,
-                          Eigen::VectorXd& hessian_dot_v) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 2, void >::type
+  hessian_dot_vector(const F& functional,
+                     const Eigen::VectorXd& x,
+                     const Eigen::VectorXd& v,
+                     double& f,
+                     Eigen::VectorXd& g,
+                     Eigen::VectorXd& hessian_dot_v) {
     
     reset();
     
     eigen_idx_t d = x.size();
     
-    try {
-      
-      auto f_var = functional(x);
-      
-      if (f_var.order() < 2) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the hessian dot vector");
-      }
-      
-      f = f_var.first_val();
-      
-      // First-order
-      first_order_reverse_adj(f_var);
-      
-      for (eigen_idx_t i = 0; i < d; ++i)
-        g(i) = var_bodies_[i + 1].first_grad();
-      
-      // Second-order
-      for (eigen_idx_t i = 0; i < d; ++i)
-        var_bodies_[i + 1].second_val() = v(i);
-      
-      second_order_forward_val(f_var);
-      second_order_reverse_adj(f_var);
-      
-      for (eigen_idx_t i = 0; i < d; ++i)
-        hessian_dot_v(i) = var_bodies_[i + 1].second_grad();
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Hessian dot vector cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
-    }
+    auto f_var = functional(x);
+    f = f_var.first_val();
+    
+    // First-order
+    first_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_bodies_[i + 1].first_grad();
+    
+    // Second-order
+    for (eigen_idx_t i = 0; i < d; ++i)
+      var_bodies_[i + 1].second_val() = v(i);
+    
+    second_order_forward_val(f_var);
+    second_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      hessian_dot_v(i) = var_bodies_[i + 1].second_grad();
   
     reset();
     
@@ -331,55 +285,40 @@ namespace nomad {
   }
   
   template <typename F>
-  void trace_matrix_times_hessian(const F& functional,
-                                  const Eigen::VectorXd& x,
-                                  const Eigen::MatrixXd& M,
-                                  double& f,
-                                  Eigen::VectorXd& g,
-                                  double& trace_m_times_h) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 1, void >::type
+  trace_matrix_times_hessian(const F& functional,
+                             const Eigen::VectorXd& x,
+                             const Eigen::MatrixXd& M,
+                             double& f,
+                             Eigen::VectorXd& g,
+                             double& trace_m_times_h) {
     
     reset();
     
     eigen_idx_t d = x.size();
+
+    auto f_var = functional(x);
+    f = f_var.first_val();
     
-    try {
+    // First-order
+    first_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_bodies_[i + 1].first_grad();
+    
+    // Second-order
+    trace_m_times_h = 0;
+    
+    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      auto f_var = functional(x);
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].second_val() = M(j, i);
       
-      if (f_var.order() < 2) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the trace of a matrix times the Hessian");
-      }
+      second_order_forward_val(f_var);
+      second_order_reverse_adj(f_var);
       
-      f = f_var.first_val();
+      trace_m_times_h += var_bodies_[i + 1].second_grad();
       
-      // First-order
-      first_order_reverse_adj(f_var);
-      
-      for (eigen_idx_t i = 0; i < d; ++i)
-        g(i) = var_bodies_[i + 1].first_grad();
-      
-      // Second-order
-      trace_m_times_h = 0;
-      
-      for (eigen_idx_t i = 0; i < d; ++i) {
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].second_val() = M(j, i);
-        
-        second_order_forward_val(f_var);
-        second_order_reverse_adj(f_var);
-        
-        trace_m_times_h += var_bodies_[i + 1].second_grad();
-        
-      }
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Trace of a matrix times the Hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
     }
     
     reset();

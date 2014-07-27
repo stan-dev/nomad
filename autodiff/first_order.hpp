@@ -3,6 +3,8 @@
 
 #include <iomanip>
 #include <string>
+#include <type_traits>
+
 #include <Eigen/Core>
 
 #include <var/var.hpp>
@@ -24,28 +26,18 @@ namespace nomad {
   }
 
   template <typename F>
-  void gradient(const F& f,
-                const Eigen::VectorXd& x,
-                double& fx,
-                Eigen::VectorXd& g) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 1, void >::type
+  gradient(const F& f,
+           const Eigen::VectorXd& x,
+           double& fx,
+           Eigen::VectorXd& g) {
     
     reset();
 
-    try {
-      
-      auto fx_var = f(x);
-      
-      if (fx_var.order() < 1)
-        throw autodiff_fail_ex("Autodiff order "
-                               + std::to_string(fx_var.order())
-                               + " insufficient for computing the gradient");
-      fx = fx_var.first_val();
-      first_order_reverse_adj(fx_var);
-      
-    } catch (...) {
-      reset();
-      throw;
-    }
+    auto fx_var = f(x);
+
+    fx = fx_var.first_val();
+    first_order_reverse_adj(fx_var);
     
     for (eigen_idx_t i = 0; i < x.size(); ++i)
       g(i) = var_bodies_[i + 1].first_grad();
@@ -63,29 +55,13 @@ namespace nomad {
   }
   
   template <typename F>
-  void finite_diff_gradient(const F& functional,
-                            const Eigen::VectorXd& x,
-                            Eigen::VectorXd& g,
-                            const double epsilon = 1e-6) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 0, void >::type
+  finite_diff_gradient(const F& functional,
+                       const Eigen::VectorXd& x,
+                       Eigen::VectorXd& g,
+                       const double epsilon = 1e-6) {
     
     Eigen::VectorXd x_dynam(x);
-    
-    try {
-      
-      auto f_var = functional(x);
-      reset();
-      
-      if (f_var.order() < 0) {
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the finite difference gradient");
-      }
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Finite difference gradient cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
-    }
     
     for (eigen_idx_t i = 0; i < x.size(); ++i) {
       
@@ -173,39 +149,24 @@ namespace nomad {
   }
   
   template <typename F>
-  void gradient_dot_vector(const F& functional,
-                           const Eigen::VectorXd& x,
-                           const Eigen::VectorXd& v,
-                           double& f,
-                           double& grad_dot_v) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 1, void >::type
+  gradient_dot_vector(const F& functional,
+                      const Eigen::VectorXd& x,
+                      const Eigen::VectorXd& v,
+                      double& f,
+                      double& grad_dot_v) {
     
     reset();
     
-    try {
-      
-      auto f_var = functional(x);
-      
-      if (f_var.order() < 1) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the gradient dot vector");
-      }
-      
-      f = f_var.first_val();
+    auto f_var = functional(x);
+    f = f_var.first_val();
+  
+    for (eigen_idx_t i = 0; i < x.size(); ++i)
+      var_bodies_[i + 1].first_grad() = v(i);
     
-      for (eigen_idx_t i = 0; i < x.size(); ++i)
-        var_bodies_[i + 1].first_grad() = v(i);
-      
-      first_order_forward_adj(f_var);
-      
-      grad_dot_v = f_var.first_grad();
-
-    } catch (partial_fail_ex& e) {
-      std::cout << "Gradient dot vector cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
-    }
+    first_order_forward_adj(f_var);
+    
+    grad_dot_v = f_var.first_grad();
     
     reset();
     

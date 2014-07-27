@@ -7,7 +7,8 @@
 namespace nomad {
 
   template <typename T>
-  struct f_first_fail {
+  class f_first_fail: base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       first_fail<T>();
       return T();
@@ -15,7 +16,8 @@ namespace nomad {
   };
 
   template <typename T>
-  struct f_second_fail {
+  class f_second_fail: base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       second_fail<T>();
       return T();
@@ -23,7 +25,8 @@ namespace nomad {
   };
 
   template <typename T>
-  struct f_third_fail {
+  class f_third_fail: base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       third_fail<T>();
       return T();

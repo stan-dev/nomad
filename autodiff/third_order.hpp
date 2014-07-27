@@ -27,82 +27,67 @@ namespace nomad {
   }
 
   template <typename F>
-  void grad_hessian(const F& functional,
-                    const Eigen::VectorXd& x,
-                    double& f,
-                    Eigen::VectorXd& g,
-                    Eigen::MatrixXd& H,
-                    Eigen::MatrixXd& grad_H) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 3, void >::type
+  grad_hessian(const F& functional,
+               const Eigen::VectorXd& x,
+               double& f,
+               Eigen::VectorXd& g,
+               Eigen::MatrixXd& H,
+               Eigen::MatrixXd& grad_H) {
     
     reset();
     
     eigen_idx_t d = x.size();
     
-    try {
+    auto f_var = functional(x);
+    f = f_var.first_val();
+    
+    // First-order
+    first_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_bodies_[i + 1].first_grad();
+    
+    Eigen::VectorXd v(d);
+    
+    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      auto f_var = functional(x);
-
-      if (f_var.order() < 3) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the gradient of the Hessian");
-      }
+      // Second-order
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
       
-      f = f_var.first_val();
+      second_order_forward_val(f_var);
+      second_order_reverse_adj(f_var);
       
-      // First-order
-      first_order_reverse_adj(f_var);
+      for (Eigen::internal::traits<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >::Index j = 0; j < d; ++j)
+        v(j) = var_bodies_[j + 1].second_grad();
       
-      for (eigen_idx_t i = 0; i < d; ++i)
-        g(i) = var_bodies_[i + 1].first_grad();
+      H.col(i) = v;
       
-      Eigen::VectorXd v(d);
+      // Third-order
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].fourth_val() = 0;
       
-      for (eigen_idx_t i = 0; i < d; ++i) {
+      for (eigen_idx_t k = 0; k <= i; ++k) {
         
-        // Second-order
         for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
+          var_bodies_[j + 1].third_val() = static_cast<double>(k == j);
         
-        second_order_forward_val(f_var);
-        second_order_reverse_adj(f_var);
+        third_order_forward_val(f_var);
         
-        for (Eigen::internal::traits<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >::Index j = 0; j < d; ++j)
-          v(j) = var_bodies_[j + 1].second_grad();
-        
-        H.col(i) = v;
-        
-        // Third-order
         for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].fourth_val() = 0;
+          v(j) = var_bodies_[j + 1].fourth_grad();
         
-        for (eigen_idx_t k = 0; k <= i; ++k) {
-          
-          for (eigen_idx_t j = 0; j < d; ++j)
-            var_bodies_[j + 1].third_val() = static_cast<double>(k == j);
-          
-          third_order_forward_val(f_var);
-          
-          for (eigen_idx_t j = 0; j < d; ++j)
-            v(j) = var_bodies_[j + 1].fourth_grad();
-          
-          third_order_reverse_adj(f_var);
-          
-          for (eigen_idx_t j = 0; j < d; ++j)
-            v(j) = var_bodies_[j + 1].fourth_grad();
-          
-          grad_H.block(0, i * d, d, d).col(k) = v;
-          grad_H.block(0, k * d, d, d).col(i) = v;
-          
-        }
+        third_order_reverse_adj(f_var);
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
+          v(j) = var_bodies_[j + 1].fourth_grad();
+        
+        grad_H.block(0, i * d, d, d).col(k) = v;
+        grad_H.block(0, k * d, d, d).col(i) = v;
         
       }
       
-    } catch (partial_fail_ex& e) {
-      std::cout << "Gradient of the Hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
     }
     
     reset();
@@ -124,32 +109,16 @@ namespace nomad {
   }
   
   template <typename F>
-  void finite_diff_grad_hessian(const F& functional,
-                                const Eigen::VectorXd& x,
-                                Eigen::MatrixXd& grad_H,
-                                const double epsilon = 1e-6) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 2, void >::type
+  finite_diff_grad_hessian(const F& functional,
+                           const Eigen::VectorXd& x,
+                           Eigen::MatrixXd& grad_H,
+                           const double epsilon = 1e-6) {
     eigen_idx_t d = x.size();
     
     Eigen::VectorXd x_dynam(x);
     Eigen::MatrixXd H_diff(d, d);
     Eigen::MatrixXd H_auto(d, d);
-    
-    try {
-      
-      auto f_var = functional(x);
-      reset();
-      
-      if (f_var.order() < 2) {
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the finite difference grad hessian");
-      }
-      
-    } catch (partial_fail_ex& e) {
-      std::cout << "Finite difference grad hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
-    }
     
     for (eigen_idx_t k = 0; k < d; ++k) {
       
@@ -247,75 +216,61 @@ namespace nomad {
   }
   
   template <typename F>
-  void grad_trace_matrix_times_hessian(const F& functional,
-                                       const Eigen::VectorXd& x,
-                                       const Eigen::MatrixXd& M,
-                                       double& f,
-                                       Eigen::VectorXd& g,
-                                       Eigen::MatrixXd& H,
-                                       Eigen::VectorXd& grad_trace_m_times_h) {
+  typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 3, void >::type
+  grad_trace_matrix_times_hessian(const F& functional,
+                                  const Eigen::VectorXd& x,
+                                  const Eigen::MatrixXd& M,
+                                  double& f,
+                                  Eigen::VectorXd& g,
+                                  Eigen::MatrixXd& H,
+                                  Eigen::VectorXd& grad_trace_m_times_h) {
     
     reset();
     
     eigen_idx_t d = x.size();
     
-    try {
+
+    auto f_var = functional(x);
+    f = f_var.first_val();
+    
+    // First-order
+    first_order_reverse_adj(f_var);
+    
+    for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_bodies_[i + 1].first_grad();
+    
+    Eigen::VectorXd v(d);
+    grad_trace_m_times_h.setZero();
+    
+    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      auto f_var = functional(x);
+      // Second-order
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
       
-      if (f_var.order() < 3) {
-        reset();
-        throw autodiff_fail_ex("Autodiff order " + std::to_string(f_var.order())
-                               + " insufficient for computing the gradient of the trace of a matrix times the Hessian");
-      }
+      second_order_forward_val(f_var);
+      second_order_reverse_adj(f_var);
       
-      f = f_var.first_val();
+      for (eigen_idx_t j = 0; j < d; ++j)
+        v(j) = var_bodies_[j + 1].second_grad();
       
-      // First-order
-      first_order_reverse_adj(f_var);
+      H.col(i) = v;
       
-      for (eigen_idx_t i = 0; i < d; ++i)
-        g(i) = var_bodies_[i + 1].first_grad();
+      // Third-order
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].fourth_val() = 0;
       
-      Eigen::VectorXd v(d);
-      grad_trace_m_times_h.setZero();
+      for (eigen_idx_t j = 0; j < d; ++j)
+        var_bodies_[j + 1].third_val() = M(j, i);
       
-      for (eigen_idx_t i = 0; i < d; ++i) {
-        
-        // Second-order
-        for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
-        
-        second_order_forward_val(f_var);
-        second_order_reverse_adj(f_var);
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_bodies_[j + 1].second_grad();
-        
-        H.col(i) = v;
-        
-        // Third-order
-        for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].fourth_val() = 0;
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].third_val() = M(j, i);
-        
-        third_order_forward_val(f_var);
-        third_order_reverse_adj(f_var);
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_bodies_[j + 1].fourth_grad();
-        
-        grad_trace_m_times_h += v;
-        
-      }
+      third_order_forward_val(f_var);
+      third_order_reverse_adj(f_var);
       
-    } catch (partial_fail_ex& e) {
-      std::cout << "The gradient of the trace of a matrix times the Hessian cannot be computed -- " << std::endl;
-      std::cout << e.what() << std::endl;
-      reset();
-      throw e;
+      for (eigen_idx_t j = 0; j < d; ++j)
+        v(j) = var_bodies_[j + 1].fourth_grad();
+      
+      grad_trace_m_times_h += v;
+      
     }
     
     reset();
