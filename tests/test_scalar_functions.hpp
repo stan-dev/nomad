@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <autodiff/base_functor.hpp>
 #include <scalar/functions.hpp>
 #include <tests/finite_difference.hpp>
 
@@ -89,7 +90,8 @@ namespace nomad {
   
   // acos
   template <typename T>
-  struct acos_func {
+  class acos_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return acos(v);
@@ -106,7 +108,8 @@ namespace nomad {
   
   // acosh
   template <typename T>
-  struct acosh_func {
+  class acosh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return acosh(v);
@@ -123,7 +126,8 @@ namespace nomad {
   
   // asin
   template <typename T>
-  struct asin_func {
+  class asin_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return asin(v);
@@ -140,7 +144,8 @@ namespace nomad {
   
   // asinh
   template <typename T>
-  struct asinh_func {
+  class asinh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return asinh(v);
@@ -157,7 +162,8 @@ namespace nomad {
   
   // atan
   template <typename T>
-  struct atan_func {
+  class atan_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return atan(v);
@@ -174,7 +180,8 @@ namespace nomad {
   
   // atan2
   template <typename T>
-  struct atan2_vv_func {
+  class atan2_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -185,7 +192,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct atan2_vd_func {
+  class atan2_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return atan2(v, 0.4847);
@@ -195,7 +203,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct atan2_dv_func {
+  class atan2_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return atan2(0.3898, v);
@@ -220,7 +229,8 @@ namespace nomad {
   
   // atanh
   template <typename T>
-  struct atanh_func {
+  class atanh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return atanh(v);
@@ -237,7 +247,8 @@ namespace nomad {
  
   // binary_prod_cubes
   template <typename T>
-  struct binary_prod_cubes_func {
+  class binary_prod_cubes_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -256,7 +267,8 @@ namespace nomad {
 
   // cbrt
   template <typename T>
-  struct cbrt_func {
+  class cbrt_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return cbrt(v);
@@ -273,7 +285,8 @@ namespace nomad {
   
   // cos
   template <typename T>
-  struct cos_func {
+  class cos_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return cos(v);
@@ -290,7 +303,8 @@ namespace nomad {
   
   // cosh
   template <typename T>
-  struct cosh_func {
+  class cosh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return cosh(v);
@@ -307,7 +321,8 @@ namespace nomad {
 
   // erf
   template <typename T>
-  struct erf_func {
+  class erf_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return erf(v);
@@ -324,7 +339,8 @@ namespace nomad {
   
   // erfc
   template <typename T>
-  struct erfc_func {
+  class erfc_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return erfc(v);
@@ -341,7 +357,8 @@ namespace nomad {
   
   // exp
   template <typename T>
-  struct exp_func {
+  class exp_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp(v);
@@ -358,7 +375,8 @@ namespace nomad {
   
   // exp2
   template <typename T>
-  struct exp2_func {
+  class exp2_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return exp2(v);
@@ -375,7 +393,8 @@ namespace nomad {
   
   // expm1
   template <typename T>
-  struct expm1_func {
+  class expm1_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return expm1(v);
@@ -392,7 +411,8 @@ namespace nomad {
   
   // fma
   template <typename T>
-  struct fma_func {
+  class fma_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -413,7 +433,8 @@ namespace nomad {
   
   // hypot
   template <typename T>
-  struct hypot_vv_func {
+  class hypot_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -424,7 +445,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct hypot_vd_func {
+  class hypot_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return hypot(v, 0.4847);
@@ -434,7 +456,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct hypot_dv_func {
+  class hypot_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return hypot(0.3898, v);
@@ -459,7 +482,8 @@ namespace nomad {
 
   // inv_cloglog
   template <typename T>
-  struct inv_cloglog_func {
+  class inv_cloglog_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return inv_cloglog(v);
@@ -476,7 +500,8 @@ namespace nomad {
   
   // inv_logit
   template <typename T>
-  struct inv_logit_func {
+  class inv_logit_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return inv_logit(v);
@@ -493,7 +518,8 @@ namespace nomad {
   
   // inv_sqrt
   template <typename T>
-  struct inv_sqrt_func {
+  class inv_sqrt_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return inv_sqrt(v);
@@ -510,7 +536,8 @@ namespace nomad {
   
   // inv_square
   template <typename T>
-  struct inv_square_func {
+  class inv_square_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return inv_square(v);
@@ -527,7 +554,8 @@ namespace nomad {
   
   // inv
   template <typename T>
-  struct inv_func {
+  class inv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return inv(v);
@@ -544,7 +572,8 @@ namespace nomad {
   
   // log_diff_exp
   template <typename T>
-  struct log_diff_exp_vv_func {
+  class log_diff_exp_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -555,7 +584,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct log_diff_exp_vd_func {
+  class log_diff_exp_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log_diff_exp(v, 0.5);
@@ -565,7 +595,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct log_diff_exp_dv_func {
+  class log_diff_exp_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log_diff_exp(0.5, v);
@@ -597,7 +628,8 @@ namespace nomad {
   
   // log_sum_exp
   template <typename T>
-  struct log_sum_exp_vv_func {
+  class log_sum_exp_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -608,7 +640,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct log_sum_exp_vd_func {
+  class log_sum_exp_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log_sum_exp(v, 0.5);
@@ -618,7 +651,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct log_sum_exp_dv_func {
+  class log_sum_exp_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log_sum_exp(0.5, v);
@@ -650,7 +684,8 @@ namespace nomad {
 
   // log
   template <typename T>
-  struct log_func {
+  class log_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log(v);
@@ -667,7 +702,8 @@ namespace nomad {
 
   // log1p_exp
   template <typename T>
-  struct log1p_exp_func {
+  class log1p_exp_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log1p_exp(v);
@@ -686,7 +722,8 @@ namespace nomad {
   
   // log1p
   template <typename T>
-  struct log1p_func {
+  class log1p_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log1p(v);
@@ -703,7 +740,8 @@ namespace nomad {
   
   // log2
   template <typename T>
-  struct log2_func {
+  class log2_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log2(v);
@@ -720,7 +758,8 @@ namespace nomad {
   
   // log10
   template <typename T>
-  struct log10_func {
+  class log10_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return log10(v);
@@ -737,7 +776,8 @@ namespace nomad {
   
   // multiply_log
   template <typename T>
-  struct multiply_log_vv_func {
+  class multiply_log_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -748,7 +788,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct multiply_log_vd_func {
+  class multiply_log_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return multiply_log(v, 0.5);
@@ -758,7 +799,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct multiply_log_dv_func {
+  class multiply_log_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return multiply_log(0.5, v);
@@ -783,7 +825,8 @@ namespace nomad {
   
   // pow
   template <typename T>
-  struct pow_vv_func {
+  class pow_vv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -794,7 +837,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct pow_vd_func {
+  class pow_vd_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return pow(v, 0.4847);
@@ -804,7 +848,8 @@ namespace nomad {
   };
   
   template <typename T>
-  struct pow_dv_func {
+  class pow_dv_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return pow(0.3898, v);
@@ -829,7 +874,8 @@ namespace nomad {
 
   // Phi
   template <typename T>
-  struct Phi_func {
+  class Phi_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return Phi(v);
@@ -846,7 +892,8 @@ namespace nomad {
   
   // sin
   template <typename T>
-  struct sin_func {
+  class sin_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return sin(v);
@@ -863,7 +910,8 @@ namespace nomad {
   
   // sinh
   template <typename T>
-  struct sinh_func {
+  class sinh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return sinh(v);
@@ -880,7 +928,8 @@ namespace nomad {
   
   // sqrt
   template <typename T>
-  struct sqrt_func {
+  class sqrt_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return sqrt(v);
@@ -897,7 +946,8 @@ namespace nomad {
   
   // square
   template <typename T>
-  struct square_func {
+  class square_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return square(exp(v));
@@ -914,7 +964,8 @@ namespace nomad {
   
   // tan
   template <typename T>
-  struct tan_func {
+  class tan_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return tan(v);
@@ -931,7 +982,8 @@ namespace nomad {
   
   // tanh
   template <typename T>
-  struct tanh_func {
+  class tanh_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return tanh(v);
@@ -948,7 +1000,8 @@ namespace nomad {
   
   // trinary_prod_cubes
   template <typename T>
-  struct trinary_prod_cubes_func {
+  class trinary_prod_cubes_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v1 = x[0];
       T v2 = x[1];
@@ -966,7 +1019,7 @@ namespace nomad {
     x[1] = -1.765;
     tests::test_function<trinary_prod_cubes_func>(x);
   }
-
+  
 }
 
 #endif
