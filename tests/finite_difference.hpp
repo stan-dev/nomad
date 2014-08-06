@@ -1,7 +1,11 @@
 #ifndef nomad__tests__finite_difference_hpp
 #define nomad__tests__finite_difference_hpp
 
+#include <gtest/gtest.h>
+
 #include <math.h>
+#include <string>
+
 #include <autodiff/first_order.hpp>
 #include <autodiff/second_order.hpp>
 #include <autodiff/third_order.hpp>
@@ -29,14 +33,12 @@ namespace nomad {
         std::cout << "Cannot compute Gradient Test" << std::endl;
         throw e;
       }
-      
-      bool fail = false;
-      
-      for (eigen_idx_t i = 0; i < x.size(); ++i)
-        if (std::fabs(auto_grad(i) - diff_grad(i)) / epsilon > 1) fail |= true;
-      
-      if (fail)
-        std::cout << functional.name() << " failed gradient finite difference test" << std::endl;
+  
+      for (eigen_idx_t i = 0; i < x.size(); ++i) {
+        SCOPED_TRACE("Gradient Finite Difference Test: " + functional.name()
+                     + ", element " + std::to_string(i));
+        EXPECT_EQ(true, std::fabs(auto_grad(i) - diff_grad(i)) / epsilon < 1);
+      }
       
     }
   
@@ -63,15 +65,14 @@ namespace nomad {
         throw e;
       }
 
-      bool fail = false;
-      
-      for (eigen_idx_t i = 0; i < d; ++i)
-        for (eigen_idx_t j = 0; j <= i; ++j)
-          if (std::fabs(auto_H(i, j) - diff_H(i, j)) / epsilon > 1) fail |= true;
-      
-      if (fail)
-        std::cout << functional.name() << " failed Hessian finite difference test" << std::endl;
-          
+      for (eigen_idx_t i = 0; i < d; ++i) {
+        for (eigen_idx_t j = 0; j <= i; ++j) {
+          SCOPED_TRACE("Hessian Finite Difference Test: " + functional.name()
+                       + ", element " + std::to_string(i)
+                       + ", " + std::to_string(j) );
+          EXPECT_EQ(true, std::fabs(auto_H(i, j) - diff_H(i, j)) / epsilon < 1);
+        }
+      }
     }
     
     template <typename F>
@@ -97,29 +98,31 @@ namespace nomad {
         throw e;
       }
       
-      bool fail = false;
-      
-      for (eigen_idx_t k = 0; k < d; ++k)
-        for (eigen_idx_t i = 0; i <= k; ++i)
-          for (eigen_idx_t j = 0; j <= i; ++j)
-            if (std::fabs(auto_grad_H.block(0, k * d, d, d)(i, j) - diff_grad_H.block(0, k * d, d, d)(i, j))
-                / epsilon > 1) fail |= true;
-      
-      if (fail)
-        std::cout << functional.name() << " failed grad Hessian finite difference test" << std::endl;
-      
+      for (eigen_idx_t k = 0; k < d; ++k) {
+        for (eigen_idx_t i = 0; i <= k; ++i) {
+          for (eigen_idx_t j = 0; j <= i; ++j) {
+            SCOPED_TRACE("Grad Hessian Finite Difference Test: " + functional.name()
+                         + ", element " + std::to_string(i)
+                         + ", " + std::to_string(j)
+                         + ", " + std::to_string(k));
+            EXPECT_EQ(true, std::fabs(  auto_grad_H.block(0, k * d, d, d)(i, j)
+                                      - diff_grad_H.block(0, k * d, d, d)(i, j) ) / epsilon < 1);
+          }
+        }
+      }
+
     }
     
-    template <template <class> class F>
+    template <bool strict_smoothness, template <class> class F>
     void test_function(Eigen::VectorXd& x) {
       
-      F<var1> f1;
+      F<var<1U, strict_smoothness> > f1;
       tests::test_gradient(f1, x);
       
-      F<var2> f2;
+      F<var<2U, strict_smoothness> > f2;
       tests::test_hessian(f2, x);
       
-      F<var3> f3;
+      F<var<3U, strict_smoothness> > f3;
       tests::test_grad_hessian(f3, x);
       
     }
