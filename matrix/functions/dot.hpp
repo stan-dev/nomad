@@ -20,6 +20,7 @@ namespace nomad {
       const Eigen::MatrixBase<DerivedB>& v2) {
     
     const short autodiff_order = Eigen::MatrixBase<DerivedA>::Scalar::order();
+    const short strict_smoothness = Eigen::MatrixBase<DerivedA>::Scalar::strict();
 
     eigen_idx_t N = v1.size();
     const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(2 * N);
@@ -42,7 +43,7 @@ namespace nomad {
     for (eigen_idx_t n = 0; n < N; ++n)
       push_inputs(v2(n).dual_numbers());
     
-    return var<autodiff_order>(next_body_idx_ - 1);
+    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
     
   }
   

@@ -14,14 +14,14 @@ namespace nomad {
     is_var<typename Eigen::MatrixBase<DerivedB>::Scalar>::value &&
     std::is_same<typename Eigen::MatrixBase<DerivedA>::Scalar,
                  typename Eigen::MatrixBase<DerivedB>::Scalar>::value,
-    typename Eigen::Matrix<var<Eigen::MatrixBase<DerivedA>::Scalar::order()>,
+    typename Eigen::Matrix<typename Eigen::MatrixBase<DerivedA>::Scalar,
              Eigen::Dynamic, Eigen::Dynamic>
     >::type
   multiply(const Eigen::MatrixBase<DerivedA>& M1,
            const Eigen::MatrixBase<DerivedB>& M2) {
     
     const eigen_idx_t N = M1.cols();
-    Eigen::Matrix<var<Eigen::MatrixBase<DerivedA>::Scalar::order()>, Eigen::Dynamic, Eigen::Dynamic> M(N, N);
+    Eigen::Matrix<typename Eigen::MatrixBase<DerivedA>::Scalar, Eigen::Dynamic, Eigen::Dynamic> M(N, N);
     
     for (eigen_idx_t i = 0; i < N; ++i) {
       for (eigen_idx_t j = 0; j < N; ++j) {

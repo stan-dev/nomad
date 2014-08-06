@@ -7,7 +7,7 @@
 
 namespace nomad {
   
-  template <short autodiff_order>
+  template <short autodiff_order, bool strict_smoothness>
   class var {
   private:
 
@@ -48,6 +48,7 @@ namespace nomad {
     void set_body(nomad_idx_t body_idx) { body_idx_ = body_idx; }
     
     constexpr static short order() { return autodiff_order; }
+    constexpr static bool strict() { return strict_smoothness; }
     
     double& first_val()   const { return var_bodies_[body_idx_].first_val(); }
     double& first_grad()  const { return var_bodies_[body_idx_].first_grad(); }
@@ -63,8 +64,16 @@ namespace nomad {
   template <typename T>
   struct is_var : public std::false_type { };
   
-  template <short autodiff_order>
-  struct is_var< var<autodiff_order> > : public std::true_type { };
+  template <short autodiff_order, bool strict_smoothness>
+  struct is_var< var<autodiff_order, strict_smoothness> > : public std::true_type { };
+  
+  typedef var<1, true> var1;
+  typedef var<2, true> var2;
+  typedef var<3, true> var3;
+  
+  typedef var<1, false> wild_var1;
+  typedef var<2, false> wild_var2;
+  typedef var<3, false> wild_var3;
 
 }
 

@@ -576,7 +576,8 @@ namespace nomad {
   
   // lgamma
   template <typename T>
-  struct lgamma_func {
+  class lgamma_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return lgamma(v);
@@ -1021,7 +1022,8 @@ namespace nomad {
   
   // tgamma
   template <typename T>
-  struct tgamma_func {
+  class tgamma_func: public base_functor<T> {
+  public:
     T operator()(const Eigen::VectorXd& x) const {
       T v = x[0];
       return tgamma(v);
