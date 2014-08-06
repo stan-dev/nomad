@@ -1,5 +1,5 @@
-#ifndef nomad__src__tests__test_scalar_operators_hpp
-#define nomad__src__tests__test_scalar_operators_hpp
+#ifndef nomad__src__test__test_scalar_operators_hpp
+#define nomad__src__test__test_scalar_operators_hpp
 
 #include <string>
 

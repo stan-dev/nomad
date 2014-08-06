@@ -1,5 +1,5 @@
-#ifndef nomad__src__tests__finite_difference_hpp
-#define nomad__src__tests__finite_difference_hpp
+#ifndef nomad__src__test__finite_difference_hpp
+#define nomad__src__test__finite_difference_hpp
 
 #include <gtest/gtest.h>
 
