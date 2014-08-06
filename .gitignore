@@ -57,3 +57,6 @@
 *.xdy
 *.tdo
 *.pdf
+
+# Test Executables
+test/*

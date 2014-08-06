@@ -1,10 +1,10 @@
 #include <iostream>
 #include <time.h>
 
-#include <autodiff/autodiff.hpp>
-#include <scalar/functions.hpp>
-#include <scalar/operators.hpp>
-#include <matrix/functions.hpp>
+#include <src/autodiff/autodiff.hpp>
+#include <src/scalar/functions.hpp>
+#include <src/scalar/operators.hpp>
+#include <src/matrix/functions.hpp>
 
 //#include <tests/test_scalar_functions.hpp>
 //#include <tests/test_scalar_operators.hpp>
