@@ -8,7 +8,6 @@
 #include <Eigen/Core>
 
 #include <var/var.hpp>
-#include <autodiff/exceptions.hpp>
 
 namespace nomad {
 

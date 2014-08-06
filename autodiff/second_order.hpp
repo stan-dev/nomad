@@ -6,7 +6,6 @@
 #include <Eigen/Core>
 
 #include <var/var.hpp>
-#include <autodiff/exceptions.hpp>
 #include <autodiff/first_order.hpp>
 
 namespace nomad {
