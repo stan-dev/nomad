@@ -11,10 +11,11 @@ namespace nomad {
   template<typename Derived>
   inline typename std::enable_if<
     is_var<typename Eigen::MatrixBase<Derived>::Scalar>::value,
-    typename Eigen::MatrixBase<Derived>::Scalar >::type
+           typename Eigen::MatrixBase<Derived>::Scalar >::type
   sum(const Eigen::MatrixBase<Derived>& input) {
     
     const short autodiff_order = Eigen::MatrixBase<Derived>::Scalar::order();
+    const bool strict_smoothness = Eigen::MatrixBase<Derived>::Scalar::strict();
     const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(input.size());
     
     next_inputs_delta = n_inputs;
@@ -31,7 +32,7 @@ namespace nomad {
     for (eigen_idx_t n = 0; n < n_inputs; ++n)
       push_inputs(input(n).dual_numbers());
     
-    return var<autodiff_order>(next_body_idx_ - 1);
+    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
     
   }
 

@@ -113,13 +113,13 @@ namespace nomad {
     template <template <class> class F>
     void test_function(Eigen::VectorXd& x) {
       
-      F<var<1U>> f1;
+      F<var1> f1;
       tests::test_gradient(f1, x);
       
-      F<var<2U>> f2;
+      F<var2> f2;
       tests::test_hessian(f2, x);
       
-      F<var<3U>> f3;
+      F<var3> f3;
       tests::test_grad_hessian(f3, x);
       
     }

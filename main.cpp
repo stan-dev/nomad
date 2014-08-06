@@ -6,7 +6,6 @@
 #include <scalar/operators.hpp>
 #include <matrix/functions.hpp>
 
-#include <tests/validate_exceptions.hpp>
 //#include <tests/test_scalar_functions.hpp>
 //#include <tests/test_scalar_operators.hpp>
 
@@ -64,6 +63,7 @@ public:
   }
 };
 
+/*
 template <typename T>
 class f_dot: public base_functor<T> {
 public:
@@ -81,11 +81,13 @@ public:
     
   }
 };
+*/
 
 inline double elapsed_secs(const clock_t& start) {
   return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
 
+/*
 void time_funnel() {
 
   clock_t start;
@@ -104,7 +106,7 @@ void time_funnel() {
   Eigen::VectorXd grad_m_times_h(x.size());
   
   // First-order timing
-  funnel_func<var<1U>, 100> first_order_funnel;
+  funnel_func<var1, 100> first_order_funnel;
 
   start = clock();
   for (int n = 0; n < n_calls_times_100; ++n) {
@@ -115,7 +117,7 @@ void time_funnel() {
   std::cout << n_calls_times_100 << " gradients took " << deltaT << " seconds" << std::endl;
   
   // Second-order timing
-  funnel_func<var<2U>, 100> second_order_funnel;
+  funnel_func<var2, 100> second_order_funnel;
   
   start = clock();
   for (int n = 0; n < n_calls; ++n)
@@ -126,7 +128,7 @@ void time_funnel() {
             << std::endl;
   
   // Third-order timing
-  funnel_func<var<3U>, 100> third_order_funnel;
+  funnel_func<var3, 100> third_order_funnel;
   
   start = clock();
   for (int n = 0; n < n_calls; ++n)
@@ -138,6 +140,7 @@ void time_funnel() {
             << deltaT << " seconds" << std::endl;
   
 }
+*/
 
 void validate_funnel() {
   
@@ -148,23 +151,24 @@ void validate_funnel() {
   x *= 0.345;
 
   // First-order
-  funnel_func<var<1U>, 5> first_order_func;
+  funnel_func<wild_var1, 5> first_order_func;
   test_gradient(first_order_func, x);
   test_gradient_dot_vector(first_order_func, x, v);
   
   // Second-order
-  funnel_func<var<2U>, 5> second_order_func;
+  funnel_func<wild_var2, 5> second_order_func;
   test_hessian(second_order_func, x);
   test_hessian_dot_vector(second_order_func, x, v);
   test_trace_matrix_times_hessian(second_order_func, x, M);
    
   // Third-order
-  funnel_func<var<3U>, 5> third_order_func;
+  funnel_func<wild_var3, 5> third_order_func;
   test_grad_hessian(third_order_func, x);
   test_grad_trace_matrix_times_hessian(third_order_func, x, M);
 
 }
 
+/*
 void validate_matrix() {
 
   f_matrix<var<1U> > first_order_func;
@@ -330,6 +334,7 @@ void time_dot() {
   std::cout << n_calls << " grad-matrix-times-hessians took " << deltaT << " seconds" << std::endl;
   
 }
+*/
 
 int main(int argc, const char * argv[]) {
   //validate_exceptions();
