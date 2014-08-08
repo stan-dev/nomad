@@ -35,9 +35,11 @@ namespace nomad {
       }
   
       for (eigen_idx_t i = 0; i < x.size(); ++i) {
-        SCOPED_TRACE("Gradient Finite Difference Test: " + functional.name()
-                     + ", element " + std::to_string(i));
-        EXPECT_EQ(true, std::fabs(auto_grad(i) - diff_grad(i)) / epsilon < 1);
+        SCOPED_TRACE("\nGradient Finite Difference Test: " + functional.name()
+                     + "\n  element " + std::to_string(i)
+                     + "\n  auto_diff = " + std::to_string(auto_grad(i))
+                     + "\n  finite_diff = " + std::to_string(diff_grad(i)));
+        EXPECT_LT(std::fabs(auto_grad(i) - diff_grad(i)), epsilon);
       }
       
     }
@@ -68,9 +70,11 @@ namespace nomad {
       for (eigen_idx_t i = 0; i < d; ++i) {
         for (eigen_idx_t j = 0; j <= i; ++j) {
           SCOPED_TRACE("Hessian Finite Difference Test: " + functional.name()
-                       + ", element " + std::to_string(i)
-                       + ", " + std::to_string(j) );
-          EXPECT_EQ(true, std::fabs(auto_H(i, j) - diff_H(i, j)) / epsilon < 1);
+                       + "\n  element " + std::to_string(i)
+                       + ", " + std::to_string(j)
+                       + "\n  auto_diff = " + std::to_string(auto_H(i, j))
+                       + "\n  finite_diff = " + std::to_string(diff_H(i, j)));
+          EXPECT_LT(std::fabs(auto_H(i, j) - diff_H(i, j)), epsilon);
         }
       }
     }
@@ -102,11 +106,13 @@ namespace nomad {
         for (eigen_idx_t i = 0; i <= k; ++i) {
           for (eigen_idx_t j = 0; j <= i; ++j) {
             SCOPED_TRACE("Grad Hessian Finite Difference Test: " + functional.name()
-                         + ", element " + std::to_string(i)
+                         + "\n  element " + std::to_string(i)
                          + ", " + std::to_string(j)
-                         + ", " + std::to_string(k));
-            EXPECT_EQ(true, std::fabs(  auto_grad_H.block(0, k * d, d, d)(i, j)
-                                      - diff_grad_H.block(0, k * d, d, d)(i, j) ) / epsilon < 1);
+                         + ", " + std::to_string(k)
+                         + "\n  auto_diff = " + std::to_string(auto_grad_H.block(0, k * d, d, d)(i, j))
+                         + "\n  finite_diff = " + std::to_string(diff_grad_H.block(0, k * d, d, d)(i, j)));
+            EXPECT_LT(std::fabs(  auto_grad_H.block(0, k * d, d, d)(i, j)
+                                - diff_grad_H.block(0, k * d, d, d)(i, j) ), epsilon);
           }
         }
       }

@@ -21,8 +21,6 @@ namespace nomad {
     
     push_inputs(v1.dual_numbers());
     
-    if (autodiff_order >= 1) push_partials(1);
-    
     v1.set_body(next_body_idx_ - 1);
     return v1;
     

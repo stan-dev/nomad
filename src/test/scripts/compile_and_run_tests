@@ -6,7 +6,7 @@ nomadDir="$( dirname $nomadDir)"
 nomadDir="$( dirname $nomadDir)"
 
 cd $scriptDir
-make clean
+#make clean
 make test
 
 cd $nomadDir

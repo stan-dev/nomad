@@ -12,7 +12,7 @@ namespace nomad {
     if (x > y)
       return x + std::log(-std::expm1(y - x));
     else
-      return y + std::log(std::expm1(x - y));
+      return std::numeric_limits<double>::quiet_NaN();
   }
   
   template <short autodiff_order, bool strict_smoothness>
