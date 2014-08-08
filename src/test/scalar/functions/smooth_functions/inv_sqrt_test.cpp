@@ -8,19 +8,19 @@
 #include <src/test/finite_difference.hpp>
 
 template <typename T>
-class acos_func: public nomad::base_functor<T> {
+class inv_sqrt_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
     T v = x[0];
-    return acos(v);
+    return inv_sqrt(v);
     
   }
-  static std::string name() { return "acos"; }
+  static std::string name() { return "inv_sqrt"; }
 };
 
-TEST(ScalarSmoothFunctions, Acos) {
+TEST(ScalarSmoothFunctions, InvSqrt) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, acos_func>(x);
+  nomad::tests::test_function<true, inv_sqrt_func>(x);
 }
 
