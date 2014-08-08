@@ -6,9 +6,6 @@
 #include <src/scalar/operators.hpp>
 #include <src/matrix/functions.hpp>
 
-//#include <tests/test_scalar_functions.hpp>
-//#include <tests/test_scalar_operators.hpp>
-
 using namespace nomad;
 
 double elapsed_secs(const clock_t& start);
@@ -347,9 +344,6 @@ int main(int argc, const char * argv[]) {
   
   //validate_dot();
   //time_dot();
-  
-  //test_scalar_functions();
-  //test_scalar_operators();
   
   return 0;
 }
