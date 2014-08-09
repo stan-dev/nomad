@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd ../../..
+
+for file in `find src -name "*.hpp"`
+do
+  guard=`head -1 $file`
+  guardName=`echo $guard | sed -e 's,#ifndef nomad__,,' -e 's,__,/,g' -e 's,_hpp,.hpp,'`
+  if [ "$file" != "$guardName" ]; then
+    echo "$file has a malformed header guard: $guard"
+  fi
+done

@@ -1,13 +1,10 @@
 #include <iostream>
 #include <time.h>
 
-#include <autodiff/autodiff.hpp>
-#include <scalar/functions.hpp>
-#include <scalar/operators.hpp>
-#include <matrix/functions.hpp>
-
-//#include <tests/test_scalar_functions.hpp>
-//#include <tests/test_scalar_operators.hpp>
+#include <src/autodiff/autodiff.hpp>
+#include <src/scalar/functions.hpp>
+#include <src/scalar/operators.hpp>
+#include <src/matrix/functions.hpp>
 
 using namespace nomad;
 
@@ -347,9 +344,6 @@ int main(int argc, const char * argv[]) {
   
   //validate_dot();
   //time_dot();
-  
-  //test_scalar_functions();
-  //test_scalar_operators();
   
   return 0;
 }
