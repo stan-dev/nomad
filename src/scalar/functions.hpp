@@ -9,7 +9,6 @@
 #include <src/scalar/functions/smooth_functions/atan2.hpp>
 #include <src/scalar/functions/smooth_functions/atanh.hpp>
 #include <src/scalar/functions/smooth_functions/binary_prod_cubes.hpp>
-#include <src/scalar/functions/smooth_functions/cbrt.hpp>
 #include <src/scalar/functions/smooth_functions/cos.hpp>
 #include <src/scalar/functions/smooth_functions/cosh.hpp>
 #include <src/scalar/functions/smooth_functions/erf.hpp>
@@ -44,6 +43,7 @@
 #include <src/scalar/functions/smooth_functions/tgamma.hpp>
 #include <src/scalar/functions/smooth_functions/trinary_prod_cubes.hpp>
 
+#include <src/scalar/functions/nonsmooth_functions/cbrt.hpp>
 #include <src/scalar/functions/nonsmooth_functions/ceil.hpp>
 #include <src/scalar/functions/nonsmooth_functions/fabs.hpp>
 #include <src/scalar/functions/nonsmooth_functions/fdim.hpp>
