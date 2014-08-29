@@ -12,8 +12,14 @@ namespace nomad {
     operator+=(var<autodiff_order, strict_smoothness>& v1,
                const var<autodiff_order, strict_smoothness>& v2) {
 
+    //double val1 = v1.first_val();
+    //double val2 = v2.first_val();
+      
+    //if (unlikely(std::isnan(val1))) std::cout << "Problem!" << std::endl;
+    //if (unlikely(std::isnan(val2))) std::cout << "Problem!" << std::endl;
+      
     const unsigned int n_inputs = 2;
-    
+      
     next_inputs_delta = n_inputs;
     // next_partials_delta not used by binary_sum_var_body
     

@@ -8,6 +8,7 @@
 #include <Eigen/Core>
 
 #include <src/var/var.hpp>
+#include <src/autodiff/exceptions.hpp>
 
 namespace nomad {
 
@@ -26,31 +27,39 @@ namespace nomad {
 
   template <typename F>
   typename std::enable_if<is_var<typename F::var_type>::value && F::var_type::order() >= 1, void >::type
-  gradient(const F& f,
+  gradient(const F& functional,
            const Eigen::VectorXd& x,
-           double& fx,
+           double& f,
            Eigen::VectorXd& g) {
     
     reset();
 
-    auto fx_var = f(x);
-
-    fx = fx_var.first_val();
-    first_order_reverse_adj(fx_var);
-    
-    for (eigen_idx_t i = 0; i < x.size(); ++i)
+    try {
+      
+      auto f_var = functional(x);
+      
+      
+      f = f_var.first_val();
+      first_order_reverse_adj(f_var);
+      
+      for (eigen_idx_t i = 0; i < x.size(); ++i)
       g(i) = var_bodies_[i + 1].first_grad();
-
-    reset();
+      
+      reset();
+      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
+    }
     
   }
   
   template <typename F>
-  void gradient(const F& f,
+  void gradient(const F& functional,
                 const Eigen::VectorXd& x,
                 Eigen::VectorXd& g) {
-    double fx;
-    gradient(f, x, fx, g);
+    double f;
+    gradient(functional, x, f, g);
   }
   
   template <typename F>
@@ -157,17 +166,25 @@ namespace nomad {
     
     reset();
     
-    auto f_var = functional(x);
-    f = f_var.first_val();
-  
-    for (eigen_idx_t i = 0; i < x.size(); ++i)
+    try {
+      
+      auto f_var = functional(x);
+      
+      f = f_var.first_val();
+      
+      for (eigen_idx_t i = 0; i < x.size(); ++i)
       var_bodies_[i + 1].first_grad() = v(i);
-    
-    first_order_forward_adj(f_var);
-    
-    grad_dot_v = f_var.first_grad();
-    
-    reset();
+      
+      first_order_forward_adj(f_var);
+      
+      grad_dot_v = f_var.first_grad();
+      
+      reset();
+      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
+    }
     
   }
   
@@ -177,11 +194,7 @@ namespace nomad {
                            const Eigen::VectorXd& v,
                            double& grad_dot_v) {
     double f;
-    try {
-      gradient_dot_vector(functional, x, v, f, grad_dot_v);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    gradient_dot_vector(functional, x, v, f, grad_dot_v);
   }
   
   template <typename F>
@@ -192,7 +205,7 @@ namespace nomad {
     Eigen::VectorXd g_auto(x.size());
     try {
       gradient(functional, x, g_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Gradient Dot Vector Test" << std::endl;
       std::cout << e.what() << std::endl;
     }
@@ -202,7 +215,7 @@ namespace nomad {
     double g_dot_v_auto;
     try {
       gradient_dot_vector(functional, x, v, g_dot_v_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Gradient Dot Vector Test" << std::endl;
       std::cout << e.what() << std::endl;
     }

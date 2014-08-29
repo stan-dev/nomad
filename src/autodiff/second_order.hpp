@@ -35,30 +35,38 @@ namespace nomad {
     
     eigen_idx_t d = x.size();
     
-    auto f_var = functional(x);
-    f = f_var.first_val();
-    
-    // First-order
-    first_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
+    try {
+      
+      auto f_var = functional(x);
+      
+      f = f_var.first_val();
+      
+      // First-order
+      first_order_reverse_adj(f_var);
+      
+      for (eigen_idx_t i = 0; i < d; ++i)
       g(i) = var_bodies_[i + 1].first_grad();
-    
-    // Second-order
-    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      for (eigen_idx_t j = 0; j < d; ++j)
+      // Second-order
+      for (eigen_idx_t i = 0; i < d; ++i) {
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
         var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
-      
-      second_order_forward_val(f_var);
-      second_order_reverse_adj(f_var);
-      
-      for (eigen_idx_t j = 0; j < d; ++j)
+        
+        second_order_forward_val(f_var);
+        second_order_reverse_adj(f_var);
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
         H(i, j) = var_bodies_[j + 1].second_grad();
+        
+      }
       
+      reset();
+      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
     }
-    
-    reset();
     
   }
   
@@ -68,11 +76,7 @@ namespace nomad {
                Eigen::MatrixXd& H) {
     double f;
     Eigen::VectorXd g(x.size());
-    try {
-      hessian(functional, x, f, g, H);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    hessian(functional, x, f, g, H);
   }
   
   template <typename F>
@@ -118,7 +122,7 @@ namespace nomad {
     Eigen::MatrixXd auto_H(x.size(), x.size());
     try {
       hessian(functional, x, auto_H);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Test" << std::endl;
       throw e;
     }
@@ -126,7 +130,7 @@ namespace nomad {
     Eigen::MatrixXd diff_H(x.size(), x.size());
     try {
       finite_diff_hessian(functional, x, diff_H, epsilon);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Test" << std::endl;
       throw e;
     }
@@ -187,26 +191,34 @@ namespace nomad {
     
     eigen_idx_t d = x.size();
     
-    auto f_var = functional(x);
-    f = f_var.first_val();
-    
-    // First-order
-    first_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
+    try {
+      
+      auto f_var = functional(x);
+      
+      f = f_var.first_val();
+      
+      // First-order
+      first_order_reverse_adj(f_var);
+      
+      for (eigen_idx_t i = 0; i < d; ++i)
       g(i) = var_bodies_[i + 1].first_grad();
-    
-    // Second-order
-    for (eigen_idx_t i = 0; i < d; ++i)
+      
+      // Second-order
+      for (eigen_idx_t i = 0; i < d; ++i)
       var_bodies_[i + 1].second_val() = v(i);
-    
-    second_order_forward_val(f_var);
-    second_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
+      
+      second_order_forward_val(f_var);
+      second_order_reverse_adj(f_var);
+      
+      for (eigen_idx_t i = 0; i < d; ++i)
       hessian_dot_v(i) = var_bodies_[i + 1].second_grad();
-  
-    reset();
+      
+      reset();
+      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
+    }
     
   }
   
@@ -217,11 +229,7 @@ namespace nomad {
                           Eigen::VectorXd& hessian_dot_v) {
     double f;
     Eigen::VectorXd g(x.size());
-    try {
-      hessian_dot_vector(functional, x, v, f, g, hessian_dot_v);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    hessian_dot_vector(functional, x, v, f, g, hessian_dot_v);
   }
   
   template <typename F>
@@ -232,7 +240,7 @@ namespace nomad {
     Eigen::MatrixXd H_auto(x.size(), x.size());
     try {
       hessian(functional, x, H_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Doc Vector Test" << std::endl;
       throw e;
     }
@@ -240,7 +248,7 @@ namespace nomad {
     Eigen::VectorXd H_dot_v_auto(x.size());
     try {
       hessian_dot_vector(functional, x, v, H_dot_v_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Doc Vector Test" << std::endl;
       throw e;
     }
@@ -296,31 +304,39 @@ namespace nomad {
     
     eigen_idx_t d = x.size();
 
-    auto f_var = functional(x);
-    f = f_var.first_val();
-    
-    // First-order
-    first_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
+    try {
+      
+      auto f_var = functional(x);
+      
+      f = f_var.first_val();
+      
+      // First-order
+      first_order_reverse_adj(f_var);
+      
+      for (eigen_idx_t i = 0; i < d; ++i)
       g(i) = var_bodies_[i + 1].first_grad();
-    
-    // Second-order
-    trace_m_times_h = 0;
-    
-    for (eigen_idx_t i = 0; i < d; ++i) {
       
-      for (eigen_idx_t j = 0; j < d; ++j)
+      // Second-order
+      trace_m_times_h = 0;
+      
+      for (eigen_idx_t i = 0; i < d; ++i) {
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
         var_bodies_[j + 1].second_val() = M(j, i);
+        
+        second_order_forward_val(f_var);
+        second_order_reverse_adj(f_var);
+        
+        trace_m_times_h += var_bodies_[i + 1].second_grad();
+        
+      }
       
-      second_order_forward_val(f_var);
-      second_order_reverse_adj(f_var);
+      reset();
       
-      trace_m_times_h += var_bodies_[i + 1].second_grad();
-      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
     }
-    
-    reset();
     
   }
   
@@ -331,11 +347,7 @@ namespace nomad {
                                   double& trace_m_times_h) {
     double f;
     Eigen::VectorXd g(x.size());
-    try {
-      trace_matrix_times_hessian(functional, x, M, f, g, trace_m_times_h);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    trace_matrix_times_hessian(functional, x, M, f, g, trace_m_times_h);
   }
   
   template <typename F>
@@ -346,7 +358,7 @@ namespace nomad {
     Eigen::MatrixXd H_auto(x.size(), x.size());
     try {
       hessian(functional, x, H_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Trace Matrix Times Hessian Test" << std::endl;
       throw e;
     }
@@ -356,7 +368,7 @@ namespace nomad {
     double trace_m_times_h_auto;
     try {
       trace_matrix_times_hessian(functional, x, M, trace_m_times_h_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Trace Matrix Times Hessian Test" << std::endl;
       throw e;
     }

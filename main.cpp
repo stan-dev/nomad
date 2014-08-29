@@ -36,7 +36,7 @@ public:
     T p2 = 0.5 * sum_x2 * exp(-v);
     T p3 = 0.5 * square(v) / 9.0;
     
-    return p1 + p2 + p3;
+    return p1 + p2 + p3 + sqrt(v);
     
   }
 };
@@ -84,7 +84,6 @@ inline double elapsed_secs(const clock_t& start) {
   return (double)(clock() - start) / CLOCKS_PER_SEC;
 }
 
-/*
 void time_funnel() {
 
   clock_t start;
@@ -137,7 +136,6 @@ void time_funnel() {
             << deltaT << " seconds" << std::endl;
   
 }
-*/
 
 void validate_funnel() {
   
@@ -334,9 +332,32 @@ void time_dot() {
 */
 
 int main(int argc, const char * argv[]) {
+  
+  Eigen::VectorXd x = Eigen::VectorXd::Ones(6);
+  x(0) = -5000;
+  
+  Eigen::VectorXd v = Eigen::VectorXd::Ones(6);
+  Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6, 6);
+  
+  double f;
+  Eigen::VectorXd grad(x.size());
+  Eigen::MatrixXd H(x.size(), x.size());
+  Eigen::VectorXd grad_m_times_h(x.size());
+  
+  funnel_func<var1, 5> first_order_funnel;
+  try {
+    gradient(first_order_funnel, x, f, grad);
+  } catch(nomad_error& e) {
+    std::cout << e.what() << std::endl;
+  }
+  
+  std::cout << f << std::endl;
+  std::cout << grad.transpose() << std::endl;
+  
+  
   //validate_exceptions();
   
-  validate_funnel();
+  //validate_funnel();
   //time_funnel();
   
   //validate_matrix();
