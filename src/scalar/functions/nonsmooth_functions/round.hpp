@@ -18,12 +18,8 @@ namespace nomad {
     const short partials_order = 0;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_node<AutodiffOrder, partials_order>::n_partials();
-    
-    new unary_var_node<AutodiffOrder, partials_order>();
-
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
+      
     push_dual_numbers<AutodiffOrder>(round(input.first_val()));
     
     push_inputs(input.dual_numbers());

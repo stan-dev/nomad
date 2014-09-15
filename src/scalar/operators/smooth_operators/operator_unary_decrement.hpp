@@ -10,12 +10,7 @@ namespace nomad {
   inline var<AutodiffOrder, StrictSmoothness>&
     operator--(var<AutodiffOrder, StrictSmoothness>& v1) {
     
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by unary_plus_var_node
-    
-    new unary_plus_var_node<AutodiffOrder>();
+    create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() - 1.0);
     
@@ -30,12 +25,7 @@ namespace nomad {
   inline var<AutodiffOrder, StrictSmoothness>
     operator--(const var<AutodiffOrder, StrictSmoothness>& v1, int /* dummy */) {
 
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by unary_plus_var_node
-    
-    new unary_plus_var_node<AutodiffOrder>();
+    create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() - 1.0);
     

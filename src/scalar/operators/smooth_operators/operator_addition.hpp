@@ -12,12 +12,7 @@ namespace nomad {
     operator+(const var<AutodiffOrder, StrictSmoothness>& v1,
               const var<AutodiffOrder, StrictSmoothness>& v2) {
 
-    const unsigned int n_inputs = 2;
-    
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by binary_sum_var_node
-    
-    new binary_sum_var_node<AutodiffOrder>();
+    create_node<binary_sum_var_node<AutodiffOrder>>(2);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() + v2.first_val());
     
@@ -33,12 +28,7 @@ namespace nomad {
     operator+(double x,
               const var<AutodiffOrder, StrictSmoothness>& v2) {
     
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by unary_plus_var_node
-    
-    new unary_plus_var_node<AutodiffOrder>();
+    create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
     push_dual_numbers<AutodiffOrder>(x + v2.first_val());
     
@@ -53,12 +43,7 @@ namespace nomad {
     operator+(const var<AutodiffOrder, StrictSmoothness>& v1,
               double y) {
     
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by unary_plus_var_node
-    
-    new unary_plus_var_node<AutodiffOrder>();
+    create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() + y);
     

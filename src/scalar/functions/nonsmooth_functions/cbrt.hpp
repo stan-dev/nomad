@@ -1,5 +1,5 @@
-#ifndef nomad__src__scalar__functions__smooth_functions__cbrt_hpp
-#define nomad__src__scalar__functions__smooth_functions__cbrt_hpp
+#ifndef nomad__src__scalar__functions__nonsmooth_functions__cbrt_hpp
+#define nomad__src__scalar__functions__nonsmooth_functions__cbrt_hpp
 
 #include <math.h>
 #include <src/var/var.hpp>
@@ -18,11 +18,7 @@ namespace nomad {
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_node<AutodiffOrder, partials_order>::n_partials();
-    
-    new unary_var_node<AutodiffOrder, partials_order>();
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     double val = std::cbrt(input.first_val());
     

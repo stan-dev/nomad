@@ -18,11 +18,7 @@ namespace nomad {
     const short partials_order = 3;
     const unsigned int n_inputs = 3;
 
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_node<AutodiffOrder, partials_order>::n_partials(n_inputs);
-    
-    new var_node<AutodiffOrder, partials_order>(n_inputs);
+    create_node<var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     double x = v1.first_val();
     double y = v2.first_val();

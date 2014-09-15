@@ -12,10 +12,7 @@ namespace nomad {
     operator*(const var<AutodiffOrder, StrictSmoothness>& v1,
               const var<AutodiffOrder, StrictSmoothness>& v2) {
 
-    next_inputs_delta = 2;
-    // next_partials_delta not used by multiply_var_node
-    
-    new multiply_var_node<AutodiffOrder>();
+    create_node<multiply_var_node<AutodiffOrder>>(2);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() * v2.first_val());
     
@@ -34,11 +31,7 @@ namespace nomad {
     const short partials_order = 1;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_node<AutodiffOrder, partials_order>::n_partials();
-    
-    new unary_var_node<AutodiffOrder, partials_order>();
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     push_dual_numbers<AutodiffOrder>(v1 * v2.first_val());
     
@@ -58,11 +51,7 @@ namespace nomad {
     const short partials_order = 1;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_node<AutodiffOrder, partials_order>::n_partials();
-    
-    new unary_var_node<AutodiffOrder, partials_order>();
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() * v2);
     

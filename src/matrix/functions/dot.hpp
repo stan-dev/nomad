@@ -25,10 +25,7 @@ namespace nomad {
     eigen_idx_t N = v1.size();
     const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(2 * N);
     
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by dot_var_node
-    
-    new dot_var_node<AutodiffOrder>(n_inputs);
+    create_node<dot_var_node<AutodiffOrder>>(n_inputs);
     
     double sum = 0;
     
