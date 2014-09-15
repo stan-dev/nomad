@@ -21,9 +21,7 @@ namespace nomad {
     explicit var(nomad_idx_t body_idx) : body_idx_(body_idx) {}
     
     var(double val) {
-      // next_partials_delta not used by var_node<AutodiffOrder, 0>
-      // next_inputs_delta not used by var_node<AutodiffOrder, 0>
-      new var_node<AutodiffOrder, 0>();
+      create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder>(val);
       body_idx_ = next_body_idx_ - 1;
     }
@@ -34,9 +32,7 @@ namespace nomad {
     }
 
     var& operator=(double val) {
-      // next_partials_delta not used by var_node<AutodiffOrder, 0>
-      // next_inputs_delta not used by var_node<AutodiffOrder, 0>
-      new var_node<AutodiffOrder, 0>();
+      create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder>(val);
       body_idx_ = next_body_idx_ - 1;
       return *this;

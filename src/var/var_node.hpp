@@ -500,6 +500,7 @@ namespace nomad {
     var_node(): var_node_base() {}
     
     constexpr static bool dynamic_inputs() { return false; }
+    inline static nomad_idx_t n_partials() { return 0; }
     
     void second_order_forward_val() {
       second_grad() = 0;
