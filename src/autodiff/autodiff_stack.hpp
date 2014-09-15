@@ -10,6 +10,8 @@
 #endif
 
 #include <vector>
+#include <type_traits>
+
 #include <src/autodiff/typedefs.hpp>
 #include <src/autodiff/exceptions.hpp>
 
@@ -54,9 +56,23 @@ namespace nomad {
     next_inputs_idx_ = 1;
   }
   
+  template <class Node>
+  inline typename std::enable_if<Node::dynamic_inputs(), void>::type create_node(unsigned int n_inputs) {
+    next_inputs_delta = n_inputs;
+    next_partials_delta = Node::n_partials(n_inputs);
+    new Node(n_inputs);
+  }
+  
+  template <typename Node>
+  inline typename std::enable_if<!Node::dynamic_inputs(), void>::type create_node(unsigned int n_inputs) {
+    next_inputs_delta = n_inputs;
+    next_partials_delta = Node::n_partials();
+    new Node();
+  }
+  
   template<short autodiff_order>
   inline void push_dual_numbers(double val) {
-    if (unlikely(std::isnan(val))) throw nomad_error();
+    //if (unlikely(std::isnan(val))) throw nomad_error();
     
     dual_numbers_[next_dual_number_idx_++] = val;
     dual_numbers_[next_dual_number_idx_++] = 0;
@@ -76,7 +92,7 @@ namespace nomad {
   }
   
   inline void push_partials(double partial) {
-    if (unlikely(std::isnan(partial))) throw nomad_error();
+    //if (unlikely(std::isnan(partial))) throw nomad_error();
     partials_[next_partials_idx_++] = partial;
   }
   
