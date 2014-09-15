@@ -21,8 +21,8 @@ public:
 TEST(ScalarSmoothFunctions, Log1pExp) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, log1p_exp_func>(x);
+  nomad::tests::test_function<true, false, log1p_exp_func>(x);
   x *= -1.0;
-  nomad::tests::test_function<true, log1p_exp_func>(x);
+  nomad::tests::test_function<true, false, log1p_exp_func>(x);
 }
 

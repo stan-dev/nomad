@@ -20,6 +20,6 @@ public:
 TEST(ScalarSmoothFunctions, Acosh) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 1.576;
-  nomad::tests::test_function<true, acosh_func>(x);
+  nomad::tests::test_function<true, false, acosh_func>(x);
 }
 

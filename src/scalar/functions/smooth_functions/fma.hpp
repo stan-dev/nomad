@@ -26,7 +26,7 @@ namespace nomad {
     const short partials_order = 2;
     const unsigned int n_inputs = 3;
  
-    create_node<AutodiffOrder, partials_order>>(n_inputs);
+    create_node<var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     double x = v1.first_val();
     double y = v2.first_val();

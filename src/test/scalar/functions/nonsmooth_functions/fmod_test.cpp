@@ -43,13 +43,13 @@ TEST(ScalarNonSmoothFunctions, Fmax) {
   Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
   x1[0] = 3.25;
   x1[1] = 3.0;
-  nomad::tests::test_function<false, fmod_vv_func>(x1);
+  nomad::tests::test_function<false, false, fmod_vv_func>(x1);
 
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
   x2[0] = 3.25;
-  nomad::tests::test_function<false, fmod_vd_func>(x2);
+  nomad::tests::test_function<false, false, fmod_vd_func>(x2);
   
   x2[0] = 3.0;
-  nomad::tests::test_function<false, fmod_dv_func>(x2);
+  nomad::tests::test_function<false, false, fmod_dv_func>(x2);
 }

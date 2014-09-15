@@ -23,6 +23,6 @@ TEST(ScalarSmoothFunctions, BinaryProdCubes) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(2);
   x[0] = 0.576;
   x[1] = 0.832;
-  nomad::tests::test_function<true, binary_prod_cubes_func>(x);
+  nomad::tests::test_function<true, false, binary_prod_cubes_func>(x);
 }
 

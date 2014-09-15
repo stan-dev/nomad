@@ -25,6 +25,6 @@ void test_inv_logit() {
 TEST(ScalarSmoothFunctions, InvLogit) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, inv_logit_func>(x);
+  nomad::tests::test_function<true, false, inv_logit_func>(x);
 }
 

@@ -46,14 +46,14 @@ TEST(ScalarSmoothFunctions, LogDiffExp) {
   x1[0] = 1.0;
   x1[1] = 0.5;
   
-  nomad::tests::test_function<true, log_diff_exp_vv_func>(x1);
+  nomad::tests::test_function<true, false, log_diff_exp_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
-  nomad::tests::test_function<true, log_diff_exp_vd_func>(x2);
+  nomad::tests::test_function<true, false, log_diff_exp_vd_func>(x2);
   
   x2 *= 0.25;
-  nomad::tests::test_function<true, log_diff_exp_dv_func>(x2);
+  nomad::tests::test_function<true, false, log_diff_exp_dv_func>(x2);
 
 }
 

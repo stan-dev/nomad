@@ -25,6 +25,6 @@ TEST(ScalarSmoothFunctions, TrinaryProdCubes) {
   x[0] = 0.576;
   x[1] = 0.832;
   x[1] = -1.765;
-  nomad::tests::test_function<true, trinary_prod_cubes_func>(x);
+  nomad::tests::test_function<true, false, trinary_prod_cubes_func>(x);
 }
 

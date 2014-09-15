@@ -44,18 +44,18 @@ TEST(ScalarNonSmoothFunctions, Fdim) {
   x1[0] *= 0.5;
   x1[1] *= -0.5;
   
-  nomad::tests::test_function<false, fdim_vv_func>(x1);
+  nomad::tests::test_function<false, false, fdim_vv_func>(x1);
   
   x1 *= -1;
-  nomad::tests::test_function<false, fdim_vv_func>(x1);
+  nomad::tests::test_function<false, false, fdim_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
-  nomad::tests::test_function<false, fdim_vd_func>(x2);
+  nomad::tests::test_function<false, false, fdim_vd_func>(x2);
   
   x2[0] = 0.5;
-  nomad::tests::test_function<false, fdim_dv_func>(x2);
+  nomad::tests::test_function<false, false, fdim_dv_func>(x2);
 
   x2[0] = -1.0;
-  nomad::tests::test_function<false, fdim_vd_func>(x2);
-  nomad::tests::test_function<false, fdim_dv_func>(x2);
+  nomad::tests::test_function<false, false, fdim_vd_func>(x2);
+  nomad::tests::test_function<false, false, fdim_dv_func>(x2);
 }

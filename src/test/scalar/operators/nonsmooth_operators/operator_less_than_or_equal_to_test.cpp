@@ -54,19 +54,19 @@ TEST(ScalarNonSmoothOperators, OperatorLessThanOrEqualTo) {
   x1[0] = 1.5;
   x1[1] = 0.5;
   
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_vv_func>(x1);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_vv_func>(x1);
   
   x1[0] = 0.5;
   x1[1] = 1.5;
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_vv_func>(x1);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
   x2[0] = 1.5;
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_vd_func>(x2);
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_dv_func>(x2);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_vd_func>(x2);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_dv_func>(x2);
   
   x2[0] = 0.5;
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_vd_func>(x2);
-  nomad::tests::test_function<false, operator_less_than_or_equal_to_dv_func>(x2);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_vd_func>(x2);
+  nomad::tests::test_function<false, false, operator_less_than_or_equal_to_dv_func>(x2);
 }
