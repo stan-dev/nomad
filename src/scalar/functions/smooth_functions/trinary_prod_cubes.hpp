@@ -2,6 +2,7 @@
 #define nomad__src__scalar__functions__smooth_functions__trinary_prod_cubes_hpp
 
 #include <src/var/var.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -9,12 +10,18 @@ namespace nomad {
     return x * x * x * y * y * y * z * z * z;
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    trinary_prod_cubes(const var<AutodiffOrder, StrictSmoothness>& v1,
-                       const var<AutodiffOrder, StrictSmoothness>& v2,
-                       const var<AutodiffOrder, StrictSmoothness>& v3) {
-    
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    trinary_prod_cubes(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+                       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2,
+                       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v3) {
+
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "trinary_prod_cubes");
+      validate_input(v2.first_val(), "trinary_prod_cubes");
+      validate_input(v3.first_val(), "trinary_prod_cubes");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 3;
 
@@ -57,7 +64,7 @@ namespace nomad {
       push_partials(6 * x * x * x * y * y * y);
     }
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

@@ -5,6 +5,7 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/binary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -15,11 +16,21 @@ namespace nomad {
       return std::numeric_limits<double>::quiet_NaN();
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    log_diff_exp(const var<AutodiffOrder, StrictSmoothness>& v1,
-                 const var<AutodiffOrder, StrictSmoothness>& v2) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    log_diff_exp(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+                 const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      double val1 = v1.first_val();
+      validate_input(val1, "log_diff_exp");
+      
+      double val2 = v2.first_val();
+      validate_input(val2, "log_diff_exp");
+      
+      validate_positive_ordering(val1, val2, "log_diff_exp");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 2;
      
@@ -82,15 +93,24 @@ namespace nomad {
       
     }
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
     log_diff_exp(double x,
-                 const var<AutodiffOrder, StrictSmoothness>& v2) {
+                 const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(x, "log_diff_exp");
+      
+      double val2 = v2.first_val();
+      validate_input(val2, "log_diff_exp");
+      
+      validate_positive_ordering(x, val2, "log_diff_exp");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -128,15 +148,24 @@ namespace nomad {
       
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    log_diff_exp(const var<AutodiffOrder, StrictSmoothness>& v1,
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    log_diff_exp(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
                  double y) {
     
+    if (ValidateIO) {
+      double val1 = v1.first_val();
+      validate_input(val1, "log_diff_exp");
+      
+      validate_input(y, "log_diff_exp");
+      
+      validate_positive_ordering(val1, y, "log_diff_exp");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -174,7 +203,7 @@ namespace nomad {
       
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

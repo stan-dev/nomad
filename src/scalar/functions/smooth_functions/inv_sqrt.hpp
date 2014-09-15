@@ -4,6 +4,7 @@
 #include <math.h>
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -11,10 +12,16 @@ namespace nomad {
     return 1.0 / std::sqrt(x);
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    inv_sqrt(const var<AutodiffOrder, StrictSmoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    inv_sqrt(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) {
+      double val = input.first_val();
+      validate_input(val, "inv_sqrt");
+      validate_lower_bound(val, 0, "inv_sqrt");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -31,7 +38,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(0.75 * d * d * sqrtd);
     if (AutodiffOrder >= 3) push_partials(-1.875 * d * d * d * sqrtd);
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

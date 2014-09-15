@@ -4,14 +4,20 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/multiply_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
 
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>&
-    operator*=(var<AutodiffOrder, StrictSmoothness>& v1,
-               const var<AutodiffOrder, StrictSmoothness>& v2) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+    operator*=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+               const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
 
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "operator*=");
+      validate_input(v2.first_val(), "operator*=");
+    }
+      
     create_node<multiply_var_node<AutodiffOrder>>(2);
     
     push_dual_numbers<AutodiffOrder>(v1.first_val() * v2.first_val());
@@ -24,11 +30,16 @@ namespace nomad {
     
   }
 
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>&
-    operator*=(var<AutodiffOrder, StrictSmoothness>& v1,
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+    operator*=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
                double v2) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "operator*=");
+      validate_input(v2, "operator*=");
+    }
+      
     const short partials_order = 1;
     const unsigned int n_inputs = 1;
     

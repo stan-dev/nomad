@@ -7,16 +7,22 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/binary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double fmod(double x, double y) { return std::fmod(x, y); }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
-    fmod(const var<AutodiffOrder, StrictSmoothness>& v1,
-         const var<AutodiffOrder, StrictSmoothness>& v2) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+    fmod(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+         const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "fmod");
+      validate_input(v2.first_val(), "fmod");
+    }
+      
     const short partials_order = 1;
     const unsigned int n_inputs = 2;
     
@@ -36,15 +42,20 @@ namespace nomad {
       push_partials(-std::trunc(x / y));
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
     fmod(double x,
-         const var<AutodiffOrder, StrictSmoothness>& v2) {
+         const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(x, "fmod");
+      validate_input(v2.first_val(), "fmod");
+    }
+      
     const short partials_order = 1;
     const unsigned int n_inputs = 1;
     
@@ -58,15 +69,20 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(-std::trunc(x / y));
       
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
-    fmod(const var<AutodiffOrder, StrictSmoothness>& v1,
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+    fmod(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
          double y) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "fmod");
+      validate_input(y, "fmod");
+    }
+      
     const short partials_order = 1;
     const unsigned int n_inputs = 1;
     
@@ -80,7 +96,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(1);
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

@@ -4,10 +4,11 @@
 #include <type_traits>
 
 #include <src/var/var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
-  template <short AutodiffOrder, bool StrictSmoothness>
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
   class var {
   private:
 
@@ -21,6 +22,7 @@ namespace nomad {
     explicit var(nomad_idx_t body_idx) : body_idx_(body_idx) {}
     
     var(double val) {
+      if (ValidateIO) validate_input(val, "var constructor");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder>(val);
       body_idx_ = next_body_idx_ - 1;
@@ -32,6 +34,7 @@ namespace nomad {
     }
 
     var& operator=(double val) {
+      if (ValidateIO) validate_input(val, "var operator=");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder>(val);
       body_idx_ = next_body_idx_ - 1;
@@ -45,6 +48,7 @@ namespace nomad {
     
     constexpr static short order() { return AutodiffOrder; }
     constexpr static bool strict() { return StrictSmoothness; }
+    constexpr static bool validate() { return ValidateIO; }
     
     double& first_val()   const { return var_bodies_[body_idx_].first_val(); }
     double& first_grad()  const { return var_bodies_[body_idx_].first_grad(); }
@@ -60,16 +64,20 @@ namespace nomad {
   template <typename T>
   struct is_var : public std::false_type { };
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  struct is_var< var<AutodiffOrder, StrictSmoothness> > : public std::true_type { };
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  struct is_var< var<AutodiffOrder, StrictSmoothness, ValidateIO> > : public std::true_type { };
   
-  typedef var<1, true> var1;
-  typedef var<2, true> var2;
-  typedef var<3, true> var3;
+  typedef var<1, true, false> var1;
+  typedef var<2, true, false> var2;
+  typedef var<3, true, false> var3;
+
+  typedef var<1, true, true> debug_var1;
+  typedef var<2, true, true> debug_var2;
+  typedef var<3, true, true> debug_var3;
   
-  typedef var<1, false> wild_var1;
-  typedef var<2, false> wild_var2;
-  typedef var<3, false> wild_var3;
+  typedef var<1, false, false> wild_var1;
+  typedef var<2, false, false> wild_var2;
+  typedef var<3, false, false> wild_var3;
 
 }
 

@@ -5,15 +5,18 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/scalar/functions/smooth_functions/polygamma.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double lgamma(double x) { return std::lgamma(x); }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    lgamma(const var<AutodiffOrder, StrictSmoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    lgamma(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) validate_input(input.first_val(), "lgamma");
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -29,7 +32,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(trigamma(val));
     if (AutodiffOrder >= 3) push_partials(quadrigamma(val));
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

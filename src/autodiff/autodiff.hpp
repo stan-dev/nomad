@@ -7,5 +7,7 @@
 #include <src/autodiff/first_order.hpp>
 #include <src/autodiff/second_order.hpp>
 #include <src/autodiff/third_order.hpp>
+#include <src/autodiff/typedefs.hpp>
+#include <src/autodiff/validation.hpp>
 
 #endif

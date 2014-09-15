@@ -14,25 +14,24 @@ namespace nomad {
            typename Eigen::MatrixBase<Derived>::Scalar >::type
   sum(const Eigen::MatrixBase<Derived>& input) {
     
-    const short AutodiffOrder = Eigen::MatrixBase<Derived>::Scalar::order();
-    const bool StrictSmoothness = Eigen::MatrixBase<Derived>::Scalar::strict();
+    const short autodiff_order = Eigen::MatrixBase<Derived>::Scalar::order();
+    const bool strict_smoothness = Eigen::MatrixBase<Derived>::Scalar::strict();
+    const bool validate_io = Eigen::MatrixBase<Derived>::Scalar::validate();
+    
     const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(input.size());
     
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by multi_sum_var_node
-    
-    new multi_sum_var_node<AutodiffOrder>(n_inputs);
+    create_node<multi_sum_var_node<autodiff_order>>(n_inputs);
     
     double sum = 0;
     
     for (eigen_idx_t n = 0; n < n_inputs; ++n)
       sum += input(n).first_val();
-    push_dual_numbers<AutodiffOrder>(sum);
+    push_dual_numbers<autodiff_order>(sum);
     
     for (eigen_idx_t n = 0; n < n_inputs; ++n)
       push_inputs(input(n).dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<autodiff_order, strict_smoothness, validate_io>(next_body_idx_ - 1);
     
   }
 

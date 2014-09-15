@@ -5,16 +5,28 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/binary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double pow(double x, double y) { return std::pow(x, y); }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    pow(const var<AutodiffOrder, StrictSmoothness>& v1,
-        const var<AutodiffOrder, StrictSmoothness>& v2) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    pow(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      double val1 = v1.first_val();
+      validate_input(val1, "pow");
+      
+      double val2 = v2.first_val();
+      validate_input(val2, "pow");
+      
+      if (std::floor(val2) != val2)
+        validate_lower_bound(val1, 0, "pow");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 2;
     
@@ -47,15 +59,25 @@ namespace nomad {
       push_partials( lx * lx * lx * val );
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
     pow(double x,
-        const var<AutodiffOrder, StrictSmoothness>& v2) {
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(x, "pow");
+      
+      double val2 = v2.first_val();
+      validate_input(val2, "pow");
+      
+      if (std::floor(val2) != val2)
+        validate_lower_bound(x, 0, "pow");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -74,15 +96,25 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(lx * lx * val);
     if (AutodiffOrder >= 3) push_partials(lx * lx * lx * val);
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    pow(const var<AutodiffOrder, StrictSmoothness>& v1,
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    pow(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
         double y) {
     
+    if (ValidateIO) {
+      double val1 = v1.first_val();
+      validate_input(val1, "pow");
+      
+      validate_input(y, "pow");
+      
+      if (std::floor(y) != y)
+        validate_lower_bound(val1, 0, "pow");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -101,7 +133,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials( y * (y - 1.0) * val / (x * x) );
     if (AutodiffOrder >= 3) push_partials((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

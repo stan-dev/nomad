@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -10,12 +11,18 @@ namespace nomad {
     return std::fma(x, y, z);
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    fma(const var<AutodiffOrder, StrictSmoothness>& v1,
-        const var<AutodiffOrder, StrictSmoothness>& v2,
-        const var<AutodiffOrder, StrictSmoothness>& v3) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    fma(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2,
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v3) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "fma");
+      validate_input(v2.first_val(), "fma");
+      validate_input(v3.first_val(), "fma");
+    }
+      
     const short partials_order = 2;
     const unsigned int n_inputs = 3;
  
@@ -46,7 +53,7 @@ namespace nomad {
       push_partials(0);
     }
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

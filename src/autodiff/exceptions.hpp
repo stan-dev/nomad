@@ -13,36 +13,34 @@ namespace nomad {
   
   class nomad_domain_error: public nomad_error {
   public:
-    nomad_domain_error(std::string name):
-    nomad_error("Nomad stack construction terminated because of a domain "
-                + std::string("error in the inputs to the function ") + name) {}
+    nomad_domain_error(double input, std::string domain, std::string name):
+    nomad_error("Nomad stack construction terminated because the input "
+                + std::to_string(input) + " violated the " + domain +
+                " of " + name) {}
+    
+    nomad_domain_error(std::string domain, std::string name):
+    nomad_error("Nomad stack construction terminated because the input(s) violated the "
+                + domain + " of " + name) {}
   };
 
   class nomad_input_error: public nomad_error {
   public:
     nomad_input_error(std::string name):
-    nomad_error("Nomad stack construction terminated because the function "
+    nomad_error("Nomad stack construction terminated because"
                 + name + " encountered a NaN input") {}
-  };
-  
-  class nomad_output_error: public nomad_error {
-  public:
-    nomad_output_error(std::string name):
-    nomad_error("Nomad stack construction terminated because the function "
-                + name + " generated a NaN value or partial") {}
   };
   
   class nomad_output_value_error: public nomad_error {
   public:
     nomad_output_value_error(std::string name):
-    nomad_error("Nomad stack construction terminated because the function "
+    nomad_error("Nomad stack construction terminated because"
                 + name + " generated a NaN value") {}
   };
   
   class nomad_output_partial_error: public nomad_error {
   public:
     nomad_output_partial_error(std::string name):
-    nomad_error("Nomad stack construction terminated because the function "
+    nomad_error("Nomad stack construction terminated because"
                 + name + " generated a NaN partial") {}
   };
   

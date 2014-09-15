@@ -14,9 +14,10 @@ namespace nomad {
     return inv_logit(0.07056 * pow(x, 3.0) + 1.5976 * x);
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness> Phi_approx(const var<AutodiffOrder, StrictSmoothness>& input) {
-    return inv_logit(0.07056 * pow(input, 3.0) + 1.5976 * input);
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    Phi_approx(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
+      return inv_logit(0.07056 * pow(input, 3.0) + 1.5976 * input);
     
   }
 

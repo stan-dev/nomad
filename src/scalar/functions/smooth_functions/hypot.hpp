@@ -5,6 +5,7 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/binary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -12,11 +13,16 @@ namespace nomad {
     return std::hypot(x, y);
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    hypot(const var<AutodiffOrder, StrictSmoothness>& v1,
-          const var<AutodiffOrder, StrictSmoothness>& v2) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    hypot(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+          const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "hypot");
+      validate_input(v2.first_val(), "hypot");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 2;
     
@@ -90,14 +96,14 @@ namespace nomad {
       
     }
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
     hypot(double x,
-          const var<AutodiffOrder, StrictSmoothness>& v2) {
+          const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
@@ -152,13 +158,13 @@ namespace nomad {
       
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    hypot(const var<AutodiffOrder, StrictSmoothness>& v1,
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    hypot(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
           double y) {
     
     const short partials_order = 3;
@@ -214,7 +220,7 @@ namespace nomad {
       
     }
     
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

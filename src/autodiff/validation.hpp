@@ -6,28 +6,23 @@
 
 namespace nomad {
 
-  template <std::string f_name>
-  inline void validate_input(double val) {
-    if (unlikely(std::isnan(input_val))) throw nomad_input_error(f_name);
+  inline void validate_input(double val, std::string f_name) {
+    if (unlikely(std::isnan(val))) throw nomad_input_error(f_name);
     else return;
   }
   
-  template <std::string f_name, double Lower>
-  inline void validate_lower_bound(double val) {
-    if (unlikely(input_val < Lower)) throw nomad_domain_error(f_name);
+  inline void validate_lower_bound(double val, double lower, std::string f_name) {
+    if (unlikely(val < lower)) throw nomad_domain_error(val, "lower bound", f_name);
     else return;
   }
   
-  template <std::string f_name, double Upper>
-  inline void validate_upper_bound(double val) {
-    if (unlikely(input_val > Upper)) throw nomad_domain_error(f_name);
+  inline void validate_upper_bound(double val, double upper, std::string f_name) {
+    if (unlikely(val > upper)) throw nomad_domain_error(val, "upper bound", f_name);
     else return;
   }
   
-  template <std::string f_name, double Lower, double Upper>
-  inline void validate_lower_upper_bound(double val) {
-    if (unlikely(input_val < Lower || input_val > Upper))
-      throw nomad_domain_error(f_name);
+  inline void validate_positive_ordering(double val1, double val2, std::string f_name) {
+    if (unlikely(val1 > val2)) throw nomad_domain_error("positive-ordering", f_name);
     else return;
   }
   

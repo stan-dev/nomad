@@ -4,6 +4,7 @@
 #include <math.h>
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -12,10 +13,12 @@ namespace nomad {
     return std::log1p(exp(x));
   }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    log1p_exp(const var<AutodiffOrder, StrictSmoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    log1p_exp(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) validate_input(input.first_val(), "log1p_exp");
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -43,7 +46,7 @@ namespace nomad {
       if (AutodiffOrder >= 3) push_partials(p * (2.0 * p * p - 3.0 * p + 1.0));
     }
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 

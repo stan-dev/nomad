@@ -4,15 +4,23 @@
 #include <math.h>
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double atanh(double x) { return std::atanh(x); }
   
-  template <short AutodiffOrder, bool StrictSmoothness>
-  inline var<AutodiffOrder, StrictSmoothness>
-    atanh(const var<AutodiffOrder, StrictSmoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    atanh(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) {
+      double val = input.first_val();
+      validate_input(val, "atanh");
+      validate_lower_bound(val, -1, "atanh");
+      validate_upper_bound(val, 1, "atanh");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -29,7 +37,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(2 * x * d1 * d1);
     if (AutodiffOrder >= 3) push_partials((2 + 6 * x * x) * d1 * d1 * d1);
 
-    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
     
   }
 
