@@ -9,7 +9,6 @@ namespace nomad {
   class square_var_body: public var_base {
   public:
     
-    // Experiment with moving the checks back into the constructor proper
     static inline void* operator new(size_t /* ignore */) {
       if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<autodiff_order>();
       // no partials
@@ -21,9 +20,12 @@ namespace nomad {
   
     square_var_body(): var_base(1) {}
     
+    constexpr static bool dynamic_inputs() { return false; }
+    
     inline nomad_idx_t n_first_partials() { return 0; }
     inline nomad_idx_t n_second_partials() { return 0; }
     inline nomad_idx_t n_third_partials() { return 0; }
+    inline static nomad_idx_t n_partials() { return 0; }
     inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { return 0; }
     
     inline void first_order_forward_adj() {

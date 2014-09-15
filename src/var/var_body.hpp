@@ -57,6 +57,8 @@ namespace nomad {
     nomad_idx_t input() { return inputs_[inputs_idx_]; }
     nomad_idx_t input(unsigned int k) { return inputs_[inputs_idx_ + k]; }
     
+    constexpr static bool dynamic_inputs() { return true; }
+    
     // Are these used?
     nomad_idx_t begin() { return inputs_[inputs_idx_]; }
     nomad_idx_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
@@ -148,7 +150,7 @@ namespace nomad {
       }
       
     }
-
+    
     inline virtual void first_order_forward_adj()  {}
     inline virtual void first_order_reverse_adj()  {}
     virtual void second_order_forward_val() {}
@@ -496,6 +498,8 @@ namespace nomad {
     static inline void operator delete(void* /* ignore */) {}
     
     var_body(): var_base() {}
+    
+    constexpr static bool dynamic_inputs() { return false; }
     
     void second_order_forward_val() {
       second_grad() = 0;

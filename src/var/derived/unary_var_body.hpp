@@ -19,6 +19,8 @@ namespace nomad {
     static inline void operator delete(void* /* ignore */) {}
     
     unary_var_body(): var_base(1) {}
+    
+    constexpr static bool dynamic_inputs() { return false; }
 
     inline nomad_idx_t n_first_partials() {
       return autodiff_order >= 1 && partials_order >= 1 ? 1 : 0;

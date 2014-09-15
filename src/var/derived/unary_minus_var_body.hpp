@@ -20,6 +20,8 @@ namespace nomad {
     
     unary_minus_var_body(): var_base(1) {}
 
+    constexpr static bool dynamic_inputs() { return false; }
+    
     inline nomad_idx_t n_first_partials() { return 0; }
     inline nomad_idx_t n_second_partials() { return 0; }
     inline nomad_idx_t n_third_partials() { return 0; }

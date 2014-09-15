@@ -20,9 +20,12 @@ namespace nomad {
     
     binary_minus_var_body(): var_base(2) {}
  
+    constexpr static bool dynamic_inputs() { return false; }
+    
     inline nomad_idx_t n_first_partials() { return 0; }
     inline nomad_idx_t n_second_partials() { return 0; }
     inline nomad_idx_t n_third_partials() { return 0; }
+    inline static nomad_idx_t n_partials() { return 0; }
     inline static nomad_idx_t n_partials(unsigned int n_inputs) { return 0; }
     
     inline void first_order_forward_adj() {

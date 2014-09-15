@@ -14,10 +14,7 @@ namespace nomad {
   inline var<autodiff_order, strict_smoothness>
     square(const var<autodiff_order, strict_smoothness>& input) {
     
-    next_inputs_delta = 1;
-    // next_partials_delta not used by square_var_body
-    
-    new square_var_body<autodiff_order>();
+    create_node<square_var_body<autodiff_order>>(1);
     
     double val = input.first_val();
 

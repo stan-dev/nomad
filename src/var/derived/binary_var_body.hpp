@@ -20,6 +20,8 @@ namespace nomad {
     
     binary_var_body(): var_base(2) {}
 
+    constexpr static bool dynamic_inputs() { return false; }
+    
     inline nomad_idx_t n_first_partials() {
       return autodiff_order >= 1 && partials_order >= 1 ? 2 : 0;
     }
