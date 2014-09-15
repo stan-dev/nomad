@@ -10,37 +10,37 @@ namespace nomad {
     return std::fma(x, y, z);
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    fma(const var<autodiff_order, strict_smoothness>& v1,
-        const var<autodiff_order, strict_smoothness>& v2,
-        const var<autodiff_order, strict_smoothness>& v3) {
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline var<AutodiffOrder, StrictSmoothness>
+    fma(const var<AutodiffOrder, StrictSmoothness>& v1,
+        const var<AutodiffOrder, StrictSmoothness>& v2,
+        const var<AutodiffOrder, StrictSmoothness>& v3) {
     
     const short partials_order = 2;
     const unsigned int n_inputs = 3;
 
     next_inputs_delta = n_inputs;
     next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
+      var_node<AutodiffOrder, partials_order>::n_partials(n_inputs);
     
-    new var_body<autodiff_order, partials_order>(n_inputs);
+    new var_node<AutodiffOrder, partials_order>(n_inputs);
     
     double x = v1.first_val();
     double y = v2.first_val();
     double z = v3.first_val();
     
-    push_dual_numbers<autodiff_order>(fma(x, y, z));
+    push_dual_numbers<AutodiffOrder>(fma(x, y, z));
     
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     push_inputs(v3.dual_numbers());
     
-    if (autodiff_order >= 1) {
+    if (AutodiffOrder >= 1) {
       push_partials(y);
       push_partials(x);
       push_partials(1);
     }
-    if (autodiff_order >= 2) {
+    if (AutodiffOrder >= 2) {
       push_partials(0);
       push_partials(1);
       push_partials(0);
@@ -50,7 +50,7 @@ namespace nomad {
       push_partials(0);
     }
 
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
     
   }
 

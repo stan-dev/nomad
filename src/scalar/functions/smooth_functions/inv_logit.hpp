@@ -3,7 +3,7 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
-#include <src/var/derived/unary_var_body.hpp>
+#include <src/var/derived/unary_var_node.hpp>
 
 namespace nomad {
   
@@ -16,32 +16,32 @@ namespace nomad {
     }
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    inv_logit(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline var<AutodiffOrder, StrictSmoothness>
+    inv_logit(const var<AutodiffOrder, StrictSmoothness>& input) {
     
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
     next_inputs_delta = n_inputs;
     next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
+      unary_var_node<AutodiffOrder, partials_order>::n_partials();
     
-    new unary_var_body<autodiff_order, partials_order>();
+    new unary_var_node<AutodiffOrder, partials_order>();
 
     double s = inv_logit(input.first_val());
     
-    push_dual_numbers<autodiff_order>(s);
+    push_dual_numbers<AutodiffOrder>(s);
     
     push_inputs(input.dual_numbers());
     
     double ds = s * (1 - s);
     
-    if (autodiff_order >= 1) push_partials(ds);
-    if (autodiff_order >= 2) push_partials(ds * (1 - 2 * s) );
-    if (autodiff_order >= 3) push_partials(ds * (1 - 6 * s * (1 - s)) );
+    if (AutodiffOrder >= 1) push_partials(ds);
+    if (AutodiffOrder >= 2) push_partials(ds * (1 - 2 * s) );
+    if (AutodiffOrder >= 3) push_partials(ds * (1 - 6 * s * (1 - s)) );
 
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
     
   }
 

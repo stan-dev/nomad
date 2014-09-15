@@ -3,38 +3,38 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
-#include <src/var/derived/unary_var_body.hpp>
+#include <src/var/derived/unary_var_node.hpp>
 
 namespace nomad {
   
   inline double erf(double x) { return std::erf(x); }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    erf(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline var<AutodiffOrder, StrictSmoothness>
+    erf(const var<AutodiffOrder, StrictSmoothness>& input) {
     
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
     next_inputs_delta = n_inputs;
     next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
+      unary_var_node<AutodiffOrder, partials_order>::n_partials();
     
-    new unary_var_body<autodiff_order, partials_order>();
+    new unary_var_node<AutodiffOrder, partials_order>();
 
     double x = input.first_val();
     
-    push_dual_numbers<autodiff_order>(erf(x));
+    push_dual_numbers<AutodiffOrder>(erf(x));
     
     push_inputs(input.dual_numbers());
     
     double C = 2 * 0.56418958354776 * exp(- x * x);
     
-    if (autodiff_order >= 1) push_partials(C);
-    if (autodiff_order >= 2) push_partials(- 2 * x * C);
-    if (autodiff_order >= 3) push_partials(2 * (2 * x * x - 1) * C);
+    if (AutodiffOrder >= 1) push_partials(C);
+    if (AutodiffOrder >= 2) push_partials(- 2 * x * C);
+    if (AutodiffOrder >= 3) push_partials(2 * (2 * x * x - 1) * C);
 
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness>(next_body_idx_ - 1);
     
   }
 

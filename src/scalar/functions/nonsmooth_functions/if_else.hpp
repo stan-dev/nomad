@@ -6,26 +6,26 @@
 
 namespace nomad {
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline typename std::enable_if<!strict_smoothness, var<autodiff_order, strict_smoothness> >::type
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
     if_else(bool c,
-            const var<autodiff_order, strict_smoothness>& v_true,
-            const var<autodiff_order, strict_smoothness>& v_false) {
+            const var<AutodiffOrder, StrictSmoothness>& v_true,
+            const var<AutodiffOrder, StrictSmoothness>& v_false) {
     return c ? v_true : v_false;
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline typename std::enable_if<!strict_smoothness, var<autodiff_order, strict_smoothness> >::type
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
   if_else(bool c,
           double x_true,
-          const var<autodiff_order, strict_smoothness>& v_false) {
+          const var<AutodiffOrder, StrictSmoothness>& v_false) {
     return c ? x_true : v_false;
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline typename std::enable_if<!strict_smoothness, var<autodiff_order, strict_smoothness> >::type
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness> >::type
   if_else(bool c,
-          const var<autodiff_order, strict_smoothness>& v_true,
+          const var<AutodiffOrder, StrictSmoothness>& v_true,
           double x_false) {
     return c ? v_true : x_false;
   }

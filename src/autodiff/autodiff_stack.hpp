@@ -19,15 +19,15 @@ namespace nomad {
   
   void reset();
   void expand_var_bodies();
-  template<short autodiff_order> void expand_dual_numbers();
+  template<short AutodiffOrder> void expand_dual_numbers();
   void expand_partials();
   void expand_inputs();
 
-  class var_base;
+  class var_node_base;
   
   nomad_idx_t base_body_size_ = 100000;
   
-  var_base* var_bodies_;
+  var_node_base* var_bodies_;
   nomad_idx_t next_body_idx_ = 1;
   nomad_idx_t max_body_idx = 0;
   
@@ -70,19 +70,19 @@ namespace nomad {
     new Node();
   }
   
-  template<short autodiff_order>
+  template<short AutodiffOrder>
   inline void push_dual_numbers(double val) {
     //if (unlikely(std::isnan(val))) throw nomad_error();
     
     dual_numbers_[next_dual_number_idx_++] = val;
     dual_numbers_[next_dual_number_idx_++] = 0;
     
-    if (autodiff_order >= 2) {
+    if (AutodiffOrder >= 2) {
       dual_numbers_[next_dual_number_idx_++] = 0;
       dual_numbers_[next_dual_number_idx_++] = 0;
     }
     
-    if (autodiff_order >= 3) {
+    if (AutodiffOrder >= 3) {
       dual_numbers_[next_dual_number_idx_++] = 0;
       dual_numbers_[next_dual_number_idx_++] = 0;
       dual_numbers_[next_dual_number_idx_++] = 0;
@@ -102,11 +102,11 @@ namespace nomad {
   
   void expand_var_bodies();
   
-  template<short autodiff_order>
+  template<short AutodiffOrder>
   inline void expand_dual_numbers() {
     
     if (!max_dual_number_idx) {
-      max_dual_number_idx = (1 << autodiff_order) * base_body_size_;
+      max_dual_number_idx = (1 << AutodiffOrder) * base_body_size_;
       dual_numbers_ = new double[max_dual_number_idx];
     } else {
       max_dual_number_idx *= 2;

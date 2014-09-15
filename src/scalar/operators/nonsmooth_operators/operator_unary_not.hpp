@@ -5,9 +5,9 @@
 
 namespace nomad {
 
-  template <short autodiff_order, bool strict_smoothness>
-  inline typename std::enable_if<!strict_smoothness, bool >::type
-    operator!(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness>
+  inline typename std::enable_if<!StrictSmoothness, bool >::type
+    operator!(const var<AutodiffOrder, StrictSmoothness>& input) {
     return !(input.first_val());
   }
 
