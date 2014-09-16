@@ -21,6 +21,6 @@ public:
 TEST(ScalarSmoothFunctions, Erfc) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, false, erfc_func>(x);
+  nomad::tests::test_derivatives<true, true, erfc_func>(x);
 }
 

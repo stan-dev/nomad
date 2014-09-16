@@ -21,6 +21,6 @@ public:
 TEST(ScalarSmoothFunctions, Tgamma) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 1.2483;
-  nomad::tests::test_function<true, false, tgamma_func>(x);
+  nomad::tests::test_derivatives<true, true, tgamma_func>(x);
 }
 

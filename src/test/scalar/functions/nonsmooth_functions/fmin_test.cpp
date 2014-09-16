@@ -44,18 +44,18 @@ TEST(ScalarNonSmoothFunctions, Fmin) {
   x1[0] = 0.75;
   x1[1] = 0.25;
   
-  nomad::tests::test_function<false, false, fmin_vv_func>(x1);
+  nomad::tests::test_derivatives<false, false, fmin_vv_func>(x1);
   
   x1 *= -1;
-  nomad::tests::test_function<false, false, fmin_vv_func>(x1);
+  nomad::tests::test_derivatives<false, false, fmin_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
   x2[0] = 0.75;
-  nomad::tests::test_function<false, false, fmin_vd_func>(x2);
-  nomad::tests::test_function<false, false, fmin_dv_func>(x2);
+  nomad::tests::test_derivatives<false, false, fmin_vd_func>(x2);
+  nomad::tests::test_derivatives<false, false, fmin_dv_func>(x2);
   
   x2[0] = 0.25;
-  nomad::tests::test_function<false, false, fmin_vd_func>(x2);
-  nomad::tests::test_function<false, false, fmin_dv_func>(x2);
+  nomad::tests::test_derivatives<false, false, fmin_vd_func>(x2);
+  nomad::tests::test_derivatives<false, false, fmin_dv_func>(x2);
 }

@@ -25,6 +25,6 @@ TEST(ScalarSmoothFunctions, Fma) {
   x[0] *= -2.483;
   x[1] *= 0.576;
   x[2] *= 1.384;
-  nomad::tests::test_function<true, false, fma_func>(x);
+  nomad::tests::test_derivatives<true, true, fma_func>(x);
 }
 

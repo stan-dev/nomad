@@ -15,7 +15,7 @@ namespace nomad {
   template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
   inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
     cbrt(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
-    
+
     if (ValidateIO) validate_input(input.first_val(), "cbrt");
       
     const short partials_order = 3;
@@ -34,7 +34,7 @@ namespace nomad {
     push_inputs(input.dual_numbers());
     
     double d2 = 1.0 / input.first_val();
-    
+
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(val *= 1.0 * d2 / 3.0);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(val *= - 2.0 * d2 / 3.0);

@@ -22,7 +22,6 @@ namespace nomad {
     explicit var(nomad_idx_t node_idx) : node_idx_(node_idx) {}
     
     var(double val) {
-      if (ValidateIO) validate_input(val, "var constructor");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
       node_idx_ = next_node_idx_ - 1;
@@ -34,7 +33,6 @@ namespace nomad {
     }
 
     var& operator=(double val) {
-      if (ValidateIO) validate_input(val, "var operator=");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
       node_idx_ = next_node_idx_ - 1;

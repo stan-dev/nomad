@@ -47,13 +47,13 @@ TEST(ScalarSmoothFunctions, Atan2) {
   x1[0] *= 0.576;
   x1[1] *= -0.294;
   
-  nomad::tests::test_function<true, false, atan2_vv_func>(x1);
+  nomad::tests::test_derivatives<true, true, atan2_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   x2 *= 0.576;
   
-  nomad::tests::test_function<true, false, atan2_vd_func>(x2);
-  nomad::tests::test_function<true, false, atan2_dv_func>(x2);
+  nomad::tests::test_derivatives<true, true, atan2_vd_func>(x2);
+  nomad::tests::test_derivatives<true, true, atan2_dv_func>(x2);
 }
 
 

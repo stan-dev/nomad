@@ -31,7 +31,7 @@ public:
 TEST(ScalarSmoothOperators, OperatorUnaryDecrement) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, false, operator_unary_decrement_prefix_func>(x);
-  nomad::tests::test_function<true, false, operator_unary_decrement_postfix_func>(x);
+  nomad::tests::test_derivatives<true, true, operator_unary_decrement_prefix_func>(x);
+  nomad::tests::test_derivatives<true, true, operator_unary_decrement_postfix_func>(x);
 }
 

@@ -21,6 +21,6 @@ public:
 TEST(ScalarSmoothFunctions, InvSquare) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<true, false, inv_square_func>(x);
+  nomad::tests::test_derivatives<true, true, inv_square_func>(x);
 }
 

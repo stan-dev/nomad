@@ -46,11 +46,11 @@ TEST(ScalarSmoothFunctions, MultiplyLog) {
   x1[0] *= 1.0;
   x1[1] *= 0.5;
   
-  nomad::tests::test_function<true, false, multiply_log_vv_func>(x1);
+  nomad::tests::test_derivatives<true, true, multiply_log_vv_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
-  nomad::tests::test_function<true, false, multiply_log_vd_func>(x2);
-  nomad::tests::test_function<true, false, multiply_log_dv_func>(x2);
+  nomad::tests::test_derivatives<true, true, multiply_log_vd_func>(x2);
+  nomad::tests::test_derivatives<true, true, multiply_log_dv_func>(x2);
 }
 

@@ -76,21 +76,20 @@ namespace nomad {
     if (ValidateIO) {
       if (unlikely(std::isnan(val))) throw nomad_error();
     }
-    else {
-      dual_numbers_[next_dual_number_idx_++] = val;
+
+    dual_numbers_[next_dual_number_idx_++] = val;
+    dual_numbers_[next_dual_number_idx_++] = 0;
+    
+    if (AutodiffOrder >= 2) {
       dual_numbers_[next_dual_number_idx_++] = 0;
-      
-      if (AutodiffOrder >= 2) {
-        dual_numbers_[next_dual_number_idx_++] = 0;
-        dual_numbers_[next_dual_number_idx_++] = 0;
-      }
-      
-      if (AutodiffOrder >= 3) {
-        dual_numbers_[next_dual_number_idx_++] = 0;
-        dual_numbers_[next_dual_number_idx_++] = 0;
-        dual_numbers_[next_dual_number_idx_++] = 0;
-        dual_numbers_[next_dual_number_idx_++] = 0;
-      }
+      dual_numbers_[next_dual_number_idx_++] = 0;
+    }
+    
+    if (AutodiffOrder >= 3) {
+      dual_numbers_[next_dual_number_idx_++] = 0;
+      dual_numbers_[next_dual_number_idx_++] = 0;
+      dual_numbers_[next_dual_number_idx_++] = 0;
+      dual_numbers_[next_dual_number_idx_++] = 0;
     }
     
   }
@@ -99,9 +98,8 @@ namespace nomad {
   inline void push_partials(double partial) {
     if (ValidateIO) {
       if (unlikely(std::isnan(partial))) throw nomad_error();
-    } else {
-      partials_[next_partials_idx_++] = partial;
     }
+    partials_[next_partials_idx_++] = partial;
   }
   
   inline void push_inputs(nomad_idx_t input) {

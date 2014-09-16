@@ -20,6 +20,6 @@ public:
 TEST(ScalarNonSmoothFunctions, Round) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<false, false, round_func>(x);
+  nomad::tests::test_derivatives<false, false, round_func>(x);
 }
 

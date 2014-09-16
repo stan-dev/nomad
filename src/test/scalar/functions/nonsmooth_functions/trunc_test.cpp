@@ -20,6 +20,6 @@ public:
 TEST(ScalarNonSmoothFunctions, Trunc) {
   Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
   x *= 0.576;
-  nomad::tests::test_function<false, false, trunc_func>(x);
+  nomad::tests::test_derivatives<false, false, trunc_func>(x);
 }
 
