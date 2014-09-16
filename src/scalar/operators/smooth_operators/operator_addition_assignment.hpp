@@ -25,7 +25,7 @@ namespace nomad {
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    v1.set_body(next_body_idx_ - 1);
+    v1.set_node(next_node_idx_ - 1);
     return v1;
     
   }
@@ -46,7 +46,7 @@ namespace nomad {
     
     push_inputs(v1.dual_numbers());
 
-    v1.set_body(next_body_idx_ - 1);
+    v1.set_node(next_node_idx_ - 1);
     return v1;
     
   }

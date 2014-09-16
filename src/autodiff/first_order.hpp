@@ -14,15 +14,15 @@ namespace nomad {
 
   template<class T_var>
   void first_order_forward_adj(const T_var& v) {
-    for (nomad_idx_t i = 1; i <= v.body(); ++i)
-      var_bodies_[i].first_order_forward_adj();
+    for (nomad_idx_t i = 1; i <= v.node(); ++i)
+      var_nodes_[i].first_order_forward_adj();
   }
   
   template<class T_var>
   void first_order_reverse_adj(const T_var& v) {
-    var_bodies_[v.body()].first_grad() = 1.0;
-    for (nomad_idx_t i = v.body(); i > 0; --i)
-      var_bodies_[i].first_order_reverse_adj();
+    var_nodes_[v.node()].first_grad() = 1.0;
+    for (nomad_idx_t i = v.node(); i > 0; --i)
+      var_nodes_[i].first_order_reverse_adj();
   }
 
   template <typename F>
@@ -43,7 +43,7 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < x.size(); ++i)
-      g(i) = var_bodies_[i + 1].first_grad();
+      g(i) = var_nodes_[i + 1].first_grad();
       
       reset();
       
@@ -173,7 +173,7 @@ namespace nomad {
       f = f_var.first_val();
       
       for (eigen_idx_t i = 0; i < x.size(); ++i)
-      var_bodies_[i + 1].first_grad() = v(i);
+      var_nodes_[i + 1].first_grad() = v(i);
       
       first_order_forward_adj(f_var);
       

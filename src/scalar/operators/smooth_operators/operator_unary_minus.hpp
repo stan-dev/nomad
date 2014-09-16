@@ -19,7 +19,7 @@ namespace nomad {
     
     push_inputs(v1.dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

@@ -18,18 +18,18 @@
 namespace nomad {
   
   void reset();
-  void expand_var_bodies();
+  void expand_var_nodes();
   template<short AutodiffOrder> void expand_dual_numbers();
   void expand_partials();
   void expand_inputs();
 
   class var_node_base;
   
-  nomad_idx_t base_body_size_ = 100000;
+  nomad_idx_t base_node_size_ = 100000;
   
-  var_node_base* var_bodies_;
-  nomad_idx_t next_body_idx_ = 1;
-  nomad_idx_t max_body_idx = 0;
+  var_node_base* var_nodes_;
+  nomad_idx_t next_node_idx_ = 1;
+  nomad_idx_t max_node_idx = 0;
   
   double* dual_numbers_;
   nomad_idx_t next_dual_number_idx_ = 1;
@@ -50,7 +50,7 @@ namespace nomad {
   nomad_idx_t max_inputs_idx = 0;
   
   void reset() {
-    next_body_idx_ = 1;
+    next_node_idx_ = 1;
     next_dual_number_idx_ = 1;
     next_partials_idx_ = 1;
     next_inputs_idx_ = 1;
@@ -100,13 +100,13 @@ namespace nomad {
     inputs_[next_inputs_idx_++] = input;
   }
   
-  void expand_var_bodies();
+  void expand_var_nodes();
   
   template<short AutodiffOrder>
   inline void expand_dual_numbers() {
     
     if (!max_dual_number_idx) {
-      max_dual_number_idx = (1 << AutodiffOrder) * base_body_size_;
+      max_dual_number_idx = (1 << AutodiffOrder) * base_node_size_;
       dual_numbers_ = new double[max_dual_number_idx];
     } else {
       max_dual_number_idx *= 2;

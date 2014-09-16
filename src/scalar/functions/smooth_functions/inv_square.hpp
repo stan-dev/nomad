@@ -34,7 +34,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(val *= -3 * d);
     if (AutodiffOrder >= 3) push_partials(val *= -4 * d);
 
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

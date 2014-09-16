@@ -58,7 +58,7 @@ namespace nomad {
       push_partials(2 * x * y_inv * y_inv * y_inv);
     }
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
@@ -92,7 +92,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(- x * y_inv * y_inv);
     if (AutodiffOrder >= 3) push_partials(2 * x * y_inv * y_inv * y_inv);
 
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
@@ -121,7 +121,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(std::log(y));
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

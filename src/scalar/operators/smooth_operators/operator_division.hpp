@@ -51,7 +51,7 @@ namespace nomad {
       push_partials(-6 * val * y_inv_n);
     }
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
@@ -81,7 +81,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials(val *= - 2 * y_inv);
     if (AutodiffOrder >= 3) push_partials(val *= -3 * y_inv);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
@@ -109,7 +109,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(y_inv);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

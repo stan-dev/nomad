@@ -25,7 +25,7 @@ namespace nomad {
       partials_idx_ = next_partials_idx_;
       inputs_idx_ = next_inputs_idx_;
       
-      next_body_idx_++;
+      next_node_idx_++;
     
     }
 
@@ -36,7 +36,7 @@ namespace nomad {
       partials_idx_ = next_partials_idx_;
       inputs_idx_ = next_inputs_idx_;
       
-      next_body_idx_++;
+      next_node_idx_++;
     }
     
     virtual ~var_node_base() {}
@@ -161,21 +161,21 @@ namespace nomad {
   };
   
   template<short AutodiffOrder>
-  void expand_var_bodies() {
+  void expand_var_nodes() {
     
-    if (!max_body_idx) {
-      max_body_idx = base_body_size_;
-      var_bodies_ = new var_node_base[max_body_idx];
-      next_body_idx_ -= max_body_idx;
+    if (!max_node_idx) {
+      max_node_idx = base_node_size_;
+      var_nodes_ = new var_node_base[max_node_idx];
+      next_node_idx_ -= max_node_idx;
     } else {
-      max_body_idx *= 2;
+      max_node_idx *= 2;
       
-      var_node_base* new_stack = new var_node_base[max_body_idx];
-      for (nomad_idx_t i = 0; i < next_body_idx_; ++i)
-        new_stack[i] = var_bodies_[i];
-      delete[] var_bodies_;
+      var_node_base* new_stack = new var_node_base[max_node_idx];
+      for (nomad_idx_t i = 0; i < next_node_idx_; ++i)
+        new_stack[i] = var_nodes_[i];
+      delete[] var_nodes_;
       
-      var_bodies_ = new_stack;
+      var_nodes_ = new_stack;
     }
     
     expand_dual_numbers<AutodiffOrder>();
@@ -187,10 +187,10 @@ namespace nomad {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<AutodiffOrder>();
+      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
       if (unlikely(next_partials_idx_ + next_partials_delta > max_partials_idx)) expand_partials();
       if (unlikely(next_inputs_idx_ + next_inputs_delta > max_inputs_idx)) expand_inputs();
-      return var_bodies_ + next_body_idx_;
+      return var_nodes_ + next_node_idx_;
     }
     
     static inline void operator delete(void* /* ignore */) {}
@@ -489,10 +489,10 @@ namespace nomad {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<AutodiffOrder>();
+      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
       // no partials
       // no inputs
-      return var_bodies_ + next_body_idx_;
+      return var_nodes_ + next_node_idx_;
     }
     
     static inline void operator delete(void* /* ignore */) {}

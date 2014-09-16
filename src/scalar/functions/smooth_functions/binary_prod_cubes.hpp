@@ -51,7 +51,7 @@ namespace nomad {
       push_partials(6 * x * x * x);
     }
 
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

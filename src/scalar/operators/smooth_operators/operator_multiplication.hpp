@@ -25,7 +25,7 @@ namespace nomad {
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 
@@ -50,7 +50,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(v1);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
@@ -75,7 +75,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials(v2);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
   
