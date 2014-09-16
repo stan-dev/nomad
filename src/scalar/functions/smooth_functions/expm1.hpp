@@ -22,14 +22,22 @@ namespace nomad {
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     double val = expm1(input.first_val());
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("expm1");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(val + 1);
-    if (AutodiffOrder >= 2) push_partials(val + 1);
-    if (AutodiffOrder >= 3) push_partials(val + 1);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val + 1);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(val + 1);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(val + 1);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("expm1");
+    }
+        
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

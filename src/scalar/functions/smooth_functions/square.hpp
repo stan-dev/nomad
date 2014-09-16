@@ -21,7 +21,12 @@ namespace nomad {
     
     double val = input.first_val();
 
-    push_dual_numbers<AutodiffOrder>(val * val);
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val * val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("square");
+    }
+      
     push_inputs(input.dual_numbers());
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

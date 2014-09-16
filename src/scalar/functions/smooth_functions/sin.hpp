@@ -24,14 +24,22 @@ namespace nomad {
     double c = std::cos(input.first_val());
     double s = std::sin(input.first_val());
     
-    push_dual_numbers<AutodiffOrder>(s);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(s);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("sin");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(c);
-    if (AutodiffOrder >= 2) push_partials(-s);
-    if (AutodiffOrder >= 3) push_partials(-c);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(c);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(-s);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(-c);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("sin");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

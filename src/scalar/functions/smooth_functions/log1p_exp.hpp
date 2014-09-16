@@ -26,24 +26,32 @@ namespace nomad {
 
     double val = input.first_val();
     
-    push_dual_numbers<AutodiffOrder>(log1p_exp(val));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(log1p_exp(val));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("log1p_exp");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double val_inv = 1.0 / (1 + val);
-    
-    if (val > 0) {
-      double e = exp(-val);
-      double p = 1.0 / (1.0 + e);
-      if (AutodiffOrder >= 1) push_partials(p);
-      if (AutodiffOrder >= 2) push_partials(p * p * e);
-      if (AutodiffOrder >= 3) push_partials(p * (2.0 * p * p - 3.0 * p + 1.0));
-    } else {
-      double e = exp(val);
-      double p = e / (1.0 + e);
-      if (AutodiffOrder >= 1) push_partials(p);
-      if (AutodiffOrder >= 2) push_partials(p * p / e);
-      if (AutodiffOrder >= 3) push_partials(p * (2.0 * p * p - 3.0 * p + 1.0));
+  
+    try {
+      if (val > 0) {
+        double e = exp(-val);
+        double p = 1.0 / (1.0 + e);
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(p);
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * p * e);
+        if (AutodiffOrder >= 3) push_partials<ValidateIO>(p * (2.0 * p * p - 3.0 * p + 1.0));
+      } else {
+        double e = exp(val);
+        double p = e / (1.0 + e);
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(p);
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * p / e);
+        if (AutodiffOrder >= 3) push_partials<ValidateIO>(p * (2.0 * p * p - 3.0 * p + 1.0));
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("log1p_exp");
     }
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

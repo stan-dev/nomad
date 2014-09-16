@@ -25,22 +25,30 @@ namespace nomad {
     double val = input.first_val();
     double g = tgamma(val);
     
-    push_dual_numbers<AutodiffOrder>(g);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(g);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("tgamma");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) {
-      double dg = digamma(val);
-      push_partials(g * dg);
-    
-      if (AutodiffOrder >= 2) {
-        double tg = trigamma(val);
-        push_partials(g * (dg * dg + tg));
-    
-        if (AutodiffOrder >= 3)
-          push_partials(g * (dg * dg * dg + 3.0 * dg * tg + quadrigamma(val)));
+    try {
+      if (AutodiffOrder >= 1) {
+        double dg = digamma(val);
+        push_partials<ValidateIO>(g * dg);
+      
+        if (AutodiffOrder >= 2) {
+          double tg = trigamma(val);
+          push_partials<ValidateIO>(g * (dg * dg + tg));
+      
+          if (AutodiffOrder >= 3)
+            push_partials<ValidateIO>(g * (dg * dg * dg + 3.0 * dg * tg + quadrigamma(val)));
 
+        }
       }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("tgamma");
     }
       
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

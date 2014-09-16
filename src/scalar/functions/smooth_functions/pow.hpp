@@ -36,29 +36,37 @@ namespace nomad {
     double y = v2.first_val();
     double val = std::pow(x, y);
     
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("pow");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
     double lx = std::log(x);
     
-    if (AutodiffOrder >= 1) {
-      push_partials(val * y / x);
-      push_partials(val * lx);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(val * y / x);
+        push_partials<ValidateIO>(val * lx);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>( y * (y - 1.0) * val / (x * x) );
+        push_partials<ValidateIO>( (1 + y * lx) * val / x );
+        push_partials<ValidateIO>( lx * lx * val );
+      }
+      if (AutodiffOrder >= 3) {
+        push_partials<ValidateIO>((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
+        push_partials<ValidateIO>( ((y - 1.0) * y * lx + 2 * y - 1.0) * val / (x * x) );
+        push_partials<ValidateIO>( lx * (2.0 + y * lx) * val / x );
+        push_partials<ValidateIO>( lx * lx * lx * val );
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("pow");
     }
-    if (AutodiffOrder >= 2) {
-      push_partials( y * (y - 1.0) * val / (x * x) );
-      push_partials( (1 + y * lx) * val / x );
-      push_partials( lx * lx * val );
-    }
-    if (AutodiffOrder >= 3) {
-      push_partials((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
-      push_partials( ((y - 1.0) * y * lx + 2 * y - 1.0) * val / (x * x) );
-      push_partials( lx * (2.0 + y * lx) * val / x );
-      push_partials( lx * lx * lx * val );
-    }
-    
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -86,16 +94,24 @@ namespace nomad {
     double y = v2.first_val();
     double val = std::pow(x, y);
     
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("pow");
+    }
+      
     push_inputs(v2.dual_numbers());
     
     double lx = std::log(x);
     
-    if (AutodiffOrder >= 1) push_partials(val * lx);
-    if (AutodiffOrder >= 2) push_partials(lx * lx * val);
-    if (AutodiffOrder >= 3) push_partials(lx * lx * lx * val);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val * lx);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(lx * lx * val);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(lx * lx * lx * val);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("pow");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -123,16 +139,24 @@ namespace nomad {
     double x = v1.first_val();
     double val = std::pow(x, y);
     
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("pow");
+    }
+      
     push_inputs(v1.dual_numbers());
     
     double lx = std::log(x);
     
-    if (AutodiffOrder >= 1) push_partials(val * y / x);
-    if (AutodiffOrder >= 2) push_partials( y * (y - 1.0) * val / (x * x) );
-    if (AutodiffOrder >= 3) push_partials((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
-    
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val * y / x);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>( y * (y - 1.0) * val / (x * x) );
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("pow");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

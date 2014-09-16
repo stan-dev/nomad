@@ -34,66 +34,80 @@ namespace nomad {
     double x = v1.first_val();
     double y = v2.first_val();
     
-    if (x > y) {
-      
-      double r = y / x;
-      
-      double val = x * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-      
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(x * d1);
-        push_partials(y * d1);
-      }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
+    try {
+      if (x > y) {
         
-        push_partials(r * r * d1);
-        push_partials(-r * d1);
-        push_partials(d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        double inv_x = 1.0 / x;
+        double r = y / x;
+        
+        double val = x * sqrt(1 + r * r);
+        
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(x * d1);
+          push_partials<ValidateIO>(y * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
           
-        push_partials(3.0 * r * r * inv_x * d1);
-        push_partials(r * inv_x * (r * r - 2.0) * d1);
-        push_partials(inv_x * (1.0 - 2 * r * r) * d1);
-        push_partials(3 * r * inv_x * d1);
-      }
-      
-    } else {
+          push_partials<ValidateIO>(r * r * d1);
+          push_partials<ValidateIO>(-r * d1);
+          push_partials<ValidateIO>(d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          double inv_x = 1.0 / x;
+            
+          push_partials<ValidateIO>(3.0 * r * r * inv_x * d1);
+          push_partials<ValidateIO>(r * inv_x * (r * r - 2.0) * d1);
+          push_partials<ValidateIO>(inv_x * (1.0 - 2 * r * r) * d1);
+          push_partials<ValidateIO>(3 * r * inv_x * d1);
+        }
         
-      double r = x / y;
-      
-      double val = y * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-      
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(x * d1);
-        push_partials(y * d1);
-      }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
+      } else {
+          
+        double r = x / y;
         
-        push_partials(d1);
-        push_partials(-r * d1);
-        push_partials(r * r * d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        double inv_y = 1.0 / y;
+        double val = y * sqrt(1 + r * r);
         
-        push_partials(3.0 * r * inv_y * d1);
-        push_partials(inv_y * (1.0 - 2 * r * r) * d1);
-        push_partials(r * inv_y * (r * r - 2.0) * d1);
-        push_partials(3 * r * r * inv_y * d1);
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(x * d1);
+          push_partials<ValidateIO>(y * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
+          
+          push_partials<ValidateIO>(d1);
+          push_partials<ValidateIO>(-r * d1);
+          push_partials<ValidateIO>(r * r * d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          double inv_y = 1.0 / y;
+          
+          push_partials<ValidateIO>(3.0 * r * inv_y * d1);
+          push_partials<ValidateIO>(inv_y * (1.0 - 2 * r * r) * d1);
+          push_partials<ValidateIO>(r * inv_y * (r * r - 2.0) * d1);
+          push_partials<ValidateIO>(3 * r * r * inv_y * d1);
+        }
+        
       }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("hypot");
     }
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
@@ -114,50 +128,62 @@ namespace nomad {
     
     double y = v2.first_val();
     
-    if (x > y) {
-      
-      double r = y / x;
-      
-      double val = x * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-      
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(y * d1);
+    try {
+      if (x > y) {
+        
+        double r = y / x;
+        
+        double val = x * sqrt(1 + r * r);
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(y * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
+          push_partials<ValidateIO>(d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          push_partials<ValidateIO>(3 * r * d1 / x);
+        }
+        
+      } else {
+        
+        double r = x / y;
+        
+        double val = y * sqrt(1 + r * r);
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(y * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
+          push_partials<ValidateIO>(r * r * d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          push_partials<ValidateIO>(3 * r * r * d1 / y);
+        }
+        
       }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
-        push_partials(d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        push_partials(3 * r * d1 / x);
-      }
-      
-    } else {
-      
-      double r = x / y;
-      
-      double val = y * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-      
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(y * d1);
-      }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
-        push_partials(r * r * d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        push_partials(3 * r * r * d1 / y);
-      }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("hypot");
     }
-    
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -176,50 +202,62 @@ namespace nomad {
     
     double x = v1.first_val();
     
-    if (x > y) {
-      
-      double r = y / x;
-      
-      double val = x * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(x * d1);
+    try {
+      if (x > y) {
+        
+        double r = y / x;
+        
+        double val = x * sqrt(1 + r * r);
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(x * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
+          push_partials<ValidateIO>(r * r * d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          push_partials<ValidateIO>(3.0 * r * r * d1 / x);
+        }
+        
+      } else {
+        
+        double r = x / y;
+        
+        double val = y * sqrt(1 + r * r);
+        try {
+          push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+        } catch(nomad_error& e) {
+          throw nomad_output_value_error("hypot");
+        }
+        
+        double d1 = 1.0 / val;
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(x * d1);
+        }
+        if (AutodiffOrder >= 2) {
+          d1 /= 1.0 + r * r;
+          push_partials<ValidateIO>(d1);
+        }
+        if (AutodiffOrder >= 3) {
+          d1 /= -(1.0 + r * r);
+          push_partials<ValidateIO>(3.0 * r * d1 / y);
+        }
+        
       }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
-        push_partials(r * r * d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        push_partials(3.0 * r * r * d1 / x);
-      }
-      
-    } else {
-      
-      double r = x / y;
-      
-      double val = y * sqrt(1 + r * r);
-      push_dual_numbers<AutodiffOrder>(val);
-      
-      double d1 = 1.0 / val;
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(x * d1);
-      }
-      if (AutodiffOrder >= 2) {
-        d1 /= 1.0 + r * r;
-        push_partials(d1);
-      }
-      if (AutodiffOrder >= 3) {
-        d1 /= -(1.0 + r * r);
-        push_partials(3.0 * r * d1 / y);
-      }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("hypot");
     }
-    
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

@@ -30,27 +30,35 @@ namespace nomad {
     double x = v1.first_val();
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(binary_prod_cubes(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(binary_prod_cubes(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("binary_prod_cubes");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    if (AutodiffOrder >= 1) {
-      push_partials(3 * x * x * y * y * y);
-      push_partials(3 * x * x * x * y * y);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(3 * x * x * y * y * y);
+        push_partials<ValidateIO>(3 * x * x * x * y * y);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>(6 * x * y * y * y);
+        push_partials<ValidateIO>(9 * x * x * y * y);
+        push_partials<ValidateIO>(6 * x * x * x * y);
+      }
+      if (AutodiffOrder >= 3) {
+        push_partials<ValidateIO>(6 * y * y * y);
+        push_partials<ValidateIO>(18 * x * y * y);
+        push_partials<ValidateIO>(18 * x * x * y);
+        push_partials<ValidateIO>(6 * x * x * x);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("binary_prod_cubes");
     }
-    if (AutodiffOrder >= 2) {
-      push_partials(6 * x * y * y * y);
-      push_partials(9 * x * x * y * y);
-      push_partials(6 * x * x * x * y);
-    }
-    if (AutodiffOrder >= 3) {
-      push_partials(6 * y * y * y);
-      push_partials(18 * x * y * y);
-      push_partials(18 * x * x * y);
-      push_partials(6 * x * x * x);
-    }
-
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

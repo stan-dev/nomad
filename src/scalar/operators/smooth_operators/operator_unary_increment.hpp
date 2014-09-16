@@ -15,8 +15,12 @@ namespace nomad {
       
     create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
-    push_dual_numbers<AutodiffOrder>(v1.first_val() + 1.0);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val() + 1.0);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("operator++");
+    }
+      
     push_inputs(v1.dual_numbers());
     
     v1.set_node(next_node_idx_ - 1);
@@ -32,8 +36,12 @@ namespace nomad {
       
     create_node<unary_plus_var_node<AutodiffOrder>>(1);
     
-    push_dual_numbers<AutodiffOrder>(v1.first_val() + 1.0);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val() + 1.0);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("operator++");
+    }
+      
     push_inputs(v1.dual_numbers());
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

@@ -39,58 +39,66 @@ namespace nomad {
     double x = v1.first_val();
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(log_diff_exp(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("log_diff_exp");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    if (x > y) {
-      
-      double e = std::exp(y - x);
-      double p = 1.0 / (1.0 - e);
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(p);
-        push_partials(-e * p);
+    try {
+      if (x > y) {
+        
+        double e = std::exp(y - x);
+        double p = 1.0 / (1.0 - e);
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(p);
+          push_partials<ValidateIO>(-e * p);
+        }
+        if (AutodiffOrder >= 2) {
+          double p2 = p * (1 - p);
+          push_partials<ValidateIO>(p2);
+          push_partials<ValidateIO>(e * p * p);
+          push_partials<ValidateIO>(p2);
+        }
+        if (AutodiffOrder >= 3) {
+          p *= e;
+          p *= 2 * p * p + 3 * p + 1;
+          push_partials<ValidateIO>(p);
+          push_partials<ValidateIO>(-p);
+          push_partials<ValidateIO>(p);
+          push_partials<ValidateIO>(-p);
+        }
+        
+      } else {
+        
+        double e = std::exp(x - y);
+        double p = e / (e - 1);
+        
+        if (AutodiffOrder >= 1) {
+          push_partials<ValidateIO>(1.0 / (1.0 - e));
+          push_partials<ValidateIO>(p);
+        }
+        if (AutodiffOrder >= 2) {
+          double p2 = p * (p - 1);
+          push_partials<ValidateIO>(p2);
+          push_partials<ValidateIO>(-p * p / e);
+          push_partials<ValidateIO>(p2);
+        }
+        if (AutodiffOrder >= 3) {
+          p *= 2 * p * p - 3 * p + 1;
+          push_partials<ValidateIO>(-p);
+          push_partials<ValidateIO>(p);
+          push_partials<ValidateIO>(-p);
+          push_partials<ValidateIO>(p);
+        }
+        
       }
-      if (AutodiffOrder >= 2) {
-        double p2 = p * (1 - p);
-        push_partials(p2);
-        push_partials(e * p * p);
-        push_partials(p2);
-      }
-      if (AutodiffOrder >= 3) {
-        p *= e;
-        p *= 2 * p * p + 3 * p + 1;
-        push_partials(p);
-        push_partials(-p);
-        push_partials(p);
-        push_partials(-p);
-      }
-      
-    } else {
-      
-      double e = std::exp(x - y);
-      double p = e / (e - 1);
-      
-      if (AutodiffOrder >= 1) {
-        push_partials(1.0 / (1.0 - e));
-        push_partials(p);
-      }
-      if (AutodiffOrder >= 2) {
-        double p2 = p * (p - 1);
-        push_partials(p2);
-        push_partials(-p * p / e);
-        push_partials(p2);
-      }
-      if (AutodiffOrder >= 3) {
-        p *= 2 * p * p - 3 * p + 1;
-        push_partials(-p);
-        push_partials(p);
-        push_partials(-p);
-        push_partials(p);
-      }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("log_diff_exp");
     }
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
@@ -117,35 +125,43 @@ namespace nomad {
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     double y = v2.first_val();
-    push_dual_numbers<AutodiffOrder>(log_diff_exp(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("log_diff_exp");
+    }
+      
     push_inputs(v2.dual_numbers());
     
-    if (x > y) {
-      
-      double e = std::exp(y - x);
-      double p = 1.0 / (1.0 - e);
-      
-      if (AutodiffOrder >= 1) push_partials(-e * p);
-      if (AutodiffOrder >= 2) push_partials(p * (1 - p));
-      if (AutodiffOrder >= 3) {
-        p *= e;
-        p *= 2 * p * p + 3 * p + 1;
-        push_partials(-p);
+    try {
+      if (x > y) {
+        
+        double e = std::exp(y - x);
+        double p = 1.0 / (1.0 - e);
+        
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(-e * p);
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * (1 - p));
+        if (AutodiffOrder >= 3) {
+          p *= e;
+          p *= 2 * p * p + 3 * p + 1;
+          push_partials<ValidateIO>(-p);
+        }
+        
+      } else {
+        
+        double e = std::exp(x - y);
+        double p = e / (e - 1);
+        
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(p);
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * (p - 1));
+        if (AutodiffOrder >= 3) {
+          p *= 2 * p * p - 3 * p + 1;
+          push_partials<ValidateIO>(p);
+        }
+        
       }
-      
-    } else {
-      
-      double e = std::exp(x - y);
-      double p = e / (e - 1);
-      
-      if (AutodiffOrder >= 1) push_partials(p);
-      if (AutodiffOrder >= 2) push_partials(p * (p - 1));
-      if (AutodiffOrder >= 3) {
-        p *= 2 * p * p - 3 * p + 1;
-        push_partials(p);
-      }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("log_diff_exp");
     }
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
@@ -172,35 +188,43 @@ namespace nomad {
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     double x = v1.first_val();
-    push_dual_numbers<AutodiffOrder>(log_diff_exp(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("log_diff_exp");
+    }
+      
     push_inputs(v1.dual_numbers());
     
-    if (x > y) {
-      
-      double e = std::exp(y - x);
-      double p = 1.0 / (1.0 - e);
-      
-      if (AutodiffOrder >= 1) push_partials(p);
-      if (AutodiffOrder >= 2) push_partials(p * (1 - p));
-      if (AutodiffOrder >= 3) {
-        p *= e;
-        p *= 2 * p * p + 3 * p + 1;
-        push_partials(p);
+    try {
+      if (x > y) {
+        
+        double e = std::exp(y - x);
+        double p = 1.0 / (1.0 - e);
+        
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(p);
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * (1 - p));
+        if (AutodiffOrder >= 3) {
+          p *= e;
+          p *= 2 * p * p + 3 * p + 1;
+          push_partials<ValidateIO>(p);
+        }
+        
+      } else {
+        
+        double e = std::exp(x - y);
+        double p = e / (e - 1);
+        
+        if (AutodiffOrder >= 1) push_partials<ValidateIO>(1.0 / (1.0 - e));
+        if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * (p - 1));
+        if (AutodiffOrder >= 3) {
+          p *= 2 * p * p - 3 * p + 1;
+          push_partials<ValidateIO>(-p);
+        }
+        
       }
-      
-    } else {
-      
-      double e = std::exp(x - y);
-      double p = e / (e - 1);
-      
-      if (AutodiffOrder >= 1) push_partials(1.0 / (1.0 - e));
-      if (AutodiffOrder >= 2) push_partials(p * (p - 1));
-      if (AutodiffOrder >= 3) {
-        p *= 2 * p * p - 3 * p + 1;
-        push_partials(-p);
-      }
-      
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("log_diff_exp");
     }
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

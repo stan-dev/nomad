@@ -70,30 +70,38 @@ namespace nomad {
     new Node();
   }
   
-  template<short AutodiffOrder>
+  template<short AutodiffOrder, bool ValidateIO>
   inline void push_dual_numbers(double val) {
-    //if (unlikely(std::isnan(val))) throw nomad_error();
     
-    dual_numbers_[next_dual_number_idx_++] = val;
-    dual_numbers_[next_dual_number_idx_++] = 0;
-    
-    if (AutodiffOrder >= 2) {
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
+    if (ValidateIO) {
+      if (unlikely(std::isnan(val))) throw nomad_error();
     }
-    
-    if (AutodiffOrder >= 3) {
+    else {
+      dual_numbers_[next_dual_number_idx_++] = val;
       dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
+      
+      if (AutodiffOrder >= 2) {
+        dual_numbers_[next_dual_number_idx_++] = 0;
+        dual_numbers_[next_dual_number_idx_++] = 0;
+      }
+      
+      if (AutodiffOrder >= 3) {
+        dual_numbers_[next_dual_number_idx_++] = 0;
+        dual_numbers_[next_dual_number_idx_++] = 0;
+        dual_numbers_[next_dual_number_idx_++] = 0;
+        dual_numbers_[next_dual_number_idx_++] = 0;
+      }
     }
     
   }
   
+  template<bool ValidateIO>
   inline void push_partials(double partial) {
-    //if (unlikely(std::isnan(partial))) throw nomad_error();
-    partials_[next_partials_idx_++] = partial;
+    if (ValidateIO) {
+      if (unlikely(std::isnan(partial))) throw nomad_error();
+    } else {
+      partials_[next_partials_idx_++] = partial;
+    }
   }
   
   inline void push_inputs(nomad_idx_t input) {

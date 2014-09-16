@@ -35,29 +35,37 @@ namespace nomad {
     double x = v1.first_val();
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(multiply_log(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(multiply_log(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("multiply_log");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
     double y_inv = 1.0 / y;
     
-    if (AutodiffOrder >= 1) {
-      push_partials(std::log(y));
-      push_partials(x * y_inv);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(std::log(y));
+        push_partials<ValidateIO>(x * y_inv);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(y_inv);
+        push_partials<ValidateIO>(- x * y_inv * y_inv);
+      }
+      if (AutodiffOrder >= 3) {
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(- y_inv * y_inv);
+        push_partials<ValidateIO>(2 * x * y_inv * y_inv * y_inv);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("multiply_log");
     }
-    if (AutodiffOrder >= 2) {
-      push_partials(0);
-      push_partials(y_inv);
-      push_partials(- x * y_inv * y_inv);
-    }
-    if (AutodiffOrder >= 3) {
-      push_partials(0);
-      push_partials(0);
-      push_partials(- y_inv * y_inv);
-      push_partials(2 * x * y_inv * y_inv * y_inv);
-    }
-    
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -82,16 +90,20 @@ namespace nomad {
     
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(multiply_log(x, y));
+    push_dual_numbers<AutodiffOrder, ValidateIO>(multiply_log(x, y));
     
     push_inputs(v2.dual_numbers());
     
     double y_inv = 1.0 / y;
     
-    if (AutodiffOrder >= 1) push_partials(x * y_inv);
-    if (AutodiffOrder >= 2) push_partials(- x * y_inv * y_inv);
-    if (AutodiffOrder >= 3) push_partials(2 * x * y_inv * y_inv * y_inv);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(x * y_inv);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- x * y_inv * y_inv);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * x * y_inv * y_inv * y_inv);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("multiply_log");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -115,12 +127,16 @@ namespace nomad {
     
     double x = v1.first_val();
     
-    push_dual_numbers<AutodiffOrder>(multiply_log(x, y));
+    push_dual_numbers<AutodiffOrder, ValidateIO>(multiply_log(x, y));
     
     push_inputs(v1.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(std::log(y));
-    
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(std::log(y));
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("multiply_log");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

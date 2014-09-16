@@ -26,21 +26,21 @@ namespace nomad {
   class nomad_input_error: public nomad_error {
   public:
     nomad_input_error(std::string name):
-    nomad_error("Nomad stack construction terminated because"
+    nomad_error("Nomad stack construction terminated because "
                 + name + " encountered a NaN input") {}
   };
   
   class nomad_output_value_error: public nomad_error {
   public:
     nomad_output_value_error(std::string name):
-    nomad_error("Nomad stack construction terminated because"
+    nomad_error("Nomad stack construction terminated because "
                 + name + " generated a NaN value") {}
   };
   
   class nomad_output_partial_error: public nomad_error {
   public:
     nomad_output_partial_error(std::string name):
-    nomad_error("Nomad stack construction terminated because"
+    nomad_error("Nomad stack construction terminated because "
                 + name + " generated a NaN partial") {}
   };
   

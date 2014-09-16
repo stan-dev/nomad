@@ -20,8 +20,12 @@ namespace nomad {
       
     create_node<multiply_var_node<AutodiffOrder>>(2);
     
-    push_dual_numbers<AutodiffOrder>(v1.first_val() * v2.first_val());
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val() * v2.first_val());
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("operator*");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
@@ -44,11 +48,15 @@ namespace nomad {
     
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
-    push_dual_numbers<AutodiffOrder>(v1 * v2.first_val());
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(v1 * v2.first_val());
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("operator*");
+    }
+      
     push_inputs(v2.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(v1);
+    if (AutodiffOrder >= 1) push_partials<ValidateIO>(v1);
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
@@ -69,11 +77,15 @@ namespace nomad {
     
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
     
-    push_dual_numbers<AutodiffOrder>(v1.first_val() * v2);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val() * v2);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("operator*");
+    }
+      
     push_inputs(v1.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(v2);
+    if (AutodiffOrder >= 1) push_partials<ValidateIO>(v2);
     
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     

@@ -31,37 +31,45 @@ namespace nomad {
     double y = v2.first_val();
     double z = v3.first_val();
     
-    push_dual_numbers<AutodiffOrder>(trinary_prod_cubes(x, y, z));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(trinary_prod_cubes(x, y, z));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("trinary_prod_cubes");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     push_inputs(v3.dual_numbers());
     
-    if (AutodiffOrder >= 1) {
-      push_partials(3 * x * x * y * y * y * z * z * z);
-      push_partials(3 * x * x * x * y * y * z * z * z);
-      push_partials(3 * x * x * x * y * y * y * z * z);
-    }
-    if (AutodiffOrder >= 2) {
-      push_partials(6 * x * y * y * y * z * z * z);
-      push_partials(9 * x * x * y * y * z * z * z);
-      push_partials(6 * x * x * x * y * z * z * z);
-      
-      push_partials(9 * x * x * y * y * y * z * z);
-      push_partials(9 * x * x * x * y * y * z * z);
-      push_partials(6 * x * x * x * y * y * y * z);
-    }
-    if (AutodiffOrder >= 3) {
-      push_partials(6 * y * y * y * z * z * z);
-      push_partials(18 * x * y * y * z * z * z);
-      push_partials(18 * x * x * y * z * z * z);
-      push_partials(6 * x * x * x * z * z * z);
-      push_partials(18 * x * y * y * y * z * z);
-      push_partials(27 * x * x * y * y * z * z);
-      push_partials(18 * x * x * x * y * z * z);
-      push_partials(18 * x * x * y * y * y * z);
-      push_partials(18 * x * x * x * y * y * z);
-      push_partials(6 * x * x * x * y * y * y);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(3 * x * x * y * y * y * z * z * z);
+        push_partials<ValidateIO>(3 * x * x * x * y * y * z * z * z);
+        push_partials<ValidateIO>(3 * x * x * x * y * y * y * z * z);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>(6 * x * y * y * y * z * z * z);
+        push_partials<ValidateIO>(9 * x * x * y * y * z * z * z);
+        push_partials<ValidateIO>(6 * x * x * x * y * z * z * z);
+        
+        push_partials<ValidateIO>(9 * x * x * y * y * y * z * z);
+        push_partials<ValidateIO>(9 * x * x * x * y * y * z * z);
+        push_partials<ValidateIO>(6 * x * x * x * y * y * y * z);
+      }
+      if (AutodiffOrder >= 3) {
+        push_partials<ValidateIO>(6 * y * y * y * z * z * z);
+        push_partials<ValidateIO>(18 * x * y * y * z * z * z);
+        push_partials<ValidateIO>(18 * x * x * y * z * z * z);
+        push_partials<ValidateIO>(6 * x * x * x * z * z * z);
+        push_partials<ValidateIO>(18 * x * y * y * y * z * z);
+        push_partials<ValidateIO>(27 * x * x * y * y * z * z);
+        push_partials<ValidateIO>(18 * x * x * x * y * z * z);
+        push_partials<ValidateIO>(18 * x * x * y * y * y * z);
+        push_partials<ValidateIO>(18 * x * x * x * y * y * z);
+        push_partials<ValidateIO>(6 * x * x * x * y * y * y);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("trinary_prod_cubes");
     }
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

@@ -1,8 +1,9 @@
-CC := clang++
-#CC = /opt/local/bin/clang++-mp-3.4
+#CC := clang++
+CC = /opt/local/bin/clang++-mp-3.6
 O := 3
 
-CFLAGS := -std=c++11
+#CLFAGS := -std=c++11
+CFLAGS := -std=c++11 -stdlib=libc++
 
 NOMAD_DIR := $(shell dirname $(shell dirname $(shell dirname $(CURDIR))))
 EIGEN_DIR := /usr/local/include
@@ -13,7 +14,7 @@ INCLUDES := -I$(NOMAD_DIR) -I$(EIGEN_DIR)
 # GoogleTest
 LIBGTEST := $(NOMAD_DIR)/test/libgtest.a
 GTEST_MAIN := $(GTEST_DIR)/src/gtest_main.cc
-CFLAGS_GTEST := -I$(GTEST_DIR)/include -I$(GTEST_DIR)
+CFLAGS_GTEST := -I$(GTEST_DIR)/include -I$(GTEST_DIR) $(CFLAGS)
 
 $(LIBGTEST): $(LIBGTEST)($(NOMAD_DIR)/test/gtest.o)
 

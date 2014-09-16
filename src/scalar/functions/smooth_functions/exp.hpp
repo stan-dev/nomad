@@ -23,14 +23,22 @@ namespace nomad {
 
     double val = std::exp(input.first_val());
     
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("exp");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(val);
-    if (AutodiffOrder >= 2) push_partials(val);
-    if (AutodiffOrder >= 3) push_partials(val);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(val);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("exp");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

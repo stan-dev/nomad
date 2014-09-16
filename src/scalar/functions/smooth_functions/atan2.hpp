@@ -31,34 +31,42 @@ namespace nomad {
     double y = v1.first_val();
     double x = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(atan2(y, x));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("atan2");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
     double d = 1.0 / (x * x + y * y);
     
-    if (AutodiffOrder >= 1) {
-      push_partials(+ x * d);
-      push_partials(- y * d);
-    }
-    if (AutodiffOrder >= 2) {
-      double d2 = d * d;
-      double p = 2 * x * y * d2;
-      
-      push_partials(-p);
-      push_partials((y * y - x * x) * d2);
-      push_partials(p);
-    }
-    if (AutodiffOrder >= 3) {
-      double d3 = d * d * d;
-      double p1 = 2 * y * (y * y - 3 * x * x) * d3;
-      double p2 = 2 * x * (x * x - 3 * y * y) * d3;
-      
-      push_partials(- p2);
-      push_partials(- p1);
-      push_partials(p2);
-      push_partials(p1);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(+ x * d);
+        push_partials<ValidateIO>(- y * d);
+      }
+      if (AutodiffOrder >= 2) {
+        double d2 = d * d;
+        double p = 2 * x * y * d2;
+        
+        push_partials<ValidateIO>(-p);
+        push_partials<ValidateIO>((y * y - x * x) * d2);
+        push_partials<ValidateIO>(p);
+      }
+      if (AutodiffOrder >= 3) {
+        double d3 = d * d * d;
+        double p1 = 2 * y * (y * y - 3 * x * x) * d3;
+        double p2 = 2 * x * (x * x - 3 * y * y) * d3;
+        
+        push_partials<ValidateIO>(- p2);
+        push_partials<ValidateIO>(- p1);
+        push_partials<ValidateIO>(p2);
+        push_partials<ValidateIO>(p1);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("atan2");
     }
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
@@ -81,17 +89,24 @@ namespace nomad {
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
     
     double x = v2.first_val();
-    
-    push_dual_numbers<AutodiffOrder>(atan2(y, x));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("atan2");
+    }
+      
     push_inputs(v2.dual_numbers());
     
     double d = 1.0 / (x * x + y * y);
     
-    if (AutodiffOrder >= 1) push_partials(- y * d);
-    if (AutodiffOrder >= 2) push_partials(2 * x * y * d * d);
-    if (AutodiffOrder >= 3) push_partials(2 * y * (y * y - 3 * x * x) * d * d * d);
-    
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(- y * d);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(2 * x * y * d * d);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * y * (y * y - 3 * x * x) * d * d * d);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("atan2");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -113,16 +128,24 @@ namespace nomad {
     
     double y = v1.first_val();
     
-    push_dual_numbers<AutodiffOrder>(atan2(y, x));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("atan2");
+    }
+      
     push_inputs(v1.dual_numbers());
     
     double d = 1.0 / (x * x + y * y);
     
-    if (AutodiffOrder >= 1) push_partials(x * d);
-    if (AutodiffOrder >= 2) push_partials(- 2 * x * y * d * d);
-    if (AutodiffOrder >= 3) push_partials(- 2 * x * (x * x - 3 * y * y) * d * d * d);
-    
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(x * d);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- 2 * x * y * d * d);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(- 2 * x * (x * x - 3 * y * y) * d * d * d);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("atan2");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

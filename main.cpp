@@ -36,7 +36,32 @@ public:
     T p2 = 0.5 * sum_x2 * exp(-v);
     T p3 = 0.5 * square(v) / 9.0;
     
-    return p1 + p2 + p3 + sqrt(v);
+    return p1 + p2 + p3;
+    
+  }
+};
+
+template <typename T, int N>
+class debug_func: public base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    
+    T v = x[0];
+    
+    T y[N];
+    for (int n = 0; n < N; ++n)
+      y[n] = x[n + 1];
+    
+    T sum_x2 = 0.0;
+    
+    for (int n = 0; n < N; ++n)
+      sum_x2 += square(y[n]);
+    
+    T p1 = 0.5 * N * v;
+    T p2 = 0.5 * sum_x2 * exp(-v);
+    T p3 = 0.5 * square(v) / 9.0;
+    
+    return p1 + p2 + p3 + inv_sqrt(v);
     
   }
 };
@@ -333,8 +358,9 @@ void time_dot() {
 
 int main(int argc, const char * argv[]) {
   
+  /*
   Eigen::VectorXd x = Eigen::VectorXd::Ones(6);
-  x(0) = -5000;
+  x(0) = 0;
   
   Eigen::VectorXd v = Eigen::VectorXd::Ones(6);
   Eigen::MatrixXd M = Eigen::MatrixXd::Identity(6, 6);
@@ -344,7 +370,7 @@ int main(int argc, const char * argv[]) {
   Eigen::MatrixXd H(x.size(), x.size());
   Eigen::VectorXd grad_m_times_h(x.size());
   
-  funnel_func<var1, 5> first_order_funnel;
+  debug_func<debug_var1, 5> first_order_funnel;
   try {
     gradient(first_order_funnel, x, f, grad);
   } catch(nomad_error& e) {
@@ -353,12 +379,12 @@ int main(int argc, const char * argv[]) {
   
   std::cout << f << std::endl;
   std::cout << grad.transpose() << std::endl;
-  
+  */
   
   //validate_exceptions();
   
   //validate_funnel();
-  //time_funnel();
+  time_funnel();
   
   //validate_matrix();
   //time_matrix();

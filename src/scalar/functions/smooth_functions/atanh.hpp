@@ -27,16 +27,24 @@ namespace nomad {
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     const double x = input.first_val();
-    push_dual_numbers<AutodiffOrder>(std::atanh(x));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(std::atanh(x));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("atanh");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double d1 = 1.0 / (1 - x * x);
     
-    if (AutodiffOrder >= 1) push_partials(d1);
-    if (AutodiffOrder >= 2) push_partials(2 * x * d1 * d1);
-    if (AutodiffOrder >= 3) push_partials((2 + 6 * x * x) * d1 * d1 * d1);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(d1);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(2 * x * d1 * d1);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>((2 + 6 * x * x) * d1 * d1 * d1);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("atanh");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

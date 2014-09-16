@@ -25,16 +25,24 @@ namespace nomad {
 
     double val = std::cbrt(input.first_val());
     
-    push_dual_numbers<AutodiffOrder>(val);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("cbrt");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double d2 = 1.0 / input.first_val();
     
-    if (AutodiffOrder >= 1) push_partials(val *= 1.0 * d2 / 3.0);
-    if (AutodiffOrder >= 2) push_partials(val *= - 2.0 * d2 / 3.0);
-    if (AutodiffOrder >= 3) push_partials(val *= - 5.0 * d2 / 3.0);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val *= 1.0 * d2 / 3.0);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(val *= - 2.0 * d2 / 3.0);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(val *= - 5.0 * d2 / 3.0);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("cbrt");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

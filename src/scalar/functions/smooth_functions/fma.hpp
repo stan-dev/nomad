@@ -32,27 +32,35 @@ namespace nomad {
     double y = v2.first_val();
     double z = v3.first_val();
     
-    push_dual_numbers<AutodiffOrder>(fma(x, y, z));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(fma(x, y, z));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("fma");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     push_inputs(v3.dual_numbers());
     
-    if (AutodiffOrder >= 1) {
-      push_partials(y);
-      push_partials(x);
-      push_partials(1);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(y);
+        push_partials<ValidateIO>(x);
+        push_partials<ValidateIO>(1);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(1);
+        push_partials<ValidateIO>(0);
+        
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(0);
+        push_partials<ValidateIO>(0);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("fma");
     }
-    if (AutodiffOrder >= 2) {
-      push_partials(0);
-      push_partials(1);
-      push_partials(0);
       
-      push_partials(0);
-      push_partials(0);
-      push_partials(0);
-    }
-
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

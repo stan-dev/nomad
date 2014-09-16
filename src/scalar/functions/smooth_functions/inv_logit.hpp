@@ -30,16 +30,24 @@ namespace nomad {
 
     double s = inv_logit(input.first_val());
     
-    push_dual_numbers<AutodiffOrder>(s);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(s);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("inv_logit");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double ds = s * (1 - s);
     
-    if (AutodiffOrder >= 1) push_partials(ds);
-    if (AutodiffOrder >= 2) push_partials(ds * (1 - 2 * s) );
-    if (AutodiffOrder >= 3) push_partials(ds * (1 - 6 * s * (1 - s)) );
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(ds);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(ds * (1 - 2 * s) );
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(ds * (1 - 6 * s * (1 - s)) );
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("inv_logit");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

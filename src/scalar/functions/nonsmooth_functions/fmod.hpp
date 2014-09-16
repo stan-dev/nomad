@@ -31,17 +31,24 @@ namespace nomad {
     double x = v1.first_val();
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(fmod(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("fmod");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    
-    if (AutodiffOrder >= 1) {
-      push_partials(1);
-      push_partials(-std::trunc(x / y));
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(1);
+        push_partials<ValidateIO>(-std::trunc(x / y));
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("fmod");
     }
-    
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
@@ -63,11 +70,19 @@ namespace nomad {
     
     double y = v2.first_val();
     
-    push_dual_numbers<AutodiffOrder>(fmod(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("fmod");
+    }
+      
     push_inputs(v2.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(-std::trunc(x / y));
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(-std::trunc(x / y));
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("fmod");
+    }
       
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
@@ -90,12 +105,20 @@ namespace nomad {
     
     double x = v1.first_val();
     
-    push_dual_numbers<AutodiffOrder>(fmod(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("fmod");
+    }
+      
     push_inputs(v1.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(1);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(1);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("fmod");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

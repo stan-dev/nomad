@@ -24,14 +24,22 @@ namespace nomad {
 
     double val = input.first_val();
     
-    push_dual_numbers<AutodiffOrder>(lgamma(val));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(lgamma(val));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("lgamma");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(digamma(val));
-    if (AutodiffOrder >= 2) push_partials(trigamma(val));
-    if (AutodiffOrder >= 3) push_partials(quadrigamma(val));
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(digamma(val));
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(trigamma(val));
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(quadrigamma(val));
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("lgamma");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

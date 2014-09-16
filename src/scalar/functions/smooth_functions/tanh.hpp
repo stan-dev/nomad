@@ -23,17 +23,25 @@ namespace nomad {
 
     double t = std::tanh(input.first_val());
     
-    push_dual_numbers<AutodiffOrder>(t);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(t);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("tanh");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double sech2 = 1.0 / std::cosh(input.first_val());
     sech2 *= sech2;
     
-    if (AutodiffOrder >= 1) push_partials(sech2);
-    if (AutodiffOrder >= 2) push_partials(-2 * sech2 * t);
-    if (AutodiffOrder >= 3) push_partials(-2 * sech2 * sech2 + 4 * sech2 * t * t);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(sech2);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(-2 * sech2 * t);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(-2 * sech2 * sech2 + 4 * sech2 * t * t);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("tanh");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

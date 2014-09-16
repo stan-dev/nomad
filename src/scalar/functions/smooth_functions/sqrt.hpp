@@ -30,7 +30,7 @@ namespace nomad {
     double val = std::sqrt(input.first_val());
     
     try {
-      push_dual_numbers<AutodiffOrder>(val);
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
     } catch(nomad_error& e) {
       throw nomad_output_value_error("sqrt");
     }
@@ -40,9 +40,9 @@ namespace nomad {
     double d2 = 1.0 / input.first_val();
     
     try {
-      if (AutodiffOrder >= 1) push_partials(val *= 0.5 * d2);
-      if (AutodiffOrder >= 2) push_partials(val *= - 0.5 * d2);
-      if (AutodiffOrder >= 3) push_partials(val *= - 1.5 * d2);
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(val *= 0.5 * d2);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(val *= - 0.5 * d2);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(val *= - 1.5 * d2);
     } catch(nomad_error& e) {
       throw nomad_output_partial_error("sqrt");
     }

@@ -24,14 +24,22 @@ namespace nomad {
     double e = std::exp(input.first_val());
     double ee = std::exp(-e);
     
-    push_dual_numbers<AutodiffOrder>(1 - ee);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(1 - ee);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("inv_cloglog");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(ee * e);
-    if (AutodiffOrder >= 2) push_partials(- ee * e * (e - 1));
-    if (AutodiffOrder >= 3) push_partials(ee * e * (1 + e * (e - 3)) );
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(ee * e);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- ee * e * (e - 1));
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(ee * e * (1 + e * (e - 3)) );
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("inv_cloglog");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

@@ -23,16 +23,24 @@ namespace nomad {
 
     double x = input.first_val();
     
-    push_dual_numbers<AutodiffOrder>(erfc(x));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(erfc(x));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("erfc");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double C = - 2 * 0.56418958354776 * exp(- x * x);
     
-    if (AutodiffOrder >= 1) push_partials(C);
-    if (AutodiffOrder >= 2) push_partials(- 2 * x * C);
-    if (AutodiffOrder >= 3) push_partials(2 * (2 * x * x - 1) * C);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(C);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- 2 * x * C);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * (2 * x * x - 1) * C);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("erfc");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }

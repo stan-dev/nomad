@@ -23,8 +23,12 @@ namespace nomad {
     
     create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
       
-    push_dual_numbers<AutodiffOrder>(round(input.first_val()));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(round(input.first_val()));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("round");
+    }
+      
     push_inputs(input.dual_numbers());
 
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);

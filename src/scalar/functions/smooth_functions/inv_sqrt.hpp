@@ -29,15 +29,23 @@ namespace nomad {
 
     double d = 1.0 / input.first_val();
     double sqrtd = sqrt(d);
-    
-    push_dual_numbers<AutodiffOrder>(sqrtd);
-    
+      
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(sqrtd);
+    } catch (nomad_error& e) {
+      throw nomad_output_value_error("inv_sqrt");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (AutodiffOrder >= 1) push_partials(-0.5 * d * sqrtd);
-    if (AutodiffOrder >= 2) push_partials(0.75 * d * d * sqrtd);
-    if (AutodiffOrder >= 3) push_partials(-1.875 * d * d * d * sqrtd);
-
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(-0.5 * d * sqrtd);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(0.75 * d * d * sqrtd);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(-1.875 * d * d * d * sqrtd);
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("inv_sqrt");
+    }
+      
     return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
