@@ -119,10 +119,10 @@ namespace nomad {
 
     }
     
-    template <bool StrictSmoothness, bool ValidateIO, template <class> class F>
+    template <template <class> class F>
     void test_derivatives(Eigen::VectorXd& x) {
       
-      F<var<1U, StrictSmoothness, ValidateIO> > f1;
+      F<var<1U, false, true> > f1;
       try {
         tests::test_gradient(f1, x);
       } catch(nomad_error& e) {
@@ -130,7 +130,7 @@ namespace nomad {
         FAIL();
       }
       
-      F<var<2U, StrictSmoothness, ValidateIO> > f2;
+      F<var<2U, false, true> > f2;
       try {
         tests::test_hessian(f2, x);
       } catch(nomad_error& e) {
@@ -138,7 +138,7 @@ namespace nomad {
         FAIL();
       }
       
-      F<var<3U, StrictSmoothness, ValidateIO> > f3;
+      F<var<3U, false, true> > f3;
       try {
         tests::test_grad_hessian(f3, x);
       } catch(nomad_error& e) {

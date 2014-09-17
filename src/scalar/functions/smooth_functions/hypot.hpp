@@ -119,6 +119,11 @@ namespace nomad {
     hypot(double x,
           const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
     
+    if (ValidateIO) {
+      validate_input(x, "hypot");
+      validate_input(v2.first_val(), "hypot");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
@@ -193,6 +198,11 @@ namespace nomad {
     hypot(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
           double y) {
     
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "hypot");
+      validate_input(y, "hypot");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     

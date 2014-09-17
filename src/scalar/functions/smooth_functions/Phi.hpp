@@ -33,19 +33,19 @@ namespace nomad {
     double x = input.first_val();
     
     try {
-      push_dual_numbers<AutodiffOrder, ValidateIO>(erf(x));
+      push_dual_numbers<AutodiffOrder, ValidateIO>(Phi(x));
     } catch(nomad_error& e) {
       throw nomad_output_value_error("Phi");
     }
       
     push_inputs(input.dual_numbers());
     
-    double C = 0.39894228040143 * exp(- x * x);
+    double C = 0.39894228040143 * exp(- 0.5 * x * x);
     
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(C);
-      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- 2 * x * C);
-      if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * (2 * x * x - 1) * C);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(- x * C);
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>((x * x - 1) * C);
     } catch(nomad_error& e) {
       throw nomad_output_partial_error("Phi");
     }
