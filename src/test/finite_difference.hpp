@@ -119,17 +119,32 @@ namespace nomad {
 
     }
     
-    template <bool strict_smoothness, template <class> class F>
-    void test_function(Eigen::VectorXd& x) {
+    template <template <class> class F>
+    void test_derivatives(Eigen::VectorXd& x) {
       
-      F<var<1U, strict_smoothness> > f1;
-      tests::test_gradient(f1, x);
+      F<var<1U, false, true> > f1;
+      try {
+        tests::test_gradient(f1, x);
+      } catch(nomad_error& e) {
+        SCOPED_TRACE("test_gradient");
+        FAIL();
+      }
       
-      F<var<2U, strict_smoothness> > f2;
-      tests::test_hessian(f2, x);
+      F<var<2U, false, true> > f2;
+      try {
+        tests::test_hessian(f2, x);
+      } catch(nomad_error& e) {
+        SCOPED_TRACE("test_hessian");
+        FAIL();
+      }
       
-      F<var<3U, strict_smoothness> > f3;
-      tests::test_grad_hessian(f3, x);
+      F<var<3U, false, true> > f3;
+      try {
+        tests::test_grad_hessian(f3, x);
+      } catch(nomad_error& e) {
+        SCOPED_TRACE("test_grad_hessian");
+        FAIL();
+      }
       
     }
   

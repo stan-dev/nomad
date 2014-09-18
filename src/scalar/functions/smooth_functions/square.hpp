@@ -2,7 +2,8 @@
 #define nomad__src__scalar__functions__smooth_functions__square_hpp
 
 #include <src/var/var.hpp>
-#include <src/var/derived/square_var_body.hpp>
+#include <src/var/derived/square_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
 
@@ -10,21 +11,25 @@ namespace nomad {
     return input * input;
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    square(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    square(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
-    next_inputs_delta = 1;
-    // next_partials_delta not used by square_var_body
-    
-    new square_var_body<autodiff_order>();
+    if (ValidateIO) validate_input(input.first_val(), "square");
+      
+    create_node<square_var_node<AutodiffOrder>>(1);
     
     double val = input.first_val();
 
-    push_dual_numbers<autodiff_order>(val * val);
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val * val);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("square");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

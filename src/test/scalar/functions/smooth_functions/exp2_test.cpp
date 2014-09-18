@@ -5,22 +5,35 @@
 
 #include <src/autodiff/base_functor.hpp>
 #include <src/scalar/functions.hpp>
+#include <src/test/io_validation.hpp>
 #include <src/test/finite_difference.hpp>
 
 template <typename T>
-class exp2_func: public nomad::base_functor<T> {
+class exp2_eval_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
-    T v = x[0];
-    return exp2(v);
-    
+    return exp2(nomad::tests::construct_unsafe_var<T>(x[0]));
+  }
+  static std::string name() { return "exp2"; }
+};
+
+template <typename T>
+class exp2_grad_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    return exp2(T(x[0]));
   }
   static std::string name() { return "exp2"; }
 };
 
 TEST(ScalarSmoothFunctions, Exp2) {
-  Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
-  x *= 0.576;
-  nomad::tests::test_function<true, exp2_func>(x);
+  
+  nomad::eigen_idx_t d = 1;
+  
+  Eigen::VectorXd x(d);
+  x[0] = 0.576;
+  
+  nomad::tests::test_validation<exp2_eval_func>(x);
+  nomad::tests::test_derivatives<exp2_grad_func>(x);
 }
 

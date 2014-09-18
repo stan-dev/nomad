@@ -13,16 +13,16 @@ namespace nomad {
 
   template<class T_var>
   void third_order_forward_val(const T_var& v) {
-    for (nomad_idx_t i = 1; i <= v.body(); ++i)
-      var_bodies_[i].third_order_forward_val();
+    for (nomad_idx_t i = 1; i <= v.node(); ++i)
+      var_nodes_[i].third_order_forward_val();
   }
   
   template<class T_var>
   void third_order_reverse_adj(const T_var& v) {
-    var_bodies_[v.body()].third_grad() = 0;
-    var_bodies_[v.body()].fourth_grad() = 0;
-    for (nomad_idx_t i = v.body(); i > 0; --i)
-      var_bodies_[i].third_order_reverse_adj();
+    var_nodes_[v.node()].third_grad() = 0;
+    var_nodes_[v.node()].fourth_grad() = 0;
+    for (nomad_idx_t i = v.node(); i > 0; --i)
+      var_nodes_[i].third_order_reverse_adj();
   }
 
   template <typename F>
@@ -38,58 +38,66 @@ namespace nomad {
     
     eigen_idx_t d = x.size();
     
-    auto f_var = functional(x);
-    f = f_var.first_val();
-    
-    // First-order
-    first_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_bodies_[i + 1].first_grad();
-    
-    Eigen::VectorXd v(d);
-    
-    for (eigen_idx_t i = 0; i < d; ++i) {
+    try {
       
-      // Second-order
-      for (eigen_idx_t j = 0; j < d; ++j)
-        var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
+      auto f_var = functional(x);
       
-      second_order_forward_val(f_var);
-      second_order_reverse_adj(f_var);
+      f = f_var.first_val();
       
-      for (Eigen::internal::traits<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >::Index j = 0; j < d; ++j)
-        v(j) = var_bodies_[j + 1].second_grad();
+      // First-order
+      first_order_reverse_adj(f_var);
       
-      H.col(i) = v;
+      for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_nodes_[i + 1].first_grad();
       
-      // Third-order
-      for (eigen_idx_t j = 0; j < d; ++j)
-        var_bodies_[j + 1].fourth_val() = 0;
+      Eigen::VectorXd v(d);
       
-      for (eigen_idx_t k = 0; k <= i; ++k) {
+      for (eigen_idx_t i = 0; i < d; ++i) {
         
+        // Second-order
         for (eigen_idx_t j = 0; j < d; ++j)
-          var_bodies_[j + 1].third_val() = static_cast<double>(k == j);
+        var_nodes_[j + 1].second_val() = static_cast<double>(i == j);
         
-        third_order_forward_val(f_var);
+        second_order_forward_val(f_var);
+        second_order_reverse_adj(f_var);
         
+        for (Eigen::internal::traits<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >::Index j = 0; j < d; ++j)
+        v(j) = var_nodes_[j + 1].second_grad();
+        
+        H.col(i) = v;
+        
+        // Third-order
         for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_bodies_[j + 1].fourth_grad();
+        var_nodes_[j + 1].fourth_val() = 0;
         
-        third_order_reverse_adj(f_var);
-        
-        for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_bodies_[j + 1].fourth_grad();
-        
-        grad_H.block(0, i * d, d, d).col(k) = v;
-        grad_H.block(0, k * d, d, d).col(i) = v;
+        for (eigen_idx_t k = 0; k <= i; ++k) {
+          
+          for (eigen_idx_t j = 0; j < d; ++j)
+          var_nodes_[j + 1].third_val() = static_cast<double>(k == j);
+          
+          third_order_forward_val(f_var);
+          
+          for (eigen_idx_t j = 0; j < d; ++j)
+          v(j) = var_nodes_[j + 1].fourth_grad();
+          
+          third_order_reverse_adj(f_var);
+          
+          for (eigen_idx_t j = 0; j < d; ++j)
+          v(j) = var_nodes_[j + 1].fourth_grad();
+          
+          grad_H.block(0, i * d, d, d).col(k) = v;
+          grad_H.block(0, k * d, d, d).col(i) = v;
+          
+        }
         
       }
       
+      reset();
+      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
     }
-    
-    reset();
     
   }
   
@@ -100,11 +108,7 @@ namespace nomad {
     double f;
     Eigen::VectorXd g(x.size());
     Eigen::MatrixXd H(x.size(), x.size());
-    try {
-      grad_hessian(functional, x, f, g, H, grad_H);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    grad_hessian(functional, x, f, g, H, grad_H);
   }
   
   template <typename F>
@@ -150,7 +154,7 @@ namespace nomad {
     Eigen::MatrixXd auto_grad_H(d, d * d);
     try {
       grad_hessian(functional, x, auto_grad_H);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Gradient Test" << std::endl;
       throw e;
     }
@@ -158,7 +162,7 @@ namespace nomad {
     Eigen::MatrixXd diff_grad_H(d, d * d);
     try {
       finite_diff_grad_hessian(functional, x, diff_grad_H, epsilon);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Hessian Gradient Test" << std::endl;
       throw e;
     }
@@ -228,51 +232,58 @@ namespace nomad {
     
     eigen_idx_t d = x.size();
     
-
-    auto f_var = functional(x);
-    f = f_var.first_val();
-    
-    // First-order
-    first_order_reverse_adj(f_var);
-    
-    for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_bodies_[i + 1].first_grad();
-    
-    Eigen::VectorXd v(d);
-    grad_trace_m_times_h.setZero();
-    
-    for (eigen_idx_t i = 0; i < d; ++i) {
+    try {
       
-      // Second-order
-      for (eigen_idx_t j = 0; j < d; ++j)
-        var_bodies_[j + 1].second_val() = static_cast<double>(i == j);
+      auto f_var = functional(x);
       
-      second_order_forward_val(f_var);
-      second_order_reverse_adj(f_var);
+      f = f_var.first_val();
       
-      for (eigen_idx_t j = 0; j < d; ++j)
-        v(j) = var_bodies_[j + 1].second_grad();
+      // First-order
+      first_order_reverse_adj(f_var);
       
-      H.col(i) = v;
+      for (eigen_idx_t i = 0; i < d; ++i)
+      g(i) = var_nodes_[i + 1].first_grad();
       
-      // Third-order
-      for (eigen_idx_t j = 0; j < d; ++j)
-        var_bodies_[j + 1].fourth_val() = 0;
+      Eigen::VectorXd v(d);
+      grad_trace_m_times_h.setZero();
       
-      for (eigen_idx_t j = 0; j < d; ++j)
-        var_bodies_[j + 1].third_val() = M(j, i);
+      for (eigen_idx_t i = 0; i < d; ++i) {
+        
+        // Second-order
+        for (eigen_idx_t j = 0; j < d; ++j)
+        var_nodes_[j + 1].second_val() = static_cast<double>(i == j);
+        
+        second_order_forward_val(f_var);
+        second_order_reverse_adj(f_var);
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
+        v(j) = var_nodes_[j + 1].second_grad();
+        
+        H.col(i) = v;
+        
+        // Third-order
+        for (eigen_idx_t j = 0; j < d; ++j)
+        var_nodes_[j + 1].fourth_val() = 0;
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
+        var_nodes_[j + 1].third_val() = M(j, i);
+        
+        third_order_forward_val(f_var);
+        third_order_reverse_adj(f_var);
+        
+        for (eigen_idx_t j = 0; j < d; ++j)
+        v(j) = var_nodes_[j + 1].fourth_grad();
+        
+        grad_trace_m_times_h += v;
+        
+      }
       
-      third_order_forward_val(f_var);
-      third_order_reverse_adj(f_var);
+      reset();
       
-      for (eigen_idx_t j = 0; j < d; ++j)
-        v(j) = var_bodies_[j + 1].fourth_grad();
-      
-      grad_trace_m_times_h += v;
-      
+    } catch (nomad_error& e) {
+      reset();
+      throw e;
     }
-    
-    reset();
     
   }
   
@@ -284,11 +295,7 @@ namespace nomad {
     double f;
     Eigen::VectorXd g(x.size());
     Eigen::MatrixXd H(x.size(), x.size());
-    try {
-      grad_trace_matrix_times_hessian(functional, x, M, f, g, H, grad_trace_m_times_h);
-    } catch (std::runtime_error& e) {
-      throw e;
-    }
+    grad_trace_matrix_times_hessian(functional, x, M, f, g, H, grad_trace_m_times_h);
   }
   
   template <typename F>
@@ -300,7 +307,7 @@ namespace nomad {
     Eigen::MatrixXd grad_hessian_auto(d, d * d);
     try {
       grad_hessian(functional, x, grad_hessian_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Gradient of Trace Matrix Times Hessian Test" << std::endl;
       throw e;
     }
@@ -316,7 +323,7 @@ namespace nomad {
     Eigen::VectorXd grad_trace_m_times_h_auto(x.size());
     try {
       grad_trace_matrix_times_hessian(functional, x, M, grad_trace_m_times_h_auto);
-    } catch (std::runtime_error& e) {
+    } catch (nomad_error& e) {
       std::cout << "Cannot compute Gradient of Trace Matrix Times Hessian Test" << std::endl;
       throw e;
     }

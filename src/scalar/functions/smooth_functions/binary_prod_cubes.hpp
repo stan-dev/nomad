@@ -3,7 +3,8 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
-#include <src/var/derived/binary_var_body.hpp>
+#include <src/var/derived/binary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -11,45 +12,54 @@ namespace nomad {
     return x * x * x * y * y * y;
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    binary_prod_cubes(const var<autodiff_order, strict_smoothness>& v1,
-                      const var<autodiff_order, strict_smoothness>& v2) {
-    
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    binary_prod_cubes(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+                      const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
+
+    if (ValidateIO) {
+      validate_input(v1.first_val(), "binary_prod_cubes");
+      validate_input(v2.first_val(), "binary_prod_cubes");
+    }
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 2;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      binary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new binary_var_body<autodiff_order, partials_order>();
+    create_node<binary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     double x = v1.first_val();
     double y = v2.first_val();
     
-    push_dual_numbers<autodiff_order>(binary_prod_cubes(x, y));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(binary_prod_cubes(x, y));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("binary_prod_cubes");
+    }
+      
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    if (autodiff_order >= 1) {
-      push_partials(3 * x * x * y * y * y);
-      push_partials(3 * x * x * x * y * y);
+    try {
+      if (AutodiffOrder >= 1) {
+        push_partials<ValidateIO>(3 * x * x * y * y * y);
+        push_partials<ValidateIO>(3 * x * x * x * y * y);
+      }
+      if (AutodiffOrder >= 2) {
+        push_partials<ValidateIO>(6 * x * y * y * y);
+        push_partials<ValidateIO>(9 * x * x * y * y);
+        push_partials<ValidateIO>(6 * x * x * x * y);
+      }
+      if (AutodiffOrder >= 3) {
+        push_partials<ValidateIO>(6 * y * y * y);
+        push_partials<ValidateIO>(18 * x * y * y);
+        push_partials<ValidateIO>(18 * x * x * y);
+        push_partials<ValidateIO>(6 * x * x * x);
+      }
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("binary_prod_cubes");
     }
-    if (autodiff_order >= 2) {
-      push_partials(6 * x * y * y * y);
-      push_partials(9 * x * x * y * y);
-      push_partials(6 * x * x * x * y);
-    }
-    if (autodiff_order >= 3) {
-      push_partials(6 * y * y * y);
-      push_partials(18 * x * y * y);
-      push_partials(18 * x * x * y);
-      push_partials(6 * x * x * x);
-    }
-
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+      
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

@@ -5,30 +5,33 @@
 #include <type_traits>
 
 #include <src/var/var.hpp>
-#include <src/var/derived/unary_var_body.hpp>
+#include <src/var/derived/unary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double round(double x) { return std::round(x); }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline typename std::enable_if<!strict_smoothness, var<autodiff_order, strict_smoothness> >::type
-    round(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+    round(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) validate_input(input.first_val(), "round");
+      
     const short partials_order = 0;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
-
-    push_dual_numbers<autodiff_order>(round(input.first_val()));
-    
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
+      
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(round(input.first_val()));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("round");
+    }
+      
     push_inputs(input.dual_numbers());
 
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

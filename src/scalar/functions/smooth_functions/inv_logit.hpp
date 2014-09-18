@@ -3,7 +3,8 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
-#include <src/var/derived/unary_var_body.hpp>
+#include <src/var/derived/unary_var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
@@ -16,32 +17,38 @@ namespace nomad {
     }
   }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    inv_logit(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    inv_logit(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) validate_input(input.first_val(), "inv_logit");
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     double s = inv_logit(input.first_val());
     
-    push_dual_numbers<autodiff_order>(s);
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(s);
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("inv_logit");
+    }
+      
     push_inputs(input.dual_numbers());
     
     double ds = s * (1 - s);
     
-    if (autodiff_order >= 1) push_partials(ds);
-    if (autodiff_order >= 2) push_partials(ds * (1 - 2 * s) );
-    if (autodiff_order >= 3) push_partials(ds * (1 - 6 * s * (1 - s)) );
-
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(ds);
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(ds * (1 - 2 * s) );
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(ds * (1 - 6 * s * (1 - s)) );
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("inv_logit");
+    }
+      
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 

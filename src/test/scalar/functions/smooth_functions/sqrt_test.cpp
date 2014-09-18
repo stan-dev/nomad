@@ -5,22 +5,37 @@
 
 #include <src/autodiff/base_functor.hpp>
 #include <src/scalar/functions.hpp>
+#include <src/test/io_validation.hpp>
 #include <src/test/finite_difference.hpp>
 
 template <typename T>
-class sqrt_func: public nomad::base_functor<T> {
+class sqrt_eval_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
-    T v = x[0];
-    return sqrt(v);
-    
+    return sqrt(nomad::tests::construct_unsafe_var<T>(x[0]));
+  }
+  static std::string name() { return "sqrt"; }
+};
+
+template <typename T>
+class sqrt_grad_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    return sqrt(T(x[0]));
   }
   static std::string name() { return "sqrt"; }
 };
 
 TEST(ScalarSmoothFunctions, Sqrt) {
-  Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
-  x *= 0.576;
-  nomad::tests::test_function<true, sqrt_func>(x);
+  
+  nomad::eigen_idx_t d = 1;
+  
+  Eigen::VectorXd x(d);
+  x[0] = 1.576;
+  
+  Eigen::MatrixXd x_bad(d, 1);
+  x_bad(0, 0) = -1;
+  
+  nomad::tests::test_validation<sqrt_eval_func>(x, x_bad);
+  nomad::tests::test_derivatives<sqrt_grad_func>(x);
 }
-

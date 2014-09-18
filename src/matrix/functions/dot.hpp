@@ -4,7 +4,7 @@
 #include <Eigen/Core>
 
 #include <src/var/var.hpp>
-#include <src/var/derived/dot_var_body.hpp>
+#include <src/var/derived/dot_var_node.hpp>
 
 namespace nomad {
   
@@ -20,15 +20,13 @@ namespace nomad {
       const Eigen::MatrixBase<DerivedB>& v2) {
     
     const short autodiff_order = Eigen::MatrixBase<DerivedA>::Scalar::order();
-    const short strict_smoothness = Eigen::MatrixBase<DerivedA>::Scalar::strict();
+    const bool strict_smoothness = Eigen::MatrixBase<DerivedA>::Scalar::strict();
+    const bool validate_io = Eigen::MatrixBase<DerivedA>::Scalar::validate();
 
     eigen_idx_t N = v1.size();
     const nomad_idx_t n_inputs = static_cast<nomad_idx_t>(2 * N);
     
-    next_inputs_delta = n_inputs;
-    // next_partials_delta not used by dot_var_body
-    
-    new dot_var_body<autodiff_order>(n_inputs);
+    create_node<dot_var_node<autodiff_order>>(n_inputs);
     
     double sum = 0;
     
@@ -43,7 +41,7 @@ namespace nomad {
     for (eigen_idx_t n = 0; n < N; ++n)
       push_inputs(v2(n).dual_numbers());
     
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    return var<autodiff_order, strict_smoothness, validate_io>(next_node_idx_ - 1);
     
   }
   

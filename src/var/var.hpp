@@ -3,77 +3,81 @@
 
 #include <type_traits>
 
-#include <src/var/var_body.hpp>
+#include <src/var/var_node.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
-  template <short autodiff_order, bool strict_smoothness>
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
   class var {
   private:
 
-    nomad_idx_t body_idx_;
+    nomad_idx_t node_idx_;
     
   public:
     
     var() {}
-    var(const var& v) : body_idx_(v.body_idx_) {}
+    var(const var& v) : node_idx_(v.node_idx_) {}
     
-    explicit var(nomad_idx_t body_idx) : body_idx_(body_idx) {}
+    explicit var(nomad_idx_t node_idx) : node_idx_(node_idx) {}
     
     var(double val) {
-      // next_partials_delta not used by var_body<autodiff_order, 0>
-      // next_inputs_delta not used by var_body<autodiff_order, 0>
-      new var_body<autodiff_order, 0>();
-      push_dual_numbers<autodiff_order>(val);
-      body_idx_ = next_body_idx_ - 1;
+      if (ValidateIO) validate_input(val, "var constructor");
+      create_node<var_node<AutodiffOrder, 0>>(0);
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+      node_idx_ = next_node_idx_ - 1;
     }
     
     var& operator=(const var& v) {
-      body_idx_ = v.body_idx_;
+      node_idx_ = v.node_idx_;
       return *this;
     }
 
     var& operator=(double val) {
-      // next_partials_delta not used by var_body<autodiff_order, 0>
-      // next_inputs_delta not used by var_body<autodiff_order, 0>
-      new var_body<autodiff_order, 0>();
-      push_dual_numbers<autodiff_order>(val);
-      body_idx_ = next_body_idx_ - 1;
+      if (ValidateIO) validate_input(val, "var operator=");
+      create_node<var_node<AutodiffOrder, 0>>(0);
+      push_dual_numbers<AutodiffOrder, ValidateIO>(val);
+      node_idx_ = next_node_idx_ - 1;
       return *this;
     }
     
-    nomad_idx_t dual_numbers() const { return var_bodies_[body_idx_].dual_numbers(); }
+    nomad_idx_t dual_numbers() const { return var_nodes_[node_idx_].dual_numbers(); }
     
-    nomad_idx_t body() const { return body_idx_; }
-    void set_body(nomad_idx_t body_idx) { body_idx_ = body_idx; }
+    nomad_idx_t node() const { return node_idx_; }
+    void set_node(nomad_idx_t node_idx) { node_idx_ = node_idx; }
     
-    constexpr static short order() { return autodiff_order; }
-    constexpr static bool strict() { return strict_smoothness; }
+    constexpr static short order() { return AutodiffOrder; }
+    constexpr static bool strict() { return StrictSmoothness; }
+    constexpr static bool validate() { return ValidateIO; }
     
-    double& first_val()   const { return var_bodies_[body_idx_].first_val(); }
-    double& first_grad()  const { return var_bodies_[body_idx_].first_grad(); }
-    double& second_val()  const { return var_bodies_[body_idx_].second_val(); }
-    double& second_grad() const { return var_bodies_[body_idx_].second_grad(); }
-    double& third_val()   const { return var_bodies_[body_idx_].third_val(); }
-    double& third_grad()  const { return var_bodies_[body_idx_].third_grad(); }
-    double& fourth_val()  const { return var_bodies_[body_idx_].fourth_val(); }
-    double& fourth_grad() const { return var_bodies_[body_idx_].fourth_grad(); }
+    double& first_val()   const { return var_nodes_[node_idx_].first_val(); }
+    double& first_grad()  const { return var_nodes_[node_idx_].first_grad(); }
+    double& second_val()  const { return var_nodes_[node_idx_].second_val(); }
+    double& second_grad() const { return var_nodes_[node_idx_].second_grad(); }
+    double& third_val()   const { return var_nodes_[node_idx_].third_val(); }
+    double& third_grad()  const { return var_nodes_[node_idx_].third_grad(); }
+    double& fourth_val()  const { return var_nodes_[node_idx_].fourth_val(); }
+    double& fourth_grad() const { return var_nodes_[node_idx_].fourth_grad(); }
     
   };
 
   template <typename T>
   struct is_var : public std::false_type { };
   
-  template <short autodiff_order, bool strict_smoothness>
-  struct is_var< var<autodiff_order, strict_smoothness> > : public std::true_type { };
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  struct is_var< var<AutodiffOrder, StrictSmoothness, ValidateIO> > : public std::true_type { };
   
-  typedef var<1, true> var1;
-  typedef var<2, true> var2;
-  typedef var<3, true> var3;
+  typedef var<1, true, false> var1;
+  typedef var<2, true, false> var2;
+  typedef var<3, true, false> var3;
+
+  typedef var<1, true, true> debug_var1;
+  typedef var<2, true, true> debug_var2;
+  typedef var<3, true, true> debug_var3;
   
-  typedef var<1, false> wild_var1;
-  typedef var<2, false> wild_var2;
-  typedef var<3, false> wild_var3;
+  typedef var<1, false, false> wild_var1;
+  typedef var<2, false, false> wild_var2;
+  typedef var<3, false, false> wild_var3;
 
 }
 

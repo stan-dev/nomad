@@ -1,24 +1,24 @@
-#ifndef nomad__src__var__derived__multi_sum_var_body_hpp
-#define nomad__src__var__derived__multi_sum_var_body_hpp
+#ifndef nomad__src__var__derived__multi_sum_var_node_hpp
+#define nomad__src__var__derived__multi_sum_var_node_hpp
 
-#include <src/var/var_body.hpp>
+#include <src/var/var_node.hpp>
 
 namespace nomad {
 
-  template<short autodiff_order>
-  class multi_sum_var_body: public var_base {
+  template<short AutodiffOrder>
+  class multi_sum_var_node: public var_node_base {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<autodiff_order>();
+      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
       // no partials
       if (unlikely(next_inputs_idx_ + next_inputs_delta > max_inputs_idx)) expand_inputs();
-      return var_bodies_ + next_body_idx_;
+      return var_nodes_ + next_node_idx_;
     }
     
     static inline void operator delete(void* /* ignore */) {}
     
-    multi_sum_var_body(nomad_idx_t n_inputs): var_base(n_inputs) {}
+    multi_sum_var_node(nomad_idx_t n_inputs): var_node_base(n_inputs) {}
  
     inline nomad_idx_t n_first_partials() { return 0; }
     inline nomad_idx_t n_second_partials() { return 0; }
@@ -27,7 +27,7 @@ namespace nomad {
     
     inline void first_order_forward_adj() {
       
-      if (autodiff_order >= 1) {
+      if (AutodiffOrder >= 1) {
         
         if (n_inputs_) first_grad() = 0;
         
@@ -42,7 +42,7 @@ namespace nomad {
     
     inline void first_order_reverse_adj() {
       
-      if (autodiff_order >= 1) {
+      if (AutodiffOrder >= 1) {
         
         const double g1 = first_grad();
         
@@ -54,7 +54,7 @@ namespace nomad {
     
     void second_order_forward_val() {
       
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         
         if (n_inputs_) second_val() = 0;
         second_grad() = 0;
@@ -71,7 +71,7 @@ namespace nomad {
     
     void second_order_reverse_adj() {
       
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         
         const double g2 = second_grad();
         
@@ -83,7 +83,7 @@ namespace nomad {
     
     void third_order_forward_val() {
       
-      if (autodiff_order >= 3) {
+      if (AutodiffOrder >= 3) {
         
         if (n_inputs_) {
           third_val() = 0;
@@ -109,7 +109,7 @@ namespace nomad {
     
     void third_order_reverse_adj() {
       
-      if (autodiff_order >= 3) {
+      if (AutodiffOrder >= 3) {
         
         const double g3 = third_grad();
         const double g4 = fourth_grad();

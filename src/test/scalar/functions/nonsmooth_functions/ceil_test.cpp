@@ -5,21 +5,34 @@
 
 #include <src/autodiff/base_functor.hpp>
 #include <src/scalar/functions.hpp>
+#include <src/test/io_validation.hpp>
 #include <src/test/finite_difference.hpp>
 
 template <typename T>
-class ceil_func: public nomad::base_functor<T> {
+class ceil_eval_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
-    T v = x[0];
-    return ceil(v);
+    return ceil(nomad::tests::construct_unsafe_var<T>(x[0]));
   }
   static std::string name() { return "ceil"; }
 };
 
-TEST(ScalarNonSmoothFunctions, Ceil) {
-  Eigen::VectorXd x = Eigen::VectorXd::Ones(1);
-  x *= 0.576;
-  nomad::tests::test_function<false, ceil_func>(x);
-}
+template <typename T>
+class ceil_grad_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    return ceil(T(x[0]));
+  }
+  static std::string name() { return "ceil"; }
+};
 
+TEST(ScalarSmoothFunctions, Ceil) {
+  
+  nomad::eigen_idx_t d = 1;
+  
+  Eigen::VectorXd x(d);
+  x[0] = 0.576;
+  
+  nomad::tests::test_validation<ceil_eval_func>(x);
+  nomad::tests::test_derivatives<ceil_grad_func>(x);
+}

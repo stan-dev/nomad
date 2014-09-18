@@ -1,5 +1,5 @@
-#ifndef nomad__src__var__var_body_hpp
-#define nomad__src__var__var_body_hpp
+#ifndef nomad__src__var__var_node_hpp
+#define nomad__src__var__var_node_hpp
 
 #include <iostream>
 #include <string>
@@ -8,7 +8,7 @@
 
 namespace nomad {
   
-  class var_base {
+  class var_node_base {
   protected:
     
     nomad_idx_t dual_numbers_idx_;
@@ -19,29 +19,29 @@ namespace nomad {
     
   public:
     
-    var_base(): n_inputs_(0) {
+    var_node_base(): n_inputs_(0) {
 
       dual_numbers_idx_ = next_dual_number_idx_;
       partials_idx_ = next_partials_idx_;
       inputs_idx_ = next_inputs_idx_;
       
-      next_body_idx_++;
+      next_node_idx_++;
     
     }
 
-    var_base(nomad_idx_t n_inputs):
+    var_node_base(nomad_idx_t n_inputs):
     n_inputs_(n_inputs) {
       
       dual_numbers_idx_ = next_dual_number_idx_;
       partials_idx_ = next_partials_idx_;
       inputs_idx_ = next_inputs_idx_;
       
-      next_body_idx_++;
+      next_node_idx_++;
     }
     
-    virtual ~var_base() {}
+    virtual ~var_node_base() {}
     
-    var_base& operator=(const var_base& rhs) {
+    var_node_base& operator=(const var_node_base& rhs) {
       dual_numbers_idx_ = rhs.dual_numbers();
       partials_idx_ = rhs.partials();
       inputs_idx_ = rhs.inputs();
@@ -56,6 +56,8 @@ namespace nomad {
     
     nomad_idx_t input() { return inputs_[inputs_idx_]; }
     nomad_idx_t input(unsigned int k) { return inputs_[inputs_idx_ + k]; }
+    
+    constexpr static bool dynamic_inputs() { return true; }
     
     // Are these used?
     nomad_idx_t begin() { return inputs_[inputs_idx_]; }
@@ -99,21 +101,21 @@ namespace nomad {
     
     inline static nomad_idx_t n_partials(unsigned int n_inputs) { return 0; }
 
-    template<short autodiff_order>
+    template<short AutodiffOrder>
     void print(std::ostream* output, std::string prefix = "") {
       if(!output) return;
       
       *output << prefix << "Dual numbers stored at index " << dual_numbers_idx_ << std::endl;
       
-      if (autodiff_order >= 1) {
+      if (AutodiffOrder >= 1) {
         *output << prefix << "  first val = " << first_val()
                 << ", first grad = " << first_grad() << std::endl;
       }
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         *output << prefix << "  second val = " << second_val()
                 << ", second grad = " << second_grad() << std::endl;
       }
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         *output << prefix << "  third val = " << third_val()
                 << ", third grad = " << third_grad() << std::endl;
         *output << prefix << "  fourth val = " << fourth_val()
@@ -148,7 +150,7 @@ namespace nomad {
       }
       
     }
-
+    
     inline virtual void first_order_forward_adj()  {}
     inline virtual void first_order_reverse_adj()  {}
     virtual void second_order_forward_val() {}
@@ -158,68 +160,68 @@ namespace nomad {
     
   };
   
-  template<short autodiff_order>
-  void expand_var_bodies() {
+  template<short AutodiffOrder>
+  void expand_var_nodes() {
     
-    if (!max_body_idx) {
-      max_body_idx = base_body_size_;
-      var_bodies_ = new var_base[max_body_idx];
-      next_body_idx_ -= max_body_idx;
+    if (!max_node_idx) {
+      max_node_idx = base_node_size_;
+      var_nodes_ = new var_node_base[max_node_idx];
+      next_node_idx_ -= max_node_idx;
     } else {
-      max_body_idx *= 2;
+      max_node_idx *= 2;
       
-      var_base* new_stack = new var_base[max_body_idx];
-      for (nomad_idx_t i = 0; i < next_body_idx_; ++i)
-        new_stack[i] = var_bodies_[i];
-      delete[] var_bodies_;
+      var_node_base* new_stack = new var_node_base[max_node_idx];
+      for (nomad_idx_t i = 0; i < next_node_idx_; ++i)
+        new_stack[i] = var_nodes_[i];
+      delete[] var_nodes_;
       
-      var_bodies_ = new_stack;
+      var_nodes_ = new_stack;
     }
     
-    expand_dual_numbers<autodiff_order>();
+    expand_dual_numbers<AutodiffOrder>();
     
   }
   
-  template<short autodiff_order, short partials_order>
-  class var_body: public var_base {
+  template<short AutodiffOrder, short PartialsOrder>
+  class var_node: public var_node_base {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<autodiff_order>();
+      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
       if (unlikely(next_partials_idx_ + next_partials_delta > max_partials_idx)) expand_partials();
       if (unlikely(next_inputs_idx_ + next_inputs_delta > max_inputs_idx)) expand_inputs();
-      return var_bodies_ + next_body_idx_;
+      return var_nodes_ + next_node_idx_;
     }
     
     static inline void operator delete(void* /* ignore */) {}
     
-    var_body(nomad_idx_t n_inputs): var_base(n_inputs) {}
+    var_node(nomad_idx_t n_inputs): var_node_base(n_inputs) {}
 
     inline nomad_idx_t n_first_partials() {
-      return autodiff_order >= 1 && partials_order >= 1 ?
+      return AutodiffOrder >= 1 && PartialsOrder >= 1 ?
              n_inputs_ : 0;
     }
     
     inline nomad_idx_t n_second_partials() {
-      return autodiff_order >= 2 && partials_order >= 2 ?
+      return AutodiffOrder >= 2 && PartialsOrder >= 2 ?
              n_inputs_ * (n_inputs_ + 1) / 2 : 0;
     }
     
     inline nomad_idx_t n_third_partials() {
-      return autodiff_order >= 3 && partials_order >= 3 ?
+      return AutodiffOrder >= 3 && PartialsOrder >= 3 ?
              n_inputs_ * (n_inputs_ + 1) * (n_inputs_ + 2) / 6 : 0;
     }
     
     inline static nomad_idx_t n_partials(unsigned int n_inputs) {
-      if (autodiff_order >= 1 && partials_order >= 1)
+      if (AutodiffOrder >= 1 && PartialsOrder >= 1)
         return n_inputs;
       
       // n + n * (n + 1) / 2
-      if (autodiff_order >= 2 && partials_order >= 2)
+      if (AutodiffOrder >= 2 && PartialsOrder >= 2)
         return n_inputs * (n_inputs + 3) / 2;
       
       // n + n * (n + 1) / 2 + n * (n + 1) * (n + 2) / 6
-      if (autodiff_order >= 3 && partials_order >= 3)
+      if (AutodiffOrder >= 3 && PartialsOrder >= 3)
         return n_inputs * (11 + 6 * n_inputs + n_inputs * n_inputs) / 6;
       
       return 0;
@@ -229,7 +231,7 @@ namespace nomad {
       
       if (n_inputs_) first_grad() = 0;
       
-      if (partials_order >= 1) {
+      if (PartialsOrder >= 1) {
         
         double* first_partial = first_partials();
         
@@ -244,7 +246,7 @@ namespace nomad {
     }
     
     inline void first_order_reverse_adj() {
-      if (partials_order >= 1) {
+      if (PartialsOrder >= 1) {
         double* first_partial = first_partials();
         const double g = first_grad();
         for (nomad_idx_t i = 0; i < n_inputs_; ++i, ++first_partial)
@@ -255,12 +257,12 @@ namespace nomad {
     
     void second_order_forward_val() {
       
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         
         if (n_inputs_) second_val() = 0;
         second_grad() = 0;
         
-        if (partials_order >= 1) {
+        if (PartialsOrder >= 1) {
           
           double* first_partial = first_partials();
           double v2 = 0;
@@ -277,9 +279,9 @@ namespace nomad {
     
     void second_order_reverse_adj() {
       
-      if (autodiff_order >= 2) {
+      if (AutodiffOrder >= 2) {
         
-        if (partials_order >= 1) {
+        if (PartialsOrder >= 1) {
           
           double* first_partial = first_partials();
           const double g = second_grad();
@@ -289,7 +291,7 @@ namespace nomad {
           
         }
         
-        if (partials_order >= 2) {
+        if (PartialsOrder >= 2) {
           
           const double g1 = first_grad();
           
@@ -319,7 +321,7 @@ namespace nomad {
     
     void third_order_forward_val() {
       
-      if (autodiff_order >= 3) {
+      if (AutodiffOrder >= 3) {
         
         if (n_inputs_) {
           third_val() = 0;
@@ -329,7 +331,7 @@ namespace nomad {
         third_grad() = 0;
         fourth_grad() = 0;
         
-        if (partials_order >= 1) {
+        if (PartialsOrder >= 1) {
           
           double* first_partial = first_partials();
           double v3 = 0;
@@ -344,7 +346,7 @@ namespace nomad {
           
         }
         
-        if (partials_order >= 2) {
+        if (PartialsOrder >= 2) {
           
           double v4 = 0;
           
@@ -376,14 +378,14 @@ namespace nomad {
     
     void third_order_reverse_adj() {
       
-      if (autodiff_order >= 3) {
+      if (AutodiffOrder >= 3) {
 
         const double g1 = first_grad();
         const double g2 = second_grad();
         const double g3 = third_grad();
         const double g4 = fourth_grad();
         
-        if (partials_order >= 1) {
+        if (PartialsOrder >= 1) {
           
           double* first_partial = first_partials();
           
@@ -393,7 +395,7 @@ namespace nomad {
           }
         }
         
-        if (partials_order >= 2) {
+        if (PartialsOrder >= 2) {
           
           for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
@@ -432,7 +434,7 @@ namespace nomad {
           
         }
         
-        if (partials_order >= 3) {
+        if (PartialsOrder >= 3) {
 
           for (nomad_idx_t i = 0; i < n_inputs_; ++i) {
             
@@ -481,21 +483,24 @@ namespace nomad {
     
   };
   
-  template<short autodiff_order>
-  class var_body<autodiff_order, 0>: public var_base {
+  template<short AutodiffOrder>
+  class var_node<AutodiffOrder, 0>: public var_node_base {
     
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_body_idx_ + 1 > max_body_idx)) expand_var_bodies<autodiff_order>();
+      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
       // no partials
       // no inputs
-      return var_bodies_ + next_body_idx_;
+      return var_nodes_ + next_node_idx_;
     }
     
     static inline void operator delete(void* /* ignore */) {}
     
-    var_body(): var_base() {}
+    var_node(): var_node_base() {}
+    
+    constexpr static bool dynamic_inputs() { return false; }
+    inline static nomad_idx_t n_partials() { return 0; }
     
     void second_order_forward_val() {
       second_grad() = 0;

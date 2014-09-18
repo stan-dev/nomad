@@ -3,37 +3,44 @@
 
 #include <math.h>
 #include <src/var/var.hpp>
-#include <src/var/derived/unary_var_body.hpp>
+#include <src/var/derived/unary_var_node.hpp>
 #include <src/scalar/functions/smooth_functions/polygamma.hpp>
+#include <src/autodiff/validation.hpp>
 
 namespace nomad {
   
   inline double lgamma(double x) { return std::lgamma(x); }
   
-  template <short autodiff_order, bool strict_smoothness>
-  inline var<autodiff_order, strict_smoothness>
-    lgamma(const var<autodiff_order, strict_smoothness>& input) {
+  template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+  inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+    lgamma(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
     
+    if (ValidateIO) validate_input(input.first_val(), "lgamma");
+      
     const short partials_order = 3;
     const unsigned int n_inputs = 1;
     
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
+    create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
 
     double val = input.first_val();
     
-    push_dual_numbers<autodiff_order>(lgamma(val));
-    
+    try {
+      push_dual_numbers<AutodiffOrder, ValidateIO>(lgamma(val));
+    } catch(nomad_error& e) {
+      throw nomad_output_value_error("lgamma");
+    }
+      
     push_inputs(input.dual_numbers());
     
-    if (autodiff_order >= 1) push_partials(digamma(val));
-    if (autodiff_order >= 2) push_partials(trigamma(val));
-    if (autodiff_order >= 3) push_partials(quadrigamma(val));
-
-    return var<autodiff_order, strict_smoothness>(next_body_idx_ - 1);
+    try {
+      if (AutodiffOrder >= 1) push_partials<ValidateIO>(digamma(val));
+      if (AutodiffOrder >= 2) push_partials<ValidateIO>(trigamma(val));
+      if (AutodiffOrder >= 3) push_partials<ValidateIO>(quadrigamma(val));
+    } catch(nomad_error& e) {
+      throw nomad_output_partial_error("lgamma");
+    }
+      
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
     
   }
 
