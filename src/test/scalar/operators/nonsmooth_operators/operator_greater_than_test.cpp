@@ -10,7 +10,47 @@
 #include <src/test/finite_difference.hpp>
 
 template <typename T>
-class operator_greater_than_vv_func: public nomad::base_functor<T> {
+class operator_greater_than_vv_eval_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    T v1 = nomad::tests::construct_unsafe_var<T>(x[0]);
+    T v2 = nomad::tests::construct_unsafe_var<T>(x[1]);
+    if (v1 > v2)
+      return v1;
+    else
+      return v2;
+  }
+  static std::string name() { return "operator_greater_than_vv"; }
+};
+
+template <typename T>
+class operator_greater_than_vd_eval_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    T v = nomad::tests::construct_unsafe_var<T>(x[0]);
+    if (v > x[1])
+      return -v;
+    else
+      return v;
+  }
+  static std::string name() { return "operator_greater_than_vd"; }
+};
+
+template <typename T>
+class operator_greater_than_dv_eval_func: public nomad::base_functor<T> {
+public:
+  T operator()(const Eigen::VectorXd& x) const {
+    T v = nomad::tests::construct_unsafe_var<T>(x[1]);
+    if (x[0] > v)
+      return -v;
+    else
+      return v;
+  }
+  static std::string name() { return "operator_greater_than_dv"; }
+};
+
+template <typename T>
+class operator_greater_than_vv_grad_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
     T v1 = x[0];
@@ -24,7 +64,7 @@ public:
 };
 
 template <typename T>
-class operator_greater_than_vd_func: public nomad::base_functor<T> {
+class operator_greater_than_vd_grad_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
     T v = x[0];
@@ -37,7 +77,7 @@ public:
 };
 
 template <typename T>
-class operator_greater_than_dv_func: public nomad::base_functor<T> {
+class operator_greater_than_dv_grad_func: public nomad::base_functor<T> {
 public:
   T operator()(const Eigen::VectorXd& x) const {
     T v = x[0];
@@ -49,25 +89,31 @@ public:
   static std::string name() { return "operator_greater_than_dv"; }
 };
 
-
 TEST(ScalarNonSmoothOperators, OperatorGreaterThan) {
-  Eigen::VectorXd x1 = Eigen::VectorXd::Ones(2);
+
+  nomad::eigen_idx_t d = 2;
+  
+  Eigen::VectorXd x1(d);
   x1[0] = 1.5;
   x1[1] = 0.5;
   
-  nomad::tests::test_derivatives<operator_greater_than_vv_func>(x1);
+  nomad::tests::test_validation<operator_greater_than_vv_eval_func>(x1);
+  nomad::tests::test_validation<operator_greater_than_vd_eval_func>(x1);
+  nomad::tests::test_validation<operator_greater_than_dv_eval_func>(x1);
+  
+  nomad::tests::test_derivatives<operator_greater_than_vv_grad_func>(x1);
   
   x1[0] = 0.5;
   x1[1] = 1.5;
-  nomad::tests::test_derivatives<operator_greater_than_vv_func>(x1);
+  nomad::tests::test_derivatives<operator_greater_than_vv_grad_func>(x1);
   
   Eigen::VectorXd x2 = Eigen::VectorXd::Ones(1);
   
   x2[0] = 1.5;
-  nomad::tests::test_derivatives<operator_greater_than_vd_func>(x2);
-  nomad::tests::test_derivatives<operator_greater_than_dv_func>(x2);
+  nomad::tests::test_derivatives<operator_greater_than_vd_grad_func>(x2);
+  nomad::tests::test_derivatives<operator_greater_than_dv_grad_func>(x2);
   
   x2[0] = 0.5;
-  nomad::tests::test_derivatives<operator_greater_than_vd_func>(x2);
-  nomad::tests::test_derivatives<operator_greater_than_dv_func>(x2);
+  nomad::tests::test_derivatives<operator_greater_than_vd_grad_func>(x2);
+  nomad::tests::test_derivatives<operator_greater_than_dv_grad_func>(x2);
 }
