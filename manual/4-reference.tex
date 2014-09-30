@@ -1,4 +1,4 @@
-\chapter{Nomad Reference Guide}
+\chapter{Nomad Reference Guide} \label{chap:reference_guide}
 
 \section{Linear Differential Operations} \label{sec:differential_operations}
 
@@ -25,7 +25,7 @@ Input & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbatio
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_gradient(const F& functional,
+  void finite_diff_gradient(const F& f,
                             const Eigen::VectorXd& x,
                             Eigen::VectorXd& g,
                             const double epsilon = 1e-6)
@@ -90,7 +90,7 @@ fonttitle=\bfseries,title=Directional Derivative]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{g} & Directional Derivative
@@ -100,7 +100,7 @@ Output & \texttt{double\&} & \texttt{g} & Directional Derivative
 
 \begin{verbatim}
   template <typename F>
-  void gradient_dot_vector(const F& functional,
+  void gradient_dot_vector(const F& f,
                            const Eigen::VectorXd& x,
                            const Eigen::VectorXd& v,
                            double& grad_dot_v)
@@ -113,7 +113,7 @@ fonttitle=\bfseries,title=Directional Derivative]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -124,7 +124,7 @@ Output & \texttt{double\&} & \texttt{g} & Directional Derivative
 
 \begin{verbatim}
   template <typename F>
-  void gradient_dot_vector(const F& functional,
+  void gradient_dot_vector(const F& f,
                            const Eigen::VectorXd& x,
                            const Eigen::VectorXd& v,
                            double& f,
@@ -138,7 +138,7 @@ fonttitle=\bfseries,title=Finite Difference Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian \\
 Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbation
@@ -148,7 +148,7 @@ Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbati
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_hessian(const F& functional,
+  void finite_diff_hessian(const F& f,
                            const Eigen::VectorXd& x,
                            Eigen::MatrixXd& H,
                            const double epsilon = 1e-6)
@@ -169,7 +169,7 @@ fonttitle=\bfseries,title=Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 \end{tabular}
@@ -178,7 +178,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 
 \begin{verbatim}
   template <typename F>
-  void hessian(const F& functional,
+  void hessian(const F& f,
                const Eigen::VectorXd& x,
                Eigen::MatrixXd& H)
 \end{verbatim}
@@ -190,7 +190,7 @@ fonttitle=\bfseries,title=Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
 Output & \texttt{double\&} & \texttt{g} & Gradient \\
@@ -201,7 +201,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 
 \begin{verbatim}
   template <typename F>
-  void hessian(const F& functional,
+  void hessian(const F& f,
                const Eigen::VectorXd& x,
                double& f,
                Eigen::VectorXd& g,
@@ -215,7 +215,7 @@ fonttitle=\bfseries,title=Hessian-Vector Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
@@ -225,7 +225,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
 
 \begin{verbatim}
   template <typename F>
-  void hessian_dot_vector(const F& functional,
+  void hessian_dot_vector(const F& f,
                           const Eigen::VectorXd& x,
                           const Eigen::VectorXd& v,
                           Eigen::VectorXd& hessian_dot_v)
@@ -238,7 +238,7 @@ fonttitle=\bfseries,title=Hessian-Vector Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -250,7 +250,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
 
 \begin{verbatim}
   template <typename F>
-  void hessian_dot_vector(const F& functional,
+  void hessian_dot_vector(const F& f,
                           const Eigen::VectorXd& x,
                           const Eigen::VectorXd& v,
                           double& f,
@@ -265,7 +265,7 @@ fonttitle=\bfseries,title=Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
@@ -275,7 +275,7 @@ Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
 
 \begin{verbatim}
   template <typename F>
-  void trace_matrix_times_hessian(const F& functional,
+  void trace_matrix_times_hessian(const F& f,
                                   const Eigen::VectorXd& x,
                                   const Eigen::MatrixXd& M,
                                   double& trace_m_times_h)
@@ -288,7 +288,7 @@ fonttitle=\bfseries,title=Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -300,7 +300,7 @@ Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
 
 \begin{verbatim}
   template <typename F>
-  void trace_matrix_times_hessian(const F& functional,
+  void trace_matrix_times_hessian(const F& f,
                                   const Eigen::VectorXd& x,
                                   const Eigen::MatrixXd& M,
                                   double& f,
@@ -315,7 +315,7 @@ fonttitle=\bfseries,title=Finite Difference Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient \\
 Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbation
@@ -325,7 +325,7 @@ Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbati
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_grad_hessian(const F& functional,
+  void finite_diff_grad_hessian(const F& f,
                                 const Eigen::VectorXd& x,
                                 Eigen::MatrixXd& grad_H,
                                 const double epsilon = 1e-6)
@@ -352,7 +352,7 @@ fonttitle=\bfseries,title=Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient \\
 \end{tabular}
@@ -361,7 +361,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient 
 
 \begin{verbatim}
   template <typename F>
-  void grad_hessian(const F& functional,
+  void grad_hessian(const F& f,
                     const Eigen::VectorXd& x,
                     Eigen::MatrixXd& grad_H)
 \end{verbatim}
@@ -379,7 +379,7 @@ fonttitle=\bfseries,title=Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
 Output & \texttt{double\&} & \texttt{g} & Gradient \\
@@ -391,7 +391,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient 
 
 \begin{verbatim}
   template <typename F>
-  void grad_hessian(const F& functional,
+  void grad_hessian(const F& f,
                     const Eigen::VectorXd& x,
                     double& f,
                     Eigen::VectorXd& g,
@@ -412,7 +412,7 @@ fonttitle=\bfseries,title=Gradient of Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h} 
@@ -423,7 +423,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h}
 
 \begin{verbatim}
   template <typename F>
-  void grad_trace_matrix_times_hessian(const F& functional,
+  void grad_trace_matrix_times_hessian(const F& f,
                                        const Eigen::VectorXd& x,
                                        const Eigen::MatrixXd& M,
                                        Eigen::VectorXd& grad_trace_m_times_h)
@@ -436,7 +436,7 @@ fonttitle=\bfseries,title=Gradient of Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -450,7 +450,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h}
 
 \begin{verbatim}
   template <typename F>
-  void grad_trace_matrix_times_hessian(const F& functional,
+  void grad_trace_matrix_times_hessian(const F& f,
                                        const Eigen::VectorXd& x,
                                        const Eigen::MatrixXd& M,
                                        double& f,

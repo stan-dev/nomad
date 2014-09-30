@@ -113,6 +113,20 @@ containing only an address to the relevant data in each
 (Figure \ref{fig:architecture}) as well as accessor and mutator methods that 
 abstract the indirect storage.
 
+\textbf{Fuuuuuuuck, need to discuss template parameters around here}
+\verb|PartialsOrder| is the highest order of non-zero partial derivatives
+that the function supports and, because \nomad considers only up to
+third-order linear differential operators, should be capped at 3.  For
+example, the partial derivatives of the function $f \! \left( x \right) = x$ 
+vanish beyond first-order and so the corresponding \nomad
+implementation would have \verb|PartialsOrder = 1|.  On the other
+hand, the function $f \! \left( x \right) = e^{x}$ has non-zero partial
+derivatives at all orders and would require \verb|PartialsOrder = 3|.
+\textbf{Fuuuuuuuuck}.
+
+\textbf{Also, fuuuuuuuck, need to discuss arena-based memory allocation
+for each stack.}
+
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
 \centering
@@ -369,7 +383,7 @@ template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
 class var { ...
 \end{verbatim}
 %
-\textbf{\nomad also defines the typdefs...}
+For convenience, \nomad also defines types for common configurations.
 
 \begin{table*}[t!]
 	\centering
@@ -388,7 +402,8 @@ class var { ...
 	\verb|var3_wild| & \verb|3| & \verb|false| & \verb|false| \\
 	\end{tabular}
 	\label{tab:typedefs}
-	\caption{Some typedefs!.}
+	\caption{Some common configurations of the expression graph are represented
+	by the \nomad type definitions.}
 \end{table*}
 
 \subsubsection{AutodiffOrder}
@@ -442,42 +457,140 @@ burden and should be disabled for high-performance applications.
 
 \subsection{var-valued Functions}
 
-Validate inputs using validate methods.
+Extending a function to \verb|var|s requires not just propagating the
+value of the function but also creating a new node in the expression
+graph.  In this section we review the steps necessary for implementing
+a \verb|var|-valued function and present some specific examples.
 
+\subsubsection{Input Validation}
+
+Firstly, a \verb|var|-valued function has to validate its inputs if
+\verb|ValidateIO| is \verb|true|.  \nomad provides helper functions
+that validate double values and throws \nomad-specific exceptions
+if \verb|NaN|s are encountered,
+%
 \begin{verbatim}
 inline void validate_input(double val, std::string f_name)
 \end{verbatim}
-
+%
+Here \verb|f_name| is the name of the function being implemented
+and is used to trace the exception to the origin of the violation.
+Domain constraints may also be validated here with helper functions
+such as
+%
 \begin{verbatim}
 inline void validate_lower_bound(double val, double lower, std::string f_name)
 \end{verbatim}
 
-Push inputs onto stack using push\_input method
+\subsubsection{Expression Graph Node Creation}
 
+With the inputs validated we can now append a new node to the
+expression graph with the \verb|create_node| function.  This function
+is templated to accept the type of node being used by the function
+and will require the number of inputs to the function unless the
+specific \verb|var_node| implementation does not require it.
+
+For example, if the function is utilizing the default \verb|var_node|
+implementation then the call would be
+%
+\begin{verbatim}
+create_node<var_node<AutodiffOrder, PartialsOrder>>(n_inputs);
+\end{verbatim}
+%
+On the other hand, a function utilizing a \verb|var_node| specialization
+with a predefined number of inputs would not need to specify an
+argument,
+%
+\begin{verbatim}
+create_node<binary_var_node<AutodiffOrder, PartialsOrder>>();
+\end{verbatim}
+
+\subsubsection{Pushing Inputs}
+
+Once the node representing the component function has been created
+we can now being to push the necessary data onto the external stacks.
+Firstly are the addresses of the inputs to the function,
+%
 \begin{verbatim}
 inline void push_inputs(nomad_idx_t input)
 \end{verbatim}
+%
+which are readily accessed from the input \verb|var| objects.
 
-Compute function value and push dual numbers onto stack
-using push\_dual\_numbers method.  May throw an exception
-if ValidateIO is true and so should be wrapped in a \verb|try/catch| block.
+\subsubsection{Pushing Dual Numbers}
 
+Next are the dual numbers.  The function
+%
 \begin{verbatim}
 template<short AutodiffOrder, bool ValidateIO>
 inline void push_dual_numbers(double val)
 \end{verbatim}
+%
+pushes $2^{\mathrm{AutodiffOrder}}$ components onto the stack, with
+the first component set to the value of the function, \verb|val|, and the
+rest set to zero.
 
-Compute partials onto stack using push\_partials method.
-May throw an exception if ValidateIO is true and so should be wrapped 
-in a \verb|try/catch| block.
+When \verb|ValidateIO = true| the function \verb|push_dual_numbers|
+will also check the output \verb|val| for a \verb|NaN| and throw an
+exception if necessary.  Consequently the call to \verb|push_dual_numbers|
+must be wrapped in a \verb|try/catch| block, preferable one that throws
+a new exception identifying the current function, for example
+%
+\begin{verbatim}
+try {
+  push_dual_numbers<AutodiffOrder, ValidateIO>(binary_function(x, y));
+} catch(nomad_error& e) {
+  throw nomad_output_value_error("binary_function");
+}
+\end{verbatim}
 
+\subsubsection{Pushing Partials}
+
+Finally we can compute the partial derivatives and push them onto the
+partials stack with
+%
 \begin{verbatim}
 template<bool ValidateIO>
 inline void push_partials(double partial)
 \end{verbatim}
+%
+As with \verb|push_dual_numbers|, \verb|push_partials| will optionally
+validate the values of the partial derivatives and must be wrapped in
+a \verb|try/catch| block|,
+%
+\begin{verbatim}
+try {
+  if (AutodiffOrder >= 1) {
+    push_partials<ValidateIO>(df_dx);
+    push_partials<ValidateIO>(df_dy);
+  }
+  ...Push higher-order partial derivatives...
+} catch(nomad_error& e) {
+  throw nomad_output_partial_error("binary_function");
+}
+\end{verbatim}
 
+Because partial derivatives only up to \verb|AutodiffOrder| need to be
+computed and stored, efficient implementations of a \verb|var|-valued
+function should evaluate partial derivatives only conditionally on
+\verb|AutodiffOrder|.
 
-\subsubsection{Smooth Functions}
+\subsubsection{Returning a New Var}
+
+Finally we return a new \verb|var| that wraps the freshly-created node.
+%
+\begin{verbatim}
+return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
+\end{verbatim}
+%
+\verb|next_node_idx_| addresses the top of the \verb|var_node| stack, hence
+\verb|next_node_idx_ - 1| addresses the last node pushed to the stack.
+
+\subsubsection{Example Implemention of a Smooth Function}
+
+The logic of a \verb|var|-valued function implementation is more clear
+when each step is presented together.  Here is an example implementation
+of a smooth, binary function using the default \verb|var_node| implementation.
 
 \begin{verbatim}
 template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
@@ -514,15 +627,18 @@ inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
   // Push partial derivatives to the top of the partials stack
   try {
     if (AutodiffOrder >= 1) {
+      ...Compute df_dx and df_dy...
       push_partials<ValidateIO>(df_dx);
       push_partials<ValidateIO>(df_dy);
     }
     if (AutodiffOrder >= 2) {
+      ...Compute df2_dx2, df2_dxy, and df2_dy2...
       push_partials<ValidateIO>(df2_dx2);
       push_partials<ValidateIO>(df2_dxdy);
       push_partials<ValidateIO>(df2_dy2);
     }
     if (AutodiffOrder >= 3) {
+      ...Compute df3_dx3, df3_dx2dy, df3_dxdy2, and df3_dy3...
       push_partials<ValidateIO>(df3_dx3);
       push_partials<ValidateIO>(df3_dx2dy);
       push_partials<ValidateIO>(df3_dxdy2);
@@ -537,12 +653,22 @@ inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
     
 }
 \end{verbatim}
+%
+Note the conditioning on template parameters wherever possible to avoid
+unnecessary calculations, such as when validating inputs and computing
+and storing partial derivatives.  Because these template parameters are
+known at compile-time these checks incur no run-time penalties.
 
-Note use of template parameters to avoid expensive computations
-whenever possible.  Other relevant discussion.
+When the partial derivatives of a function are structured then we can achieve
+much higher performance by specializing the underlying \verb|var_node|.
+For example, the only non-zero partial derivatives of the addition operator
+are at first-order, and they are all equal to $1$.  Consequently we can speed
+up the automatic differentiation computations by specializing \verb|var_node|
+to avoid unnecessary multiplications by $1$.
 
-Example of a \verb|var_node| specialization.
-
+This is done in the \verb|binary_sum_var_node| and the implementation of
+the addition operator then becomes
+%
 \begin{verbatim}
 template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
 inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
@@ -555,7 +681,7 @@ inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
   }
       
   // Create a specialized var_node on the stack
-  create_node<binary_sum_var_node<AutodiffOrder>>(2);
+  create_node<binary_sum_var_node<AutodiffOrder>>();
     
   push_inputs(v1.dual_numbers());
   push_inputs(v2.dual_numbers());
@@ -575,10 +701,14 @@ inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
 }
 \end{verbatim}
 
-\subsubsection{Non-Smooth Functions}
+\subsubsection{Example Implemention of a Non-Smooth Function}
 
-Just show enable-if'd signature.
+Non-smooth functions are implemented almost exactly the same as smooth functions.
+The only difference is in the function signature which uses the \verb|enable_if|
+template metaprogram to disable the function unless \verb|StrictSmoothness = 1|.
 
+For example, the absolute value function is implemented as
+%
 \begin{verbatim}
 template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
 inline typename 
@@ -621,10 +751,11 @@ inline typename
 
 \section{The \nomad User Interface}
 
-Functor-functional relationship.
+In \nomad, linear differential operators are implemented as functionals acting
+on \verb|var|-valued functors.
 
-Implement base functor with operator().  Example.
-
+Specifically, functors are classes deriving from \verb|base_functor|
+%
 \begin{verbatim}
 template<class T>
 class base_functor {
@@ -633,7 +764,11 @@ public:
   typedef T var_type;
 };
 \end{verbatim}
-
+%
+that implement a \verb|var|-valued \verb|operator()| taking an
+\verb|Eigen::VectorXd&| of input values.  For example, at
+first-order the composite function
+%
 \begin{equation*}
 f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
 \end{equation*}
@@ -641,30 +776,31 @@ f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
 would be defined as
 %
 \begin{verbatim}
-template <typename T>
-class example_functor: public base_functor<T> {
-  T operator()(const Eigen::VectorXd& x) const {
-    T v1 = x[0];
-    T v2 = x[1];
-    T v3 = x[2];
+class example_functor: public base_functor<var1> {
+  var1 operator()(const Eigen::VectorXd& x) const {
+    var1 v1 = x[0];
+    var1 v2 = x[1];
+    var1 v3 = x[2];
     return cos( exp(v1) + exp(v2) ) / v3;  
   }
 };
 \end{verbatim}
 
-Compute linear differential operator by
-passing instance of functor to function.  Functionals
-evaluate functor to build expression graph, then
-propagate execute forward and reverse sweeps
-as necessary.  Gradient example.
+The functionals implementing linear differential operators then
+take a functor instance as an argument, first calling \verb|operator()|
+to build the expression graph and then the various sweeps
+necessary to compute the differential operator itself.  For example,
+the gradient is defined with the signature
 %
 \begin{verbatim}
-  template <typename F>
-  void gradient(const F& f,
-                const Eigen::VectorXd& x,
-                Eigen::VectorXd& g)
+template <typename F>
+void gradient(const F& f,
+              const Eigen::VectorXd& x,
+              Eigen::VectorXd& g)
 \end{verbatim}
-
+%
+Consequently computing a gradient is straightforward,
+%
 \begin{verbatim}
 int n = 100;
 Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
@@ -672,6 +808,11 @@ Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
 double f;
 Eigen::VectorXd grad(x.size());
   
-funnel_func<var1> example;
+example_functor example;
 gradient(example, x, f, grad);
+
+std::cout << grad.transpose() << std::endl;
 \end{verbatim}
+
+For the complete list of \verb|var|-valued functions and linear differential
+operators implemented in \nomad please consult Chapter \ref{chap:reference_guide}.
