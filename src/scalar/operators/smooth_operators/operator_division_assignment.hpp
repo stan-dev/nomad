@@ -55,7 +55,7 @@ namespace nomad {
       push_partials<ValidateIO>(-6 * val * y_inv_n);
     }
     
-    v1.set_node(next_node_idx_ - 1);
+    v1.set_node(nmd_stk::next_node_idx - 1);
     return v1;
     
   }
@@ -88,7 +88,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials<ValidateIO>(y_inv);
     
-    v1.set_node(next_node_idx_ - 1);
+    v1.set_node(nmd_stk::next_node_idx - 1);
     return v1;
     
   }

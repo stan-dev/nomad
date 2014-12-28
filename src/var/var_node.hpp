@@ -10,33 +10,25 @@ namespace nomad {
   
   class var_node_base {
   protected:
-    
     nomad_idx_t dual_numbers_idx_;
     nomad_idx_t partials_idx_;
     nomad_idx_t inputs_idx_;
-    
     nomad_idx_t n_inputs_;
-    
   public:
     
     var_node_base(): n_inputs_(0) {
-
-      dual_numbers_idx_ = next_dual_number_idx_;
-      partials_idx_ = next_partials_idx_;
-      inputs_idx_ = next_inputs_idx_;
-      
-      next_node_idx_++;
-    
+      dual_numbers_idx_ = nmd_stk::next_dual_number_idx;
+      partials_idx_ = nmd_stk::next_partials_idx;
+      inputs_idx_ = nmd_stk::next_inputs_idx;
+      nmd_stk::next_node_idx++;
     }
 
     var_node_base(nomad_idx_t n_inputs):
     n_inputs_(n_inputs) {
-      
-      dual_numbers_idx_ = next_dual_number_idx_;
-      partials_idx_ = next_partials_idx_;
-      inputs_idx_ = next_inputs_idx_;
-      
-      next_node_idx_++;
+      dual_numbers_idx_ = nmd_stk::next_dual_number_idx;
+      partials_idx_ = nmd_stk::next_partials_idx;
+      inputs_idx_ = nmd_stk::next_inputs_idx;
+      nmd_stk::next_node_idx++;
     }
     
     virtual ~var_node_base() {}
@@ -54,45 +46,46 @@ namespace nomad {
     inline nomad_idx_t inputs() const { return inputs_idx_; }
     inline nomad_idx_t n_inputs() const { return n_inputs_; }
     
-    nomad_idx_t input() { return inputs_[inputs_idx_]; }
-    nomad_idx_t input(unsigned int k) { return inputs_[inputs_idx_ + k]; }
+    nomad_idx_t input() { return nmd_stk::inputs[inputs_idx_]; }
+    nomad_idx_t input(unsigned int k) { return nmd_stk::inputs[inputs_idx_ + k]; }
     
     constexpr static bool dynamic_inputs() { return true; }
     
     // Are these used?
-    nomad_idx_t begin() { return inputs_[inputs_idx_]; }
-    nomad_idx_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
+    nomad_idx_t begin() { return nmd_stk::inputs[inputs_idx_]; }
+    nomad_idx_t end() { return nmd_stk::inputs[inputs_idx_ + n_inputs_]; }
     
-    inline double& first_val()   { return dual_numbers_[dual_numbers_idx_];     }
-    inline double& first_grad()  { return dual_numbers_[dual_numbers_idx_ + 1]; }
-    inline double& second_val()  { return dual_numbers_[dual_numbers_idx_ + 2]; }
-    inline double& second_grad() { return dual_numbers_[dual_numbers_idx_ + 3]; }
-    inline double& third_val()   { return dual_numbers_[dual_numbers_idx_ + 4]; }
-    inline double& third_grad()  { return dual_numbers_[dual_numbers_idx_ + 5]; }
-    inline double& fourth_val()  { return dual_numbers_[dual_numbers_idx_ + 6]; }
-    inline double& fourth_grad() { return dual_numbers_[dual_numbers_idx_ + 7]; }
+    inline double& first_val()   { return nmd_stk::dual_numbers[dual_numbers_idx_];     }
+    inline double& first_grad()  { return nmd_stk::dual_numbers[dual_numbers_idx_ + 1]; }
+    inline double& second_val()  { return nmd_stk::dual_numbers[dual_numbers_idx_ + 2]; }
+    inline double& second_grad() { return nmd_stk::dual_numbers[dual_numbers_idx_ + 3]; }
+    inline double& third_val()   { return nmd_stk::dual_numbers[dual_numbers_idx_ + 4]; }
+    inline double& third_grad()  { return nmd_stk::dual_numbers[dual_numbers_idx_ + 5]; }
+    inline double& fourth_val()  { return nmd_stk::dual_numbers[dual_numbers_idx_ + 6]; }
+    inline double& fourth_grad() { return nmd_stk::dual_numbers[dual_numbers_idx_ + 7]; }
     
-    inline static double& first_val(nomad_idx_t idx)   { return dual_numbers_[idx];     }
-    inline static double& first_grad(nomad_idx_t idx)  { return dual_numbers_[idx + 1]; }
-    inline static double& second_val(nomad_idx_t idx)  { return dual_numbers_[idx + 2]; }
-    inline static double& second_grad(nomad_idx_t idx) { return dual_numbers_[idx + 3]; }
-    inline static double& third_val(nomad_idx_t idx)   { return dual_numbers_[idx + 4]; }
-    inline static double& third_grad(nomad_idx_t idx)  { return dual_numbers_[idx + 5]; }
-    inline static double& fourth_val(nomad_idx_t idx)  { return dual_numbers_[idx + 6]; }
-    inline static double& fourth_grad(nomad_idx_t idx) { return dual_numbers_[idx + 7]; }
+    inline static double& first_val(nomad_idx_t idx)   { return nmd_stk::dual_numbers[idx];     }
+    inline static double& first_grad(nomad_idx_t idx)  { return nmd_stk::dual_numbers[idx + 1]; }
+    inline static double& second_val(nomad_idx_t idx)  { return nmd_stk::dual_numbers[idx + 2]; }
+    inline static double& second_grad(nomad_idx_t idx) { return nmd_stk::dual_numbers[idx + 3]; }
+    inline static double& third_val(nomad_idx_t idx)   { return nmd_stk::dual_numbers[idx + 4]; }
+    inline static double& third_grad(nomad_idx_t idx)  { return nmd_stk::dual_numbers[idx + 5]; }
+    inline static double& fourth_val(nomad_idx_t idx)  { return nmd_stk::dual_numbers[idx + 6]; }
+    inline static double& fourth_grad(nomad_idx_t idx) { return nmd_stk::dual_numbers[idx + 7]; }
 
-    inline double* first_partials()  { return partials_ + partials_idx_; }
-    inline double* second_partials() { return partials_ + partials_idx_ + n_first_partials(); }
-    inline double* third_partials()  { return partials_ + partials_idx_ + n_first_partials() + n_second_partials(); }
+    inline double* first_partials()  { return nmd_stk::partials + partials_idx_; }
+    inline double* second_partials() { return nmd_stk::partials + partials_idx_ + n_first_partials(); }
+    inline double* third_partials()  { return nmd_stk::partials + partials_idx_
+                                              + n_first_partials() + n_second_partials(); }
 
     inline double first_partials(nomad_idx_t idx)  {
-      return partials_[partials_idx_ + idx];
+      return nmd_stk::partials[partials_idx_ + idx];
     }
     inline double second_partials(nomad_idx_t idx) {
-      return partials_[partials_idx_ + n_first_partials() + idx];
+      return nmd_stk::partials[partials_idx_ + n_first_partials() + idx];
     }
     inline double third_partials(nomad_idx_t idx)  {
-      return partials_[partials_idx_ + n_first_partials() + n_second_partials() + idx];
+      return nmd_stk::partials[partials_idx_ + n_first_partials() + n_second_partials() + idx];
     }
     
     inline virtual nomad_idx_t n_first_partials() { return 0; }
@@ -161,21 +154,21 @@ namespace nomad {
   };
   
   template<short AutodiffOrder>
-  void expand_var_nodes() {
+  static inline void expand_var_nodes() {
     
-    if (!max_node_idx) {
-      max_node_idx = base_node_size_;
-      var_nodes_ = new var_node_base[max_node_idx];
-      next_node_idx_ -= max_node_idx;
+    if (!nmd_stk::max_node_idx) {
+      nmd_stk::max_node_idx = nmd_stk::base_node_size;
+      nmd_stk::var_nodes = new var_node_base[nmd_stk::max_node_idx];
+      nmd_stk::next_node_idx -= nmd_stk::max_node_idx;
     } else {
-      max_node_idx *= 2;
+      nmd_stk::max_node_idx *= 2;
       
-      var_node_base* new_stack = new var_node_base[max_node_idx];
-      for (nomad_idx_t i = 0; i < next_node_idx_; ++i)
-        new_stack[i] = var_nodes_[i];
-      delete[] var_nodes_;
+      var_node_base* new_stack = new var_node_base[nmd_stk::max_node_idx];
+      for (nomad_idx_t i = 0; i < nmd_stk::next_node_idx; ++i)
+        new_stack[i] = nmd_stk::var_nodes[i];
+      delete[] nmd_stk::var_nodes;
       
-      var_nodes_ = new_stack;
+      nmd_stk::var_nodes = new_stack;
     }
     
     expand_dual_numbers<AutodiffOrder>();
@@ -187,10 +180,10 @@ namespace nomad {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
-      if (unlikely(next_partials_idx_ + next_partials_delta > max_partials_idx)) expand_partials();
-      if (unlikely(next_inputs_idx_ + next_inputs_delta > max_inputs_idx)) expand_inputs();
-      return var_nodes_ + next_node_idx_;
+      if (unlikely(nmd_stk::next_node_idx + 1 > nmd_stk::max_node_idx)) expand_var_nodes<AutodiffOrder>();
+      if (unlikely(nmd_stk::next_partials_idx + nmd_stk::next_partials_delta > nmd_stk::max_partials_idx)) expand_partials();
+      if (unlikely(nmd_stk::next_inputs_idx + nmd_stk::next_inputs_delta > nmd_stk::max_inputs_idx)) expand_inputs();
+      return nmd_stk::var_nodes + nmd_stk::next_node_idx;
     }
     
     static inline void operator delete(void* /* ignore */) {}
@@ -489,10 +482,10 @@ namespace nomad {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(next_node_idx_ + 1 > max_node_idx)) expand_var_nodes<AutodiffOrder>();
+      if (unlikely(nmd_stk::next_node_idx + 1 > nmd_stk::max_node_idx)) expand_var_nodes<AutodiffOrder>();
       // no partials
       // no inputs
-      return var_nodes_ + next_node_idx_;
+      return nmd_stk::var_nodes + nmd_stk::next_node_idx;
     }
     
     static inline void operator delete(void* /* ignore */) {}

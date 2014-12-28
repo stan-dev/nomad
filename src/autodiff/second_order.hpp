@@ -13,14 +13,14 @@ namespace nomad {
   template<class T_var>
   void second_order_forward_val(const T_var& v) {
     for (nomad_idx_t i = 1; i <= v.node(); ++i)
-      var_nodes_[i].second_order_forward_val();
+      nmd_stk::var_nodes[i].second_order_forward_val();
   }
   
   template<class T_var>
   void second_order_reverse_adj(const T_var& v) {
-    var_nodes_[v.node()].second_grad() = 0;
+    nmd_stk::var_nodes[v.node()].second_grad() = 0;
     for (nomad_idx_t i = v.node(); i > 0; --i)
-      var_nodes_[i].second_order_reverse_adj();
+      nmd_stk::var_nodes[i].second_order_reverse_adj();
   }
 
   template <typename F>
@@ -45,19 +45,19 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_nodes_[i + 1].first_grad();
+      g(i) = nmd_stk::var_nodes[i + 1].first_grad();
       
       // Second-order
       for (eigen_idx_t i = 0; i < d; ++i) {
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].second_val() = static_cast<double>(i == j);
+        nmd_stk::var_nodes[j + 1].second_val() = static_cast<double>(i == j);
         
         second_order_forward_val(f_var);
         second_order_reverse_adj(f_var);
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        H(i, j) = var_nodes_[j + 1].second_grad();
+        H(i, j) = nmd_stk::var_nodes[j + 1].second_grad();
         
       }
       
@@ -201,17 +201,17 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_nodes_[i + 1].first_grad();
+      g(i) = nmd_stk::var_nodes[i + 1].first_grad();
       
       // Second-order
       for (eigen_idx_t i = 0; i < d; ++i)
-      var_nodes_[i + 1].second_val() = v(i);
+      nmd_stk::var_nodes[i + 1].second_val() = v(i);
       
       second_order_forward_val(f_var);
       second_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      hessian_dot_v(i) = var_nodes_[i + 1].second_grad();
+      hessian_dot_v(i) = nmd_stk::var_nodes[i + 1].second_grad();
       
       reset();
       
@@ -314,7 +314,7 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_nodes_[i + 1].first_grad();
+      g(i) = nmd_stk::var_nodes[i + 1].first_grad();
       
       // Second-order
       trace_m_times_h = 0;
@@ -322,12 +322,12 @@ namespace nomad {
       for (eigen_idx_t i = 0; i < d; ++i) {
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].second_val() = M(j, i);
+        nmd_stk::var_nodes[j + 1].second_val() = M(j, i);
         
         second_order_forward_val(f_var);
         second_order_reverse_adj(f_var);
         
-        trace_m_times_h += var_nodes_[i + 1].second_grad();
+        trace_m_times_h += nmd_stk::var_nodes[i + 1].second_grad();
         
       }
       

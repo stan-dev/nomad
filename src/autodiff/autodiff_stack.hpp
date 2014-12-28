@@ -17,147 +17,173 @@
 
 namespace nomad {
   
-  void reset();
-  void expand_var_nodes();
-  template<short AutodiffOrder> void expand_dual_numbers();
-  void expand_partials();
-  void expand_inputs();
+  // Wrap global variables in a templated struct to ensure
+  // only a single declaration in each translation unit
+  
+  template <typename NodeBase>
+  struct nomad_storage {
+    static nomad_idx_t base_node_size;
+    
+    static NodeBase* var_nodes;
+    static nomad_idx_t next_node_idx;
+    static nomad_idx_t max_node_idx;
+    
+    static double* dual_numbers;
+    static nomad_idx_t next_dual_number_idx;
+    static nomad_idx_t max_dual_number_idx;
+    
+    static nomad_idx_t base_partials_size;
+    
+    static double* partials;
+    static nomad_idx_t next_partials_idx;
+    static nomad_idx_t next_partials_delta;
+    static nomad_idx_t max_partials_idx;
+    
+    static nomad_idx_t base_inputs_size;
+    
+    static nomad_idx_t* inputs;
+    static nomad_idx_t next_inputs_idx;
+    static nomad_idx_t next_inputs_delta;
+    static nomad_idx_t max_inputs_idx;
+  };
+  
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::base_node_size = 100000;
+  
+  template <typename NodeBase> NodeBase* nomad_storage<NodeBase>::var_nodes = nullptr;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_node_idx = 1;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::max_node_idx = 0;
+  
+  template <typename NodeBase> double* nomad_storage<NodeBase>::dual_numbers = nullptr;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_dual_number_idx = 1;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::max_dual_number_idx = 0;
 
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::base_partials_size = 100000;
+  
+  template <typename NodeBase> double* nomad_storage<NodeBase>::partials = nullptr;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_partials_idx = 1;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_partials_delta = 0;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::max_partials_idx = 0;
+  
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::base_inputs_size = 100000;
+  
+  template <typename NodeBase> nomad_idx_t* nomad_storage<NodeBase>::inputs = nullptr;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_inputs_idx = 1;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::next_inputs_delta = 0;
+  template <typename NodeBase> nomad_idx_t nomad_storage<NodeBase>::max_inputs_idx = 0;
+  
   class var_node_base;
+  typedef nomad_storage<var_node_base> nmd_stk;
   
-  nomad_idx_t base_node_size_ = 100000;
-  
-  var_node_base* var_nodes_;
-  nomad_idx_t next_node_idx_ = 1;
-  nomad_idx_t max_node_idx = 0;
-  
-  double* dual_numbers_;
-  nomad_idx_t next_dual_number_idx_ = 1;
-  nomad_idx_t max_dual_number_idx = 0;
-  
-  nomad_idx_t base_partials_size_ = 100000;
-  
-  double* partials_;
-  nomad_idx_t next_partials_idx_ = 1;
-  nomad_idx_t next_partials_delta = 0;
-  nomad_idx_t max_partials_idx = 0;
-  
-  nomad_idx_t base_inputs_size_ = 100000;
-  
-  nomad_idx_t* inputs_;
-  nomad_idx_t next_inputs_idx_ = 1;
-  nomad_idx_t next_inputs_delta = 0;
-  nomad_idx_t max_inputs_idx = 0;
-  
-  void reset() {
-    next_node_idx_ = 1;
-    next_dual_number_idx_ = 1;
-    next_partials_idx_ = 1;
-    next_inputs_idx_ = 1;
+  // Stack manipulation functions
+  static inline void reset() {
+    nmd_stk::next_node_idx = 1;
+    nmd_stk::next_dual_number_idx = 1;
+    nmd_stk::next_partials_idx = 1;
+    nmd_stk::next_inputs_idx = 1;
   }
   
   template <class Node>
-  inline typename std::enable_if<Node::dynamic_inputs(), void>::type create_node(unsigned int n_inputs) {
-    next_inputs_delta = n_inputs;
-    next_partials_delta = Node::n_partials(n_inputs);
+  static inline typename std::enable_if<Node::dynamic_inputs(), void>::type
+  create_node(unsigned int n_inputs) {
+    nmd_stk::next_inputs_delta = n_inputs;
+    nmd_stk::next_partials_delta = Node::n_partials(n_inputs);
     new Node(n_inputs);
   }
   
   template <typename Node>
-  inline typename std::enable_if<!Node::dynamic_inputs(), void>::type create_node(unsigned int n_inputs) {
-    next_inputs_delta = n_inputs;
-    next_partials_delta = Node::n_partials();
+  static inline typename std::enable_if<!Node::dynamic_inputs(), void>::type
+  create_node(unsigned int n_inputs) {
+    nmd_stk::next_inputs_delta = n_inputs;
+    nmd_stk::next_partials_delta = Node::n_partials();
     new Node();
   }
   
   template<short AutodiffOrder, bool ValidateIO>
-  inline void push_dual_numbers(double val) {
+  static inline void push_dual_numbers(double val) {
     
     if (ValidateIO) {
       if (unlikely(std::isnan(val))) throw nomad_error();
     }
 
-    dual_numbers_[next_dual_number_idx_++] = val;
-    dual_numbers_[next_dual_number_idx_++] = 0;
+    nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = val;
+    nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
     
     if (AutodiffOrder >= 2) {
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
     }
     
     if (AutodiffOrder >= 3) {
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
-      dual_numbers_[next_dual_number_idx_++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
+      nmd_stk::dual_numbers[nmd_stk::next_dual_number_idx++] = 0;
     }
     
   }
   
   template<bool ValidateIO>
-  inline void push_partials(double partial) {
+  static inline void push_partials(double partial) {
     if (ValidateIO) {
       if (unlikely(std::isnan(partial))) throw nomad_error();
     }
-    partials_[next_partials_idx_++] = partial;
+    nmd_stk::partials[nmd_stk::next_partials_idx++] = partial;
   }
   
-  inline void push_inputs(nomad_idx_t input) {
-    inputs_[next_inputs_idx_++] = input;
+  static inline void push_inputs(nomad_idx_t input) {
+    nmd_stk::inputs[nmd_stk::next_inputs_idx++] = input;
   }
-  
-  void expand_var_nodes();
   
   template<short AutodiffOrder>
-  inline void expand_dual_numbers() {
+  static inline void expand_dual_numbers() {
     
-    if (!max_dual_number_idx) {
-      max_dual_number_idx = (1 << AutodiffOrder) * base_node_size_;
-      dual_numbers_ = new double[max_dual_number_idx];
+    if (!nmd_stk::max_dual_number_idx) {
+      nmd_stk::max_dual_number_idx = (1 << AutodiffOrder) * nmd_stk::base_node_size;
+      nmd_stk::dual_numbers = new double[nmd_stk::max_dual_number_idx];
     } else {
-      max_dual_number_idx *= 2;
+      nmd_stk::max_dual_number_idx *= 2;
       
-      double* new_stack = new double[max_dual_number_idx];
-      for (nomad_idx_t i = 0; i < next_dual_number_idx_; ++i)
-        new_stack[i] = dual_numbers_[i];
-      delete[] dual_numbers_;
+      double* new_stack = new double[nmd_stk::max_dual_number_idx];
+      for (nomad_idx_t i = 0; i < nmd_stk::next_dual_number_idx; ++i)
+        new_stack[i] = nmd_stk::dual_numbers[i];
+      delete[] nmd_stk::dual_numbers;
       
-      dual_numbers_ = new_stack;
+      nmd_stk::dual_numbers = new_stack;
     }
 
   }
   
-  void expand_partials() {
+  static inline void expand_partials() {
     
-    if (!max_partials_idx) {
-      max_partials_idx = base_partials_size_;
-      partials_ = new double[max_partials_idx];
+    if (!nmd_stk::max_partials_idx) {
+      nmd_stk::max_partials_idx = nmd_stk::base_partials_size;
+      nmd_stk::partials = new double[nmd_stk::max_partials_idx];
     } else {
-      max_partials_idx *= 2;
+      nmd_stk::max_partials_idx *= 2;
       
-      double* new_stack = new double[max_partials_idx];
-      for (nomad_idx_t i = 0; i < next_partials_idx_; ++i)
-        new_stack[i] = partials_[i];
-      delete[] partials_;
+      double* new_stack = new double[nmd_stk::max_partials_idx];
+      for (nomad_idx_t i = 0; i < nmd_stk::next_partials_idx; ++i)
+        new_stack[i] = nmd_stk::partials[i];
+      delete[] nmd_stk::partials;
       
-      partials_ = new_stack;
+      nmd_stk::partials = new_stack;
     }
     
   }
   
-  void expand_inputs() {
-    if (!max_inputs_idx) {
-      max_inputs_idx = base_inputs_size_;
-      inputs_ = new nomad_idx_t[max_inputs_idx];
+  static inline void expand_inputs() {
+    if (!nmd_stk::max_inputs_idx) {
+      nmd_stk::max_inputs_idx = nmd_stk::base_inputs_size;
+      nmd_stk::inputs = new nomad_idx_t[nmd_stk::max_inputs_idx];
     } else {
-      max_inputs_idx *= 2;
+      nmd_stk::max_inputs_idx *= 2;
       
-      nomad_idx_t* new_stack = new nomad_idx_t[max_inputs_idx];
-      for (nomad_idx_t i = 0; i < next_inputs_idx_; ++i)
-        new_stack[i] = inputs_[i];
-      delete[] inputs_;
+      nomad_idx_t* new_stack = new nomad_idx_t[nmd_stk::max_inputs_idx];
+      for (nomad_idx_t i = 0; i < nmd_stk::next_inputs_idx; ++i)
+        new_stack[i] = nmd_stk::inputs[i];
+      delete[] nmd_stk::inputs;
       
-      inputs_ = new_stack;
+      nmd_stk::inputs = new_stack;
     }
     
   }

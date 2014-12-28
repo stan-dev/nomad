@@ -14,15 +14,15 @@ namespace nomad {
   template<class T_var>
   void third_order_forward_val(const T_var& v) {
     for (nomad_idx_t i = 1; i <= v.node(); ++i)
-      var_nodes_[i].third_order_forward_val();
+      nmd_stk::var_nodes[i].third_order_forward_val();
   }
   
   template<class T_var>
   void third_order_reverse_adj(const T_var& v) {
-    var_nodes_[v.node()].third_grad() = 0;
-    var_nodes_[v.node()].fourth_grad() = 0;
+    nmd_stk::var_nodes[v.node()].third_grad() = 0;
+    nmd_stk::var_nodes[v.node()].fourth_grad() = 0;
     for (nomad_idx_t i = v.node(); i > 0; --i)
-      var_nodes_[i].third_order_reverse_adj();
+      nmd_stk::var_nodes[i].third_order_reverse_adj();
   }
 
   template <typename F>
@@ -48,7 +48,7 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_nodes_[i + 1].first_grad();
+      g(i) = nmd_stk::var_nodes[i + 1].first_grad();
       
       Eigen::VectorXd v(d);
       
@@ -56,34 +56,34 @@ namespace nomad {
         
         // Second-order
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].second_val() = static_cast<double>(i == j);
+        nmd_stk::var_nodes[j + 1].second_val() = static_cast<double>(i == j);
         
         second_order_forward_val(f_var);
         second_order_reverse_adj(f_var);
         
         for (Eigen::internal::traits<Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic> >::Index j = 0; j < d; ++j)
-        v(j) = var_nodes_[j + 1].second_grad();
+        v(j) = nmd_stk::var_nodes[j + 1].second_grad();
         
         H.col(i) = v;
         
         // Third-order
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].fourth_val() = 0;
+        nmd_stk::var_nodes[j + 1].fourth_val() = 0;
         
         for (eigen_idx_t k = 0; k <= i; ++k) {
           
           for (eigen_idx_t j = 0; j < d; ++j)
-          var_nodes_[j + 1].third_val() = static_cast<double>(k == j);
+          nmd_stk::var_nodes[j + 1].third_val() = static_cast<double>(k == j);
           
           third_order_forward_val(f_var);
           
           for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_nodes_[j + 1].fourth_grad();
+          v(j) = nmd_stk::var_nodes[j + 1].fourth_grad();
           
           third_order_reverse_adj(f_var);
           
           for (eigen_idx_t j = 0; j < d; ++j)
-          v(j) = var_nodes_[j + 1].fourth_grad();
+          v(j) = nmd_stk::var_nodes[j + 1].fourth_grad();
           
           grad_H.block(0, i * d, d, d).col(k) = v;
           grad_H.block(0, k * d, d, d).col(i) = v;
@@ -242,7 +242,7 @@ namespace nomad {
       first_order_reverse_adj(f_var);
       
       for (eigen_idx_t i = 0; i < d; ++i)
-      g(i) = var_nodes_[i + 1].first_grad();
+      g(i) = nmd_stk::var_nodes[i + 1].first_grad();
       
       Eigen::VectorXd v(d);
       grad_trace_m_times_h.setZero();
@@ -251,28 +251,28 @@ namespace nomad {
         
         // Second-order
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].second_val() = static_cast<double>(i == j);
+        nmd_stk::var_nodes[j + 1].second_val() = static_cast<double>(i == j);
         
         second_order_forward_val(f_var);
         second_order_reverse_adj(f_var);
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        v(j) = var_nodes_[j + 1].second_grad();
+        v(j) = nmd_stk::var_nodes[j + 1].second_grad();
         
         H.col(i) = v;
         
         // Third-order
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].fourth_val() = 0;
+        nmd_stk::var_nodes[j + 1].fourth_val() = 0;
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        var_nodes_[j + 1].third_val() = M(j, i);
+        nmd_stk::var_nodes[j + 1].third_val() = M(j, i);
         
         third_order_forward_val(f_var);
         third_order_reverse_adj(f_var);
         
         for (eigen_idx_t j = 0; j < d; ++j)
-        v(j) = var_nodes_[j + 1].fourth_grad();
+        v(j) = nmd_stk::var_nodes[j + 1].fourth_grad();
         
         grad_trace_m_times_h += v;
         
