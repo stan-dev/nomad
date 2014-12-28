@@ -34,8 +34,6 @@ namespace nomad {
       
     push_inputs(input.dual_numbers());
     
-    double val_inv = 1.0 / (1 + val);
-  
     try {
       if (val > 0) {
         double e = exp(-val);

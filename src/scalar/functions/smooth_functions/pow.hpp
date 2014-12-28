@@ -147,8 +147,6 @@ namespace nomad {
       
     push_inputs(v1.dual_numbers());
     
-    double lx = std::log(x);
-    
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(val * y / x);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>( y * (y - 1.0) * val / (x * x) );
