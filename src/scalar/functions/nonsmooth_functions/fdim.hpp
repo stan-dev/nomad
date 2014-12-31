@@ -33,7 +33,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fdim(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fdim");
     }
       
@@ -51,7 +51,7 @@ namespace nomad {
           push_partials<ValidateIO>(0);
         }
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fdim");
     }
       
@@ -78,7 +78,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fdim(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fdim");
     }
       
@@ -89,7 +89,7 @@ namespace nomad {
         if (x > y) push_partials<ValidateIO>(-1);
         else       push_partials<ValidateIO>(0);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fdim");
     }
       
@@ -116,7 +116,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fdim(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fdim");
     }
       
@@ -127,7 +127,7 @@ namespace nomad {
         if (x > y) push_partials<ValidateIO>(1);
         else       push_partials<ValidateIO>(0);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fdim");
     }
       

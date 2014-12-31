@@ -41,7 +41,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("log_diff_exp");
     }
       
@@ -97,7 +97,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("log_diff_exp");
     }
 
@@ -127,7 +127,7 @@ namespace nomad {
     double y = v2.first_val();
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("log_diff_exp");
     }
       
@@ -160,7 +160,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("log_diff_exp");
     }
     
@@ -190,7 +190,7 @@ namespace nomad {
     double x = v1.first_val();
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(log_diff_exp(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("log_diff_exp");
     }
       
@@ -223,7 +223,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("log_diff_exp");
     }
     

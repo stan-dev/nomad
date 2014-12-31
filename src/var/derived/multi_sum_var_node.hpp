@@ -23,7 +23,7 @@ namespace nomad {
     inline nomad_idx_t n_first_partials() { return 0; }
     inline nomad_idx_t n_second_partials() { return 0; }
     inline nomad_idx_t n_third_partials() { return 0; }
-    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { return 0; }
+    inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) { (void)n_inputs; return 0; }
     
     inline void first_order_forward_adj() {
       

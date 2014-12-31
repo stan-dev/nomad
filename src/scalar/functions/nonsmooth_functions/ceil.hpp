@@ -25,7 +25,7 @@ namespace nomad {
 
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(ceil(input.first_val()));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("ceil");
     }
       

@@ -8,6 +8,7 @@ namespace nomad {
   template<class T>
   class base_functor {
   public:
+    virtual ~base_functor() {}
     virtual T operator()(const Eigen::VectorXd& x) const;
     typedef T var_type;
   };

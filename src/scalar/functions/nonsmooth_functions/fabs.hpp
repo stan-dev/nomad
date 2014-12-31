@@ -27,7 +27,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fabs(x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fabs");
     }
       
@@ -40,7 +40,7 @@ namespace nomad {
         else
           push_partials<ValidateIO>(1);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fabs");
     }
 

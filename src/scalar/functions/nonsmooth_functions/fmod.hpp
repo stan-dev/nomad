@@ -33,7 +33,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fmod");
     }
       
@@ -45,7 +45,7 @@ namespace nomad {
         push_partials<ValidateIO>(1);
         push_partials<ValidateIO>(-std::trunc(x / y));
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fmod");
     }
       
@@ -72,7 +72,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fmod");
     }
       
@@ -80,7 +80,7 @@ namespace nomad {
     
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(-std::trunc(x / y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fmod");
     }
       
@@ -107,7 +107,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fmod(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fmod");
     }
       
@@ -115,7 +115,7 @@ namespace nomad {
     
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(1);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fmod");
     }
       

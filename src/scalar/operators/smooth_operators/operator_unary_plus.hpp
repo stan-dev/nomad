@@ -17,7 +17,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val());
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("operator+");
     }
       

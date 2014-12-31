@@ -28,14 +28,12 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(log1p_exp(val));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("log1p_exp");
     }
       
     push_inputs(input.dual_numbers());
     
-    double val_inv = 1.0 / (1 + val);
-  
     try {
       if (val > 0) {
         double e = exp(-val);
@@ -50,7 +48,7 @@ namespace nomad {
         if (AutodiffOrder >= 2) push_partials<ValidateIO>(p * p / e);
         if (AutodiffOrder >= 3) push_partials<ValidateIO>(p * (2.0 * p * p - 3.0 * p + 1.0));
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("log1p_exp");
     }
 

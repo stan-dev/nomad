@@ -8,7 +8,7 @@
 
 namespace nomad {
   
-  double fmax(double x, double y) { return std::fmax(x, y); }
+  inline double fmax(double x, double y) { return std::fmax(x, y); }
   
   template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
   inline typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type

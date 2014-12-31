@@ -39,7 +39,7 @@ namespace nomad {
       next_node_idx_++;
     }
     
-    virtual ~var_node_base() {}
+    virtual ~var_node_base();
     
     var_node_base& operator=(const var_node_base& rhs) {
       dual_numbers_idx_ = rhs.dual_numbers();
@@ -60,8 +60,8 @@ namespace nomad {
     constexpr static bool dynamic_inputs() { return true; }
     
     // Are these used?
-    nomad_idx_t begin() { return inputs_[inputs_idx_]; }
-    nomad_idx_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
+    //nomad_idx_t begin() { return inputs_[inputs_idx_]; }
+    //nomad_idx_t end() { return inputs_[inputs_idx_ + n_inputs_]; }
     
     inline double& first_val()   { return dual_numbers_[dual_numbers_idx_];     }
     inline double& first_grad()  { return dual_numbers_[dual_numbers_idx_ + 1]; }
@@ -99,7 +99,7 @@ namespace nomad {
     inline virtual nomad_idx_t n_second_partials() { return 0; }
     inline virtual nomad_idx_t n_third_partials() { return 0; }
     
-    inline static nomad_idx_t n_partials(unsigned int n_inputs) { return 0; }
+    inline static nomad_idx_t n_partials(unsigned int n_inputs) { (void)n_inputs; return 0; }
 
     template<short AutodiffOrder>
     void print(std::ostream* output, std::string prefix = "") {
@@ -151,14 +151,17 @@ namespace nomad {
       
     }
     
-    inline virtual void first_order_forward_adj()  {}
-    inline virtual void first_order_reverse_adj()  {}
+    virtual void first_order_forward_adj()  {}
+    virtual void first_order_reverse_adj()  {}
     virtual void second_order_forward_val() {}
     virtual void second_order_reverse_adj() {}
     virtual void third_order_forward_val()  {}
     virtual void third_order_reverse_adj()  {}
     
   };
+  
+  // Out-of-line virtual defintion to prevent weak vtable
+  var_node_base::~var_node_base() {}
   
   template<short AutodiffOrder>
   void expand_var_nodes() {

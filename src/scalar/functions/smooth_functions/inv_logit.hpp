@@ -32,7 +32,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(s);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("inv_logit");
     }
       
@@ -44,7 +44,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(ds);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(ds * (1 - 2 * s) );
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(ds * (1 - 6 * s * (1 - s)) );
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("inv_logit");
     }
       

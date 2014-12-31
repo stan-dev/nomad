@@ -24,7 +24,7 @@ namespace nomad {
     const double x = input.first_val();
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(std::asinh(x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("asinh");
     }
       
@@ -37,7 +37,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(d2);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(-x * d1 * d2);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>((-1 + 2 * x * x) * d1 * d1 * d2);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("asinh");
     }
       
