@@ -5,6 +5,7 @@
 #include <string>
 
 #include <src/autodiff/autodiff_stack.hpp>
+#include <src/meta/unlikely.hpp>
 
 namespace nomad {
   

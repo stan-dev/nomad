@@ -1,10 +1,7 @@
 #include <iostream>
 #include <time.h>
 
-#include <src/autodiff/autodiff.hpp>
-#include <src/scalar/functions.hpp>
-#include <src/scalar/operators.hpp>
-#include <src/matrix/functions.hpp>
+#include <src/nomad.hpp>
 
 using namespace nomad;
 

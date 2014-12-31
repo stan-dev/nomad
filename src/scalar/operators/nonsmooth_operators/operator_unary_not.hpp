@@ -2,7 +2,7 @@
 #define nomad__src__scalar__operators__nonsmooth_operators__operator_unary_not_hpp
 
 #include <src/var/var.hpp>
-#include <src/autodiff/validation.hpp>
+#include <src/validation/inputs.hpp>
 
 namespace nomad {
 

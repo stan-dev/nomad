@@ -4,7 +4,7 @@
 #include <math.h>
 #include <type_traits>
 #include <src/var/var.hpp>
-#include <src/autodiff/validation.hpp>
+#include <src/validation/inputs.hpp>
 
 namespace nomad {
   

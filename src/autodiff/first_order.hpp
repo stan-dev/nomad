@@ -8,7 +8,7 @@
 #include <Eigen/Core>
 
 #include <src/var/var.hpp>
-#include <src/autodiff/exceptions.hpp>
+#include <src/validation/exceptions.hpp>
 
 namespace nomad {
 

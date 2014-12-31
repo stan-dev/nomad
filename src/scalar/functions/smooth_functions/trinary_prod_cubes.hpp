@@ -2,7 +2,7 @@
 #define nomad__src__scalar__functions__smooth_functions__trinary_prod_cubes_hpp
 
 #include <src/var/var.hpp>
-#include <src/autodiff/validation.hpp>
+#include <src/validation/inputs.hpp>
 
 namespace nomad {
   

@@ -1,19 +1,12 @@
 #ifndef nomad__src__autodiff__autodiff_stack_hpp
 #define nomad__src__autodiff__autodiff_stack_hpp
 
-#ifdef __GNUC__
-#define likely(x) (__builtin_expect((x),1))
-#define unlikely(x) (__builtin_expect((x),0))
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
-
 #include <vector>
 #include <type_traits>
 
 #include <src/autodiff/typedefs.hpp>
-#include <src/autodiff/exceptions.hpp>
+#include <src/meta/unlikely.hpp>
+#include <src/validation/exceptions.hpp>
 
 namespace nomad {
   

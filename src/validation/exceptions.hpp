@@ -1,5 +1,5 @@
-#ifndef nomad__src__autodiff__exceptions_hpp
-#define nomad__src__autodiff__exceptions_hpp
+#ifndef nomad__src__validation__exceptions_hpp
+#define nomad__src__validation__exceptions_hpp
 
 #include <string>
 #include <exception>

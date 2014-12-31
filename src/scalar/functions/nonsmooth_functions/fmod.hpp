@@ -7,7 +7,7 @@
 #include <src/var/var.hpp>
 #include <src/var/derived/unary_var_node.hpp>
 #include <src/var/derived/binary_var_node.hpp>
-#include <src/autodiff/validation.hpp>
+#include <src/validation/inputs.hpp>
 
 namespace nomad {
   

@@ -5,7 +5,7 @@
 #include <src/var/derived/unary_minus_var_node.hpp>
 #include <src/var/derived/unary_plus_var_node.hpp>
 #include <src/var/derived/binary_minus_var_node.hpp>
-#include <src/autodiff/validation.hpp>
+#include <src/validation/inputs.hpp>
 
 namespace nomad {
 
