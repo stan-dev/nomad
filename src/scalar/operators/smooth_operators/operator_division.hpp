@@ -55,7 +55,7 @@ namespace nomad {
       push_partials<ValidateIO>(-6 * val * y_inv_n);
     }
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
   
@@ -89,7 +89,7 @@ namespace nomad {
     if (AutodiffOrder >= 2) push_partials<ValidateIO>(val *= - 2 * y_inv);
     if (AutodiffOrder >= 3) push_partials<ValidateIO>(val *= -3 * y_inv);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
   
@@ -121,7 +121,7 @@ namespace nomad {
     
     if (AutodiffOrder >= 1) push_partials<ValidateIO>(y_inv);
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
 

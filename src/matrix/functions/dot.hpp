@@ -41,7 +41,7 @@ namespace nomad {
     for (eigen_idx_t n = 0; n < N; ++n)
       push_inputs(v2(n).dual_numbers());
     
-    return var<autodiff_order, strict_smoothness, validate_io>(nmd_stk::next_node_idx - 1);
+    return var<autodiff_order, strict_smoothness, validate_io>(next_node_idx::value - 1);
     
   }
   

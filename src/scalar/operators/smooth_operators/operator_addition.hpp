@@ -29,7 +29,7 @@ namespace nomad {
     push_inputs(v1.dual_numbers());
     push_inputs(v2.dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
   
@@ -53,7 +53,7 @@ namespace nomad {
       
     push_inputs(v2.dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
   
@@ -77,7 +77,7 @@ namespace nomad {
       
     push_inputs(v1.dual_numbers());
     
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
 

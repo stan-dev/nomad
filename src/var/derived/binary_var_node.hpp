@@ -10,12 +10,12 @@ namespace nomad {
   public:
     
     static inline void* operator new(size_t /* ignore */) {
-      if (unlikely(nmd_stk::next_node_idx + 1 > nmd_stk::max_node_idx)) expand_var_nodes<AutodiffOrder>();
-      if (unlikely(nmd_stk::next_partials_idx + nmd_stk::next_partials_delta > nmd_stk::max_partials_idx))
+      if (unlikely(next_node_idx::value + 1 > max_node_idx::value)) expand_var_nodes<AutodiffOrder>();
+      if (unlikely(next_partials_idx::value + next_partials_delta::value > max_partials_idx::value))
         expand_partials();
-      if (unlikely(nmd_stk::next_inputs_idx + nmd_stk::next_inputs_delta > nmd_stk::max_inputs_idx))
+      if (unlikely(next_inputs_idx::value + next_inputs_delta::value > max_inputs_idx::value))
         expand_inputs();
-      return nmd_stk::var_nodes + nmd_stk::next_node_idx;
+      return var_nodes::address + next_node_idx::value;
     }
     
     static inline void operator delete(void* /* ignore */) {}

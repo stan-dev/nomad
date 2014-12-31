@@ -42,7 +42,7 @@ namespace nomad {
       throw nomad_output_partial_error("inv_square");
     }
       
-    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(nmd_stk::next_node_idx - 1);
+    return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx::value - 1);
     
   }
 

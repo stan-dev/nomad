@@ -25,7 +25,7 @@ namespace nomad {
       if (ValidateIO) validate_input(val, "var constructor");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-      node_idx_ = nmd_stk::next_node_idx - 1;
+      node_idx_ = next_node_idx::value - 1;
     }
     
     var& operator=(const var& v) {
@@ -37,11 +37,11 @@ namespace nomad {
       if (ValidateIO) validate_input(val, "var operator=");
       create_node<var_node<AutodiffOrder, 0>>(0);
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-      node_idx_ = nmd_stk::next_node_idx - 1;
+      node_idx_ = next_node_idx::value - 1;
       return *this;
     }
     
-    nomad_idx_t dual_numbers() const { return nmd_stk::var_nodes[node_idx_].dual_numbers(); }
+    nomad_idx_t dual_numbers() const { return var_nodes::address[node_idx_].dual_numbers(); }
     
     nomad_idx_t node() const { return node_idx_; }
     void set_node(nomad_idx_t node_idx) { node_idx_ = node_idx; }
@@ -50,14 +50,14 @@ namespace nomad {
     constexpr static bool strict() { return StrictSmoothness; }
     constexpr static bool validate() { return ValidateIO; }
     
-    double& first_val()   const { return nmd_stk::var_nodes[node_idx_].first_val(); }
-    double& first_grad()  const { return nmd_stk::var_nodes[node_idx_].first_grad(); }
-    double& second_val()  const { return nmd_stk::var_nodes[node_idx_].second_val(); }
-    double& second_grad() const { return nmd_stk::var_nodes[node_idx_].second_grad(); }
-    double& third_val()   const { return nmd_stk::var_nodes[node_idx_].third_val(); }
-    double& third_grad()  const { return nmd_stk::var_nodes[node_idx_].third_grad(); }
-    double& fourth_val()  const { return nmd_stk::var_nodes[node_idx_].fourth_val(); }
-    double& fourth_grad() const { return nmd_stk::var_nodes[node_idx_].fourth_grad(); }
+    double& first_val()   const { return var_nodes::address[node_idx_].first_val(); }
+    double& first_grad()  const { return var_nodes::address[node_idx_].first_grad(); }
+    double& second_val()  const { return var_nodes::address[node_idx_].second_val(); }
+    double& second_grad() const { return var_nodes::address[node_idx_].second_grad(); }
+    double& third_val()   const { return var_nodes::address[node_idx_].third_val(); }
+    double& third_grad()  const { return var_nodes::address[node_idx_].third_grad(); }
+    double& fourth_val()  const { return var_nodes::address[node_idx_].fourth_val(); }
+    double& fourth_grad() const { return var_nodes::address[node_idx_].fourth_grad(); }
     
   };
 
