@@ -77,7 +77,7 @@ or \textit{tangent map} canonically defined for any function,
 f_{*} : T_{x} \mathbb{R}^{N} \rightarrow T_{ f ( x ) } \mathbb{R}^{M}.
 \end{equation*}
 %
-In components the pushforward is exactly given by the Jacobian matrix of partial derivatives,
+In components the pushforward is given exactly by the Jacobian matrix of partial derivatives,
 %
 \begin{equation*}
 \left( f_{*} \right)_{mn} = \frac{ \partial f_{m} }{ \partial x_{n} }.
@@ -85,7 +85,8 @@ In components the pushforward is exactly given by the Jacobian matrix of partial
 
 Pushforwards behave well under function composition.  Given two functions,
 $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{L}$ and
-$g : \mathbb{R}^{L} \rightarrow \mathbb{R}^{M}$, the pushforward is simply
+$g : \mathbb{R}^{L} \rightarrow \mathbb{R}^{M}$, the pushforward of their compositions
+is simply
 %
 \begin{equation*}
 \left( g \circ f \right)_{*} = g_{*} \cdot f_{*},
@@ -98,16 +99,13 @@ or, in components,
 \sum_{l = 1}^{L} \left( g_{*} \right)_{ml} \left( f_{*} \right)_{ln}
 \\
 \frac{ \partial g_{m} }{ \partial x_{n} } &= 
-\sum_{l = 1}^{L} \frac{ \partial g_{m} }{ \partial f_{l} } \cdot \frac{ \partial f_{l} }{ \partial x_{n} }.
+\sum_{l = 1}^{L} \frac{ \partial g_{m} }{ \partial f_{l} } \cdot \frac{ \partial f_{l} }{ \partial x_{n} },
 \end{align*}
 %
 which is just the chain rule.  Because of this behavior, the pushforward of a
 composite function is straightforward computationally, provided that the pushforwards
 of each component function are known.  In particular, using the standard basis the
 composition pushforward is given simply by a succession of vector-matrix products.
-
-\textbf{Something about how linear differential operators are comprised of linear
-combinations of pushforwars?}
 
 \subsubsection{Sensitivities}
 
@@ -175,9 +173,9 @@ to vector-matrix products moving backwards, against the flow of the function eva
 
 Unfortunately, a theory of higher-order perturbations, and the corresponding
 linear differential operators, is substantially more complicated, requiring an elegant but
-abstract construction known as \textit{$k$-jet spaces} to generalize the tangent space.  
+abstract construction known as \textit{jet spaces} to generalize the tangent space.  
 For example, a second-order linear differential operator does simply map second-order 
-tangents to second-order tangents but also requires two first-order tangents,
+tangents to second-order tangents but also requires \textit{two} first-order tangents,
 %
  \begin{equation*}
 \delta^{2} f_{m} 
@@ -197,13 +195,14 @@ of computing how higher-order perturbations propagate across a function.
 \section{Dual Numbers}
 
 Dual numbers are a generalization of real numbers that naturally unify the
-action of a function and its pushforward, and hence are the ideal setting for
-automatic differentiation.  In this section we derive first-order dual numbers
-and then consider the construction of higher-order dual numbers.
+action of a function, its pushforward, and, with some care, its pullback;
+consequently they are the ideal basis for implementing automatic differentiation. 
+In this section we derive first-order dual numbers and then consider the construction 
+of higher-order dual numbers and higher-order linear differential operators.
 
 \subsection{First-Order Dual Numbers}
 
-Dual numbers extend the real numbers, $\mathbb{R}$, with
+Dual numbers extend the real numbers, $\mathbb{R}$, with the
 addition of a new element, $\mathfrak{a}$, which is nilpotent, $\mathfrak{a}^{2} = 0$,
 and denoted a \textit{dual unit}.
 
@@ -279,11 +278,20 @@ f_{m} \! \left( \mbox{\boldmath{$\xi$}} \right) = f_{m} \! \left( \mathbf{x} \ri
 %
 If we consider the dual component as identifying an element of the tangent
 space, then the dual part of the extended function is exactly the pushforward 
-of the original function.  Because dual numbers inherently integrate the function 
-and its pushforward, they are the natural type for automatic differentiation.
+of the original function.  
 
-\textbf{Natural for pushforward, but not pullback.  How to treat pullback correctly
-other than dual numbers having the right number of components?}
+Similarly, we can interpret the dual component as a sensitivity.  In this case
+the action of a function on the dual number is given by the adjoint action of the
+pushforward,
+%
+\begin{equation} \label{dual_function}
+\xi_{n}  = x_{n}  + \mathfrak{a} \sum_{m = 1}^{M} 
+\delta f_{m} \frac{ \partial f_{m} }{ \partial x_{n} } \! \left( \mathbf{x} \right).
+\end{equation} 
+
+Because dual numbers inherently integrate a function with its pushforward or
+pullback, they are the natural type from which we can implement linear
+differential operators and, consequently, automatic differentiation.
 
 \subsection{Higher-Order Dual Numbers}
 
@@ -313,7 +321,7 @@ dual number by replacing the real-valued parts of $\zeta$ with dual numbers,
 \, x, \delta x, \delta y, \delta^{2} y \in \mathbb{R}.
 \end{alignat*}
 %
-From the linear differential operator perspective, $x$ a the value, $\delta x$ and 
+From the linear differential operator perspective, $x$ is a the value, $\delta x$ and 
 $\delta y$ are first-order perturbations, and $\delta^{2} y$ is a second-order perturbation.
 Higher-order dual numbers follow recursively with the introduction of a new dual unit
 and the replacement of real-valued components with new dual numbers.  An $n$-th 
@@ -418,7 +426,7 @@ These results are summarized in Table \ref{tab:secondOrder}.
 	\\
 	\end{tabular}
 	\caption{Recursively expanding a function with respect to a second-order dual number 
-	gives the values of each component of the dual number.
+	gives each component of the function's second-order pushforward.
 	\label{tab:secondOrder}}
 \end{table*}
 
@@ -429,11 +437,13 @@ as sensitivities, as the second term in the second-order gradient map no longer 
 sense.  
 
 The generalization of an adjoint map does not consider all components as sensitivities but rather
-considers all $k$-order values as $(k - 1)$-order tangents (with a $0$-order tangent
-taken to be an input value) and all $k$-order gradients as $k$-order sensitivities.  Hence
-for our usual test function $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ with the
-perturbations $\delta y \rightarrow \mathrm{d} f$ and 
-$\delta^{2} y \rightarrow \mathrm{d}^{2} f$, the second-order adjoint mapping is given by
+considers all $k$th-order values as $(k - 1)$-order tangents (with a $0$-order tangent
+taken to be an input value) and all $k$th-order gradients as $k$th-order sensitivities.  Once the partial
+derivatives are contracted against the tangents they can be transposed to give the
+components of the pullback map.  For example, given our usual test function 
+$f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ with the perturbations 
+$\delta y \rightarrow \mathrm{d} f$ and $\delta^{2} y \rightarrow \mathrm{d}^{2} f$, the 
+second-order pullback is given by
 %
 \begin{equation*}
 \mathrm{d}^{2} x_{n}
@@ -814,12 +824,12 @@ These results are summarized in Table \ref{tab:thirdOrder}.
 	\\
 	\end{tabular}
 	\caption{Recursively expanding a function with respect to a third-order dual number 
-	gives the values of each component of the dual number.
+	gives each component of the function's third-order pushforward.
 	\label{tab:thirdOrder}}
 \end{table*}
 
-As for second-order, third-order adjoint maps require considering the values as tangents
-and the gradients as sensitivities.  For example, with the notation
+As with second-order pullbacks, third-order pullbacks require considering each values as 
+a tangent and each gradient as a sensitivity.  For example, with the notation
 %
 \begin{align*}
 s &\rightarrow x \\
@@ -859,15 +869,15 @@ the third-order adjoint map is given by
 
 Automatic differentiation is the automated computation of linear differential operators applied
 to a user-defined function.  Because dual numbers integrate a function evaluation along with
-its pushforward, they provide a natural type -- ultimately, automatic differentiation is just the
-extension of a user-defined, real-valued function to accept dual numbers.
+its pushforward or pullback, they provide a natural type -- ultimately, automatic differentiation 
+is just the extension of a user-defined, real-valued function to accept dual numbers.
 
 When these functions are composite, as is the case in almost any practical application, they
 can be represented by an \textit{expression graph}, with each node carrying the value of
 the intermediate function evaluation and each edge denoting a functional dependency
 (Figure \ref{fig:exprGraph}).  The dual number-valued functions necessary for automatic
 differentiation simply replace the single value at each node with the components of a
-$k$-order dual number.
+$k$th-order dual number.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -923,7 +933,7 @@ $g \! \left( f_{1} \! \left( x_{1}, x_{2} \right), f_{2} \! \left( x_{2}, x_{3} 
 generates a three level graph, with leaves $\left\{ x_{1}, x_{2}, x_{3} \right\}$ and
 root $g$.  The expression graph corresponding to a real-valued function
 stores single values at each node, and automatic differentiation requires that
-each node store all components of a $k$-order dual number.
+each node store all components of a $k$th-order dual number.
 }
 \label{fig:exprGraph} 
 \end{figure}
@@ -931,7 +941,7 @@ each node store all components of a $k$-order dual number.
 The computation of any linear differential operator comprised entirely of pushforwards is
 known as \textit{forward mode} or \textit{forward accumulation} automatic differentiation
 because all dual numbers are propagated forward along the expression graph.  Any
-adjoint operator, however, requires probating sensitivities backwards along the expression
+adjoint operator, however, requires propagating sensitivities backwards along the expression
 graph and consequently the implementation of adjoint operators is known as 
 \textit{reverse mode} or \textit{reverse accumulation} automatic differentiation.  In this
 section we consider both forward and reverse mode automatic differentiation, discuss
@@ -940,7 +950,7 @@ implementations.
 
 \subsection{Forward Mode Automatic Differentiation}
 
-Forward mode automatic differentiation computes the $k$-order pushforward 
+Forward mode automatic differentiation computes the $k$th-order pushforward 
 of a given function by first initializing all values and gradients at the function
 inputs and propagating the perturbations along the expression graph in a single 
 forward sweep.  
@@ -953,7 +963,7 @@ entirely of pushforwards are often not of immediate practical interest.
 \subsection{Reverse Mode Automatic Differentiation}
 
 Reverse mode automatic differentiation compliments forward mode by computing
-$k$-order adjoint operators which require more elaborate traversals of the
+$k$th-order adjoint operators which require more elaborate traversals of the
 expression graph.  A general reverse mode calculation interleaves the forward
 propagation of tangents and the reverse propagation of sensitivities, starting at
 first order and working up to the desired order.
@@ -973,7 +983,7 @@ Consider, for example, many-to-one functions $f : \mathbb{R}^{N} \rightarrow \ma
 common to many applications.  Forward mode automatic differentiation, computes the 
 directional derivative of the function along a given tangent in a single forward sweep.
 Recovering the full gradient then requires $N$ forward sweeps, each initialized with
-a tangent along a coordinate axis.  On the other hand, reverse mode automatic
+only one of the input tangents non-zero.  On the other hand, reverse mode automatic
 differentiation computes the gradient with only one forward and one reverse sweep.  
 
 If the directional derivative is sufficient or $N$ is small then forward mode automatic
@@ -984,12 +994,12 @@ practice, \nomad implements reverse mode automatic differentiation.
 
 \subsection{Example Implementations}
 
-Here we review the computations needed for the implementation of a selection of
+Here we review the exact computations needed to implement a selection of
 linear differential operators natural to many-to-one functions, 
 $f : \mathbb{R}^{N} \rightarrow 1$.
 
 The gradient and Hessian are denoted by $\mathbf{g}$ and $\mathbf{H}$, respectively,
-and here adjuncts refers to lower-order linear differential operators that are generated
+while adjuncts refers to lower-order linear differential operators that are generated
 as a side effect of the desired operation.
 
 \begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,

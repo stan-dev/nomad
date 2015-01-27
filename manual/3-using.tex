@@ -6,30 +6,30 @@ new functions into the language.
 
 \section{Installation}
 
-\nomad is a header library, meaning there is nothing to compile
-before compiling an executable itself \textbf{this should probably change
-to put all of the globals into a translation unit -- not exactly header
-only but still nothing to compile before the executable}.
+\nomad is a header-only library, meaning there are no shared objects
+to compile and build before compiling an executable itself.  Note that
+this also means that any attempt to link shared objects that have each
+included \nomad headers will fail.
 
 When incorporating \nomad into an executable there are two
 dependencies.  Firstly, \nomad requires a compiler supporting C++11 
 \textbf{reference}, including but not limited to \verb|clang++ 3.4|,
-\verb|g++ 4.8|, and any more recent versions.  The second is Eigen,
-the header library implementing a wide array of efficient linear algebra
+\verb|g++ 4.8|, and above.  The second is Eigen, the header-only 
+library implementing a wide array of efficient linear algebra
 routines \textbf{reference}.
 
 For example, if you wish to incorporate \nomad into an executable
 that compiles as
 %
 \begin{verbatim}
-./compiler -03 main main.cpp
+./compiler -03 -o main main.cpp
 \end{verbatim}
 %
 then including \nomad nominally requires only the addition of the 
 appropriate paths,
 %
 \begin{verbatim}
-./compiler -03 -I/path/to/Nomad -I/path/to/Eigen main main.cpp
+./compiler -03 -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
 \end{verbatim}
 %
 Note that some compilers do not implement C++11 by default.  In
@@ -37,16 +37,18 @@ this case you may have to explicit enable C++11 and the updated
 Standard Library with
 %
 \begin{verbatim}
-./compiler -03 -std=c++11 -stdlib=libc++ -I/path/to/Nomad -I/path/to/Eigen main main.cpp
+./compiler -03 -std=c++11 -stdlib=libc++ -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
 \end{verbatim}
 
 \section{Computing Differential Operations}
 
-As noted in Section \ref{sec:user_interface}, differential operations are
-implemented with a functor-functional pattern, with functions wrapped
-in functors and differential operations implemented as functionals.
+As noted in Section \ref{sec:user_interface}, linear differential operations 
+are in \nomad are implemented using a functor-functional pattern, with 
+functions wrapped in functors and differential operations implemented 
+as functionals.
 
-Here a functor is any class implementing
+Here a functor is a class deriving from \textbf{base functor} and implementing
+the public member function
 %
 \begin{verbatim}
 T operator()(const Eigen::VectorXd& x) const,
@@ -64,7 +66,7 @@ double example_function(const Eigen::VectorXd& x) {
 }
 \end{verbatim}
 %
-we would need to define the class
+we would need to define the class \textbf{update to base functor derivation}
 %
 \begin{verbatim}
 class example_functor {
@@ -105,7 +107,8 @@ example_functor<var<3U>>
 \end{verbatim}
 %
 defining classes for first, second, and third-order automatic differentiation
-variables, respectively.
+variables, respectively.  \textbf{Use typdefs and refer to typedef table 
+in previous chapter}.
 
 Differential operators are implemented as functionals which take
 the functors as arguments.  A gradient, for example, can be computed
@@ -129,8 +132,8 @@ All linear differential operations implanted in \nomad are detailed in \ref{sec:
 
 \section{Implementing Functions}
 
-Although \nomad has variety of functions available difficult applications often
-require the addition of new functions specific to the problem at hand.  The
+Although \nomad implements a diverse array of functions, difficult applications
+may require the addition of new functions specific to the problem at hand.  The
 implementation of new functions in \nomad is straightforward.
 
 The biggest complication in implementing a new function is in properly
@@ -138,13 +141,13 @@ managing the global stack that represents the expression graph.  In particular,
 a function has to define the number of inputs and partials it will be using
 so that the stack can expand if necessary, create a node on the expression
 graph for the function, and then push the necessary inputs, dual numbers,
-and partials onto the stack.  For details on how the stacks are implemented
-see Section \ref{sec:architecture}.
+and partials onto the stack.  For details on how the stacks on the implemention
+see Chapter \ref{chp:implementation}.
 
 \subsection{Generic Unary Function}
 
 A unary function, for example, might be implemented in \verb|new_function.hpp|
-as
+as \textbf{Need all the template configuration!}
 %
 \begin{verbatim}
 #ifndef new_funcion_hpp
@@ -189,7 +192,9 @@ Firstly we define the double-valued function,
  double new_function(double x).
 \end{verbatim}
 %
-although this isn't strictly necessary it can be convenient in some cases.
+although this isn't strictly necessary if the double-valued function is defined
+in an external namespace, it can be helpful to ensure consistency when
+calling the function from within the \verb|nomad| namespace.
 
 Next we implement the automatic differentiation viable-valued function,
 %
@@ -411,126 +416,12 @@ namespace nomad {
 
 \subsection{Custom Node Types}
 
-As noted in Section \ref{subsubsec:var_body}, some functions may benefit
-from custom propagation routines defined in custom \verb|var_body|
+As noted in Section \ref{sec:exp_graph_rep}, some functions may benefit
+from optimized propagation routines defined in custom \verb|var_body|
 implementations.  For example, \nomad defines special unary and binary
 function types with optimized propagation functions.  Using these the binary
 example above would become
-%
-\begin{verbatim}
-#ifndef new_binary_function_hpp
-#define new_binary_function_hpp
-
-#include <math.h>
-#include <var/var.hpp>
-#include <var/derived/unary_var_body.hpp>
-#include <var/derived/binary_var_body.hpp>
-
-namespace nomad {
-  
-  inline double new_binary_function(double x, double y) {
-    return ...;
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
-                                                 const var<autodiff_order>& v2) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 2;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      binary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new binary_var_body<autodiff_order, partials_order>();
-
-    double x = v1.first_val();
-    double y = v2.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v1.dual_numbers());
-    push_inputs(v2.dual_numbers());
-
-    if (autodiff_order >= 1) {
-      push_partials(df_dx);
-      push_partials(df_dy);
-    }
-    if (autodiff_order >= 2) {
-      push_partials(d2f_dx2);
-      push_partials(d2f_dxdy);
-      push_partials(d2f_dy2);
-    }
-    if (autodiff_order >= 3) {
-      push_partials(df3_dx3);
-      push_partials(df3_dx2dy);
-      push_partials(df3_dxdy2);
-      push_partials(df3_dy3);
-    }
-
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(double x,
-                                                 const var<autodiff_order>& v2) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
-    
-    double y = v2.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v2.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dy);
-    if (autodiff_order >= 2) push_partials(df2_dy2);
-    if (autodiff_order >= 3) push_partials(df3_dy3);
-    
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
-                                                 double y) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      unary_var_body<autodiff_order, partials_order>::n_partials();
-    
-    new unary_var_body<autodiff_order, partials_order>();
-    
-    double x = v1.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v1.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dx);
-    if (autodiff_order >= 2) push_partials(d2f_dx2);
-    if (autodiff_order >= 3) push_partials(d3f_dx3);
-    
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-
-}
-#endif
-\end{verbatim}
 
 Defining new \verb|var_body| specializations is a substantial task and anyone
-interesting in introducing a new specialization should contact the development
-team directly.
+interesting in introducing a new specialization should contact the Stan Development
+Team directly.

@@ -1,4 +1,5 @@
 \chapter{Implementation}
+\label{chp:implementation}
 
 \nomad is a \verb|C++| implementation of reverse mode automatic
 differentiation that uses an \textit{operator overloading} strategy.
@@ -11,24 +12,25 @@ implementations leverage the recursive nature of higher-order dual
 numbers directly, automatically differentiating through a first-order
 implementation to compute higher-order partial derivatives and
 the subsequent linear differential operators.  This approach allows for
-arbitrary-order automatic differentiation, but at the cost of inefficient and 
+arbitrary-order automatic differentiation, but only at the cost of inefficient and 
 sometimes numerically unstable results.  \nomad,
 on the other hand, explicitly implements second and third-order operators
 with a focus on performance and numerical stability.
 
 In this chapter we introduce the architecture behind the \nomad automatic 
-differentiation implementation.  We view the internal representation of the 
-expression graph and how it interfaces with function overloads before
-discussing the user interface.
+differentiation implementation.  We first review the internal representation 
+of the expression graph and how it interfaces with function overloads before
+discussing the user interface itself.
 
 \section{Internal Representation of the Expression Graph}
+\label{sec:exp_graph_rep}
 
 While the expression graph represents the entire composite function, each
 node in the expression graph represents just a single component function.  
 Consequently each node must be responsible for both implementing the 
 local pushforward and pullback of the corresponding function and storing 
 the dual numbers, input nodes, and any auxiliary storage convenient for 
-the operator implementations, like partial derivatives.
+the operator implementations, such as partial derivatives.
  
 Like many other automatic differentiation implementations, \nomad
 topologically sorts the expression graph into a linear stack of nodes, 
@@ -210,7 +212,7 @@ objects.
 
 \subsubsection{Dual Number Stack}
 
-The dual number stack stores the $2^{k}$ components of the $k$-order
+The dual number stack stores the $2^{k}$ components of the $k$th-order
 dual numbers at each node.  For example, a first-order expression graph
 will need only two elements for each node while a third-order expression 
 graph will need eight (Figure \ref{fig:dualNumberStorage}).
@@ -267,29 +269,29 @@ eight elements.
 \subsubsection{Partials Stack}
 
 A common approach in many automatic differentiation implementations
-is to compute partial derivatives as necessary and avoid storing them
+is to compute partial derivatives online as necessary and avoid storing them
 in the expression graph.  This strategy is sound for first-order reverse
 mode calculations where the partials are used only once, but higher-order
 calculations require multiple sweeps that reuse the partials.  Recomputing
-the partials for each sweep becomes a significant computational burden.
+the partials for each sweep then becomes a significant computational burden.
 
 With a focus on implementing efficient higher-order methods, \nomad 
 explicitly stores partial derivatives in a dedicated partials stack.  When 
-constructing an $k$-order expression graph only the $k$-order partial 
+constructing an $k$th-order expression graph only the $k$th-order partial 
 derivatives and lower are stored, and only if the partial derivatives are 
 non-zero.  For example, a second-order expression graph will calculate 
 and store only the first and second-order partial derivatives.
 
-To avoid redundant calculations and storage, \nomad leverages the 
-stores only the unique higher-order values.  In a second-order calculation 
-a node representing the component function 
+To avoid redundant calculations and storage, \nomad stores only the 
+unique higher-order values.  In a second-order calculation a node 
+representing the component function 
 $f: \mathbb{R}^{N} \rightarrow \mathbb{R}$ will store
 %
 \begin{equation*}
 \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} }, \, i \in 1, \ldots, N, j \in 1, \ldots i,
 \end{equation*}
 %
-while a third-order calculation requires
+while a third-order calculation will store
 %
 \begin{equation*}
 \frac{ \partial^{3} f }{ \partial x_{i} \partial x_{j} \partial x_{k} }, \, 
@@ -338,7 +340,7 @@ partial derivatives.
 
 In general a function with $N$ inputs and non-vanishing derivatives at
 all orders will require $\binom{N + M}{M}$ elements to store the unique
-$M$-order partial derivatives.
+$M$th-order partial derivatives.
 
 \section{Extending Functions to Accept Dual Numbers}
 
@@ -361,15 +363,16 @@ the \verb|var| class and the implementation of \verb|var|-valued functions.
 The \verb|var| class itself is only a lightweight wrapper for an underlying 
 \verb|var_node| in the expression graph, storing an address to the 
 corresponding node with a variety of member functions that expose the 
-node's data.  Most importantly, \verb|var| is a templated is allow for
-the compile-time configuration of the expression graph,
+node's data.  Most importantly, \verb|var| is templated to allow for the 
+compile-time configuration of the expression graph,
 %
 \begin{verbatim}
 template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
 class var { ...
 \end{verbatim}
 %
-\textbf{\nomad also defines the typdefs...}
+\nomad also defines a variety of type definitions for the most commonly
+used template configurations (Table \ref{tab:typedefs}).
 
 \begin{table*}[t!]
 	\centering
@@ -387,8 +390,9 @@ class var { ...
 	\rowcolor[gray]{0.9} \verb|var2_wild| & \verb|2| & \verb|false| & \verb|false| \\
 	\verb|var3_wild| & \verb|3| & \verb|false| & \verb|false| \\
 	\end{tabular}
+	\caption{The \texttt{nomad} namespace includes helpful type definitions for 
+	the most common \texttt{var} configurations.}
 	\label{tab:typedefs}
-	\caption{Some typedefs!.}
 \end{table*}
 
 \subsubsection{AutodiffOrder}
@@ -402,9 +406,9 @@ will induce a compile-time error.
 Note that lower-order graphs require the computation and storage of
 fewer dual numbers and partial derivatives, not to mention faster pushforward
 and pullback implementations.  Consequently, although a higher-order
-graph will admit lower-order operators it is much more efficient to match
+graph will admit lower-order operators, it is much more efficient to match
 the order of the expression graph, via the choice of \verb|AutodiffOrder|,
-to the linear differential operator of interest.
+to the linear differential operators of interest.
 
 \subsubsection{StrictSmoothness}
 
@@ -442,6 +446,11 @@ burden and should be disabled for high-performance applications.
 
 \subsection{var-valued Functions}
 
+With the var class wrapping the expression graph we can now implement
+var-valued functions and, with them, automatic differentiation.
+
+\textbf{Basic flow here}.
+
 Validate inputs using validate methods.
 
 \begin{verbatim}
@@ -476,8 +485,12 @@ template<bool ValidateIO>
 inline void push_partials(double partial)
 \end{verbatim}
 
+Let's consider how we might implement smooth and non-smooth
+var-valued functions...
 
 \subsubsection{Smooth Functions}
+
+Something something example for a smooth function.
 
 \begin{verbatim}
 template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
@@ -620,6 +633,7 @@ inline typename
 \end{verbatim}
 
 \section{The \nomad User Interface}
+\label{sec:user_interface}
 
 Functor-functional relationship.
 
