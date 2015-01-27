@@ -109,25 +109,14 @@ default pushforward and pullback methods that can be specialized
 for functions with structured Jacobians.  Because the amount of storage for 
 each node can vary widely depending on the corresponding function and the 
 order of the desired linear differential operator, storage is decoupled from 
-each node.  Instead the necessary data is stored in three global stacks, the 
+each node.  Instead the necessary data are stored in three global stacks, the 
 inputs stack, dual numbers stack, and partials stack, with \verb|var_node| 
 containing only an address to the relevant data in each 
-(Figure \ref{fig:architecture}) as well as accessor and mutator methods that 
+(Figure \ref{fig:architecture}), as well as accessor and mutator methods that 
 abstract the indirect storage.
 
-\textbf{Fuuuuuuuck, need to discuss template parameters around here}
-\verb|PartialsOrder| is the highest order of non-zero partial derivatives
-that the function supports and, because \nomad considers only up to
-third-order linear differential operators, should be capped at 3.  For
-example, the partial derivatives of the function $f \! \left( x \right) = x$ 
-vanish beyond first-order and so the corresponding \nomad
-implementation would have \verb|PartialsOrder = 1|.  On the other
-hand, the function $f \! \left( x \right) = e^{x}$ has non-zero partial
-derivatives at all orders and would require \verb|PartialsOrder = 3|.
-\textbf{Fuuuuuuuuck}.
-
-\textbf{Also, fuuuuuuuck, need to discuss arena-based memory allocation
-for each stack.}
+Storage for each stack is pre-allocated and expanded only as necessary with 
+an arena-based allocation pattern.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -358,7 +347,7 @@ $M$th-order partial derivatives.
 
 \section{Extending Functions to Accept Dual Numbers}
 
-In order to implement reverse mode calculations, each dual-number 
+In order to implement automatic differentiation calculations, each dual-number 
 valued-function is responsible for not only computing the function
 value but also expanding the expression graph with the addition of
 a node with the desired pushforward and pullback methods and
@@ -460,7 +449,7 @@ burden and should be disabled for high-performance applications.
 
 \subsection{var-valued Functions}
 
-Extending a function to take \verb|var|s requires not just propagating the
+Extending a function to take \verb|var| arguments requires not just propagating the
 value of the function but also creating a new node in the expression
 graph.  In this section we review the steps necessary for implementing
 a \verb|var|-valued function and present some specific examples.
@@ -512,13 +501,13 @@ create_node<binary_var_node<AutodiffOrder, PartialsOrder>>();
 
 Once the node representing the component function has been created
 we can now being to push the necessary data onto the external stacks.
-Firstly are the addresses of the inputs to the function,
+First are the addresses of the inputs to the function,
 %
 \begin{verbatim}
 inline void push_inputs(nomad_idx_t input)
 \end{verbatim}
 %
-which are readily accessed from the input \verb|var| objects.
+which are readily accessed from the input \verb|var| arguments.
 
 \subsubsection{Pushing Dual Numbers}
 
@@ -559,7 +548,7 @@ inline void push_partials(double partial)
 %
 As with \verb|push_dual_numbers|, \verb|push_partials| will optionally
 validate the values of the partial derivatives and must be wrapped in
-a \verb|try/catch| block|,
+a \verb|try/catch| block,
 %
 \begin{verbatim}
 try {
@@ -657,10 +646,10 @@ inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
 }
 \end{verbatim}
 %
-Note that conditioning on template parameters wherever possible to avoid
-unnecessary calculations, such as when validating inputs and computing
-and storing partial derivatives.  Because these template parameters are
-known at compile-time these checks incur no run-time penalties.
+Note that expensive calculations, such as when validating inputs and computing
+and storing partial derivatives, are conditioned on template parameters wherever 
+possible to avoid unnecessary computation.  Because these template parameters 
+are known at compile-time these checks incur no run-time penalties.
 
 When the partial derivatives of a function are structured then we can achieve
 much higher performance by specializing the underlying \verb|var_node|.

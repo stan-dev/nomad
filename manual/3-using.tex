@@ -3,7 +3,7 @@
 In this chapter we provide a brief introduction to \nomad meant
 to get users experimenting with the code quickly; for more extensive
 details about the underlying theory and implementation of \nomad
-see the other chapters.  After discussing requirements and
+consult the previous chapters.  After discussing requirements and
 installation instructions we present the basic \nomad pattern for
 applying linear differential operators and a few examples.
 
@@ -18,20 +18,15 @@ into any existing program.
 
 \section{Installation}
 
-Because much of \nomad is implemented with template metaprogramming
-no static or dynamic libraries are necessary.  Instead \nomad is
-an almost entirely header-only library, requiring only one translation
-unit.
-
-\textbf{\nomad is a header-only library, meaning there are no shared objects
+\nomad is a header-only library, meaning there are no shared objects
 to compile and build before compiling an executable itself.  Note that
 this also means that any attempt to link shared objects that have each
-included \nomad headers will fail.}
+included \nomad headers will fail.
 
 For example, consider an existing executable that compiles with
 %
 \begin{verbatim}
-./compiler -03 -o main main.cpp
+> ./compiler -03 -o main main.cpp
 \end{verbatim}
 %
 Assuming that the compiler meets the above requirements, enabling \nomad 
@@ -39,7 +34,7 @@ in this executable requires only the addition of the appropriate paths and
 a single \verb|C++| file,
 %
 \begin{verbatim}
-./compiler -03 -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
+> ./compiler -03 -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
 \end{verbatim}
 %
 Some compilers do not implement C++11 by default, and in
@@ -99,7 +94,7 @@ class example_functor: public base_functor<var1> {
 The full list of functions that have been implemented for automatic
 differentiation variables can be found in Section \ref{sec:operators_and_functions}.
 
-Note that specifying a functor for each automatic differentiation variable 
+Specifying a functor for each automatic differentiation variable 
 can be burdensome and it is usually easier to define a template class.  
 For example, the above would become
 %
@@ -141,7 +136,7 @@ void gradient(const F& f,
 \end{verbatim}
 
 Using \nomad then becomes a matter of instantiating the appropriate
-functor and passing into the desired functional.  The gradient is readily
+functor and passing it into the desired functional.  The gradient is readily
 computed as
 %
 \begin{verbatim}
@@ -177,28 +172,8 @@ std::cout << H << std::endl;
 The full list of linear differential operations implanted in \nomad are detailed 
 in \ref{sec:differential_operations}.
 
-\begin{table*}[t!]
-	\centering
-	\renewcommand{\arraystretch}{2}
-	\begin{tabular}{cc}
-	\rowcolor[gray]{0.9} Type Definition & Description \\
-	\verb|var1| & First-order calculations \\
-	\rowcolor[gray]{0.9} \verb|var2| & Second-order calculations \\
-	\verb|var3| & Third-order calculations \\
-	\rowcolor[gray]{0.9} \verb|var1_debug| & First-order with input/output validation \\
-	\verb|var2_debug| & Second-order with input/output validation \\
-	\rowcolor[gray]{0.9} \verb|var3_debug| & Third-order with input/output validation  \\
-	\verb|var1_wild| & First-order with non-smooth functions \\
-	\rowcolor[gray]{0.9} \verb|var2_wild| & Second-order with non-smooth functions \\
-	\verb|var3_wild| & Third-order with non-smooth functions \\
-	\end{tabular}
-	\label{tab:quickstart_typedefs}
-	\caption{\nomad defines a variety of automatic differentiation variables, including
-	variants that enable input/output validation and the use of non-smooth functions.}
-\end{table*}
-
 \nomad also defines auxiliary automatic differentiation types 
-(Table \ref{tab:quickstart_typedefs}).  The most useful of these are the \text{debug} 
+(Table \ref{tab:typedefs}).  The most useful of these are the \text{debug} 
 variants that enable strict input and output validation of each component function.  
 If any numerical problems are encountered then an exception identifying the source 
 of the problem is thrown, assisting in any debugging efforts.  For example,
