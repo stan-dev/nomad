@@ -1,0 +1,52 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}
+\geometry{letterpaper}
+\usepackage{graphicx}
+\usepackage{amssymb, amsmath}
+\usepackage{epstopdf}
+
+\begin{document}
+
+\section*{Poisson Distribution}
+
+\subsection*{Density}
+
+\begin{equation*}
+p \! \left( n | \lambda \right)
+=
+\frac{\lambda^{n} e^{-\lambda} }{\Gamma \! \left( n + 1 \right) }
+\end{equation*}
+
+\subsection*{Log Density}
+
+\begin{equation*}
+l \! \left( n | \lambda \right)
+=
+n \log \lambda - \lambda - \log \Gamma \! \left( n + 1 \right)
+\end{equation*}
+
+\subsection*{First Derivatives}
+
+\begin{equation*}
+\frac{ \partial l \! \left( n | \lambda \right) }{ \partial \lambda }
+=
+\frac{n}{\lambda} - 1
+\end{equation*}
+
+\subsection*{Second Derivatives}
+
+\begin{equation*}
+\frac{ \partial^{2} l \! \left( n | \lambda \right) }{ \partial \lambda^{2} }
+=
+- \frac{n}{\lambda^{2}} 
+\end{equation*}
+
+\subsection*{Third Derivatives}
+
+\begin{equation*}
+\frac{ \partial^{3} l \! \left( n | \lambda \right) }{ \partial \lambda^{3} }
+=
+\frac{2 n}{\lambda^{3}}
+\end{equation*}
+
+\end{document}
