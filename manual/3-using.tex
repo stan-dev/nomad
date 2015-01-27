@@ -1,80 +1,97 @@
-\chapter{Using Nomad}
+\chapter{Nomad Quickstart Guide}
 
-In this chapter we review the basics of using \nomad to in practice, 
-from installation to computing differential operations to implementing
-new functions into the language.
+In this chapter we provide a brief introduction to \nomad meant
+to get users experimenting with the code quickly; for more extensive
+details about the underlying theory and implementation of \nomad
+see the other chapters.  After discussing requirements and
+installation instructions we present the basic \nomad pattern for
+applying linear differential operators and a few examples.
+
+\section{Requirements}
+
+\nomad is a largely self contained library, depending on only the 
+excellent \verb|Eigen| library and relatively recent \verb|C++| compilers.
+Specifically \nomad requires at least \verb|Eigen 3.2| and a
+\verb|C++| compiler implementing the full \verb|C++11| specification.
+Once these dependencies are met, \nomad code is readily introduced 
+into any existing program. 
 
 \section{Installation}
 
-\nomad is a header-only library, meaning there are no shared objects
+Because much of \nomad is implemented with template metaprogramming
+no static or dynamic libraries are necessary.  Instead \nomad is
+an almost entirely header-only library, requiring only one translation
+unit.
+
+\textbf{\nomad is a header-only library, meaning there are no shared objects
 to compile and build before compiling an executable itself.  Note that
 this also means that any attempt to link shared objects that have each
-included \nomad headers will fail.
+included \nomad headers will fail.}
 
-When incorporating \nomad into an executable there are two
-dependencies.  Firstly, \nomad requires a compiler supporting C++11 
-\textbf{reference}, including but not limited to \verb|clang++ 3.4|,
-\verb|g++ 4.8|, and above.  The second is Eigen, the header-only 
-library implementing a wide array of efficient linear algebra
-routines \textbf{reference}.
-
-For example, if you wish to incorporate \nomad into an executable
-that compiles as
+For example, consider an existing executable that compiles with
 %
 \begin{verbatim}
 ./compiler -03 -o main main.cpp
 \end{verbatim}
 %
-then including \nomad nominally requires only the addition of the 
-appropriate paths,
+Assuming that the compiler meets the above requirements, enabling \nomad 
+in this executable requires only the addition of the appropriate paths and
+a single \verb|C++| file,
 %
 \begin{verbatim}
 ./compiler -03 -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
 \end{verbatim}
 %
-Note that some compilers do not implement C++11 by default.  In
-this case you may have to explicit enable C++11 and the updated
-Standard Library with
+Some compilers do not implement C++11 by default, and in
+this case you may have to explicitly enable C++11 and the 
+updated Standard Library, for example
 %
 \begin{verbatim}
-./compiler -03 -std=c++11 -stdlib=libc++ -I/path/to/Nomad -I/path/to/Eigen -o main main.cpp
+>./compiler -03 -std=c++11 -stdlib=libc++ -I/path/to/Nomad -I/path/to/Eigen \
+> -o main main.cpp
 \end{verbatim}
 
-\section{Computing Differential Operations}
+\section{Applying Linear Differential Operations}
 
-As noted in Section \ref{sec:user_interface}, linear differential operations 
-are in \nomad are implemented using a functor-functional pattern, with 
-functions wrapped in functors and differential operations implemented 
-as functionals.
+With the \nomad libraries available applying linear differential operators
+to functions is straightforward.  Let us consider, for example, the
+function
+%
+\begin{equation*}
+f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
+\end{equation*}
+%
+In order to apply a linear differential operator we have to implement
+this function as a \textit{functor} and then pass it to the appropriate
+\textit{functionals}.
 
-Here a functor is a class deriving from \textbf{base functor} and implementing
-the public member function
+\subsection{Implementing a Functor}
+
+In \nomad functions are implemented by defining a class
+that derives from \verb|base_functor|,
 %
 \begin{verbatim}
-T operator()(const Eigen::VectorXd& x) const,
+template<class T>
+class base_functor {
+public:
+  virtual T operator()(const Eigen::VectorXd& x) const;
+  typedef T var_type;
+};
 \end{verbatim}
 %
-where \verb|T| is any automatic differentiation variable.  For example,
-if we wanted to compute the gradient of the function
+where the template parameter \verb|T| is an appropriate automatic 
+differentiation variable.  
+
+First-order linear differential operators, for example, require the 
+variable \verb|var1|, in which case our function can be implemented as
 %
 \begin{verbatim}
-double example_function(const Eigen::VectorXd& x) {
-  double x1 = x[0];
-  double x2 = x[1];
-  double x3 = x[2];
-  return exp( cos(x1) + sin(x2) ) / x3;
-}
-\end{verbatim}
-%
-we would need to define the class \textbf{update to base functor derivation}
-%
-\begin{verbatim}
-class example_functor {
-  var<1U> operator()(const Eigen::VectorXd& x) const {
-    var<1U> x1 = x[0];
-    var<1U> x2 = x[1];
-    var<1U> x3 = x[2];
-    return exp( cos(x1) + sin(x2) ) / x3;
+class example_functor: public base_functor<var1> {
+  var1 operator()(const Eigen::VectorXd& x) const {
+    var1 v1 = x[0];
+    var1 v2 = x[1];
+    var1 v3 = x[2];
+    return cos( exp(v1) + exp(v2) ) / v3;  
   }
 };
 \end{verbatim}
@@ -82,18 +99,19 @@ class example_functor {
 The full list of functions that have been implemented for automatic
 differentiation variables can be found in Section \ref{sec:operators_and_functions}.
 
-Specifying a functor for each automatic differentiation variable can be
-burdensome and it is usually easier to define a template class.  For
-example, the above would become
+Note that specifying a functor for each automatic differentiation variable 
+can be burdensome and it is usually easier to define a template class.  
+For example, the above would become
 %
 \begin{verbatim}
 template <typename T>
-class example_functor {
+\begin{verbatim}
+class example_functor: public base_functor<T> {
   T operator()(const Eigen::VectorXd& x) const {
-    T x1 = x[0];
-    T x2 = x[1];
-    T x3 = x[2];
-    return exp( cos(x1) + sin(x2) ) / x3;
+    T v1 = x[0];
+    T v2 = x[1];
+    T v3 = x[2];
+    return cos( exp(v1) + exp(v2) ) / v3;  
   }
 };
 \end{verbatim}
@@ -101,327 +119,125 @@ class example_functor {
 with
 %
 \begin{verbatim}
-example_functor<var<1U>>
-example_functor<var<2U>>
-example_functor<var<3U>>
+example_functor<var1>
+example_functor<var2>
+example_functor<var3>
 \end{verbatim}
 %
-defining classes for first, second, and third-order automatic differentiation
-variables, respectively.  \textbf{Use typdefs and refer to typedef table 
-in previous chapter}.
+defining functors for first, second, and third-order automatic differentiation
+variables, respectively.
 
-Differential operators are implemented as functionals which take
-the functors as arguments.  A gradient, for example, can be computed
-as
+\subsection{Passing Functors to Functionals}
+
+Linear differential operators in \nomad are implemented as functionals that 
+take in a functor as an argument.  The gradient of a function, for example,
+is implemented as
 %
 \begin{verbatim}
-Eigen::VectorXd& x = ...;
-Eigen::VectorXd& g = Eigen::VectorXd::Zero(x.size());
-gradient(example_functor<var<1U>>, x, g);
+template <typename F>
+void gradient(const F& f,
+              const Eigen::VectorXd& x,
+              Eigen::VectorXd& g)
 \end{verbatim}
-%
-and the Hessian as
-%
-\begin{verbatim}
-Eigen::VectorXd& x = ...;
-Eigen::VectorXd& H = Eigen::VectorXd::Zero(x.size(), x.size());
-hessian(example_functor<var<2U>>, x, H);
-\end{verbatim}
-%
-All linear differential operations implanted in \nomad are detailed in \ref{sec:differential_operations}.
 
-\section{Implementing Functions}
-
-Although \nomad implements a diverse array of functions, difficult applications
-may require the addition of new functions specific to the problem at hand.  The
-implementation of new functions in \nomad is straightforward.
-
-The biggest complication in implementing a new function is in properly
-managing the global stack that represents the expression graph.  In particular,
-a function has to define the number of inputs and partials it will be using
-so that the stack can expand if necessary, create a node on the expression
-graph for the function, and then push the necessary inputs, dual numbers,
-and partials onto the stack.  For details on how the stacks on the implemention
-see Chapter \ref{chp:implementation}.
-
-\subsection{Generic Unary Function}
-
-A unary function, for example, might be implemented in \verb|new_function.hpp|
-as \textbf{Need all the template configuration!}
+Using \nomad then becomes a matter of instantiating the appropriate
+functor and passing into the desired functional.  The gradient is readily
+computed as
 %
 \begin{verbatim}
-#ifndef new_funcion_hpp
-#define new_function_hpp
-
-#include <var/var.hpp>
-
-namespace nomad {
-
-  inline double new_function(double x) { return ...; }
+int n = 100;
+Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
   
-  template <short autodiff_order>
-  inline var<autodiff_order> new_function(const var<autodiff_order>& input) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-    
-    new var_body<autodiff_order, partials_order>(n_inputs);
+double f;
+Eigen::VectorXd grad(x.size());
+  
+example_functor<var1> example;
+gradient(example, x, f, grad);
 
-    const double x = input.first_val();
-    push_dual_numbers<autodiff_order>(new_function(x));
-    
-    push_inputs(input.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dx);
-    if (autodiff_order >= 2) push_partials(d2f_dx2);
-    if (autodiff_order >= 3) push_partials(d3f_dx3);
+std::cout << grad.transpose() << std::endl;
+\end{verbatim}
+%
+Similarly, the Hessian requires a functor using the second-order automatic
+differentiation variable, \verb|var2|,
+ %
+\begin{verbatim}
+int n = 100;
+Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
+  
+double f;
+Eigen::VectorXd grad(x.size());
+Eigen::VectorXd H(x.size(), x.size());
+  
+example_functor<var1> example;
+hessian(example, x, f, grad, H);
 
-    return var<autodiff_order>(next_body_idx_ - 1);
-  }
+std::cout << H << std::endl;
+\end{verbatim}
+%
+The full list of linear differential operations implanted in \nomad are detailed 
+in \ref{sec:differential_operations}.
+
+\begin{table*}[t!]
+	\centering
+	\renewcommand{\arraystretch}{2}
+	\begin{tabular}{cc}
+	\rowcolor[gray]{0.9} Type Definition & Description \\
+	\verb|var1| & First-order calculations \\
+	\rowcolor[gray]{0.9} \verb|var2| & Second-order calculations \\
+	\verb|var3| & Third-order calculations \\
+	\rowcolor[gray]{0.9} \verb|var1_debug| & First-order with input/output validation \\
+	\verb|var2_debug| & Second-order with input/output validation \\
+	\rowcolor[gray]{0.9} \verb|var3_debug| & Third-order with input/output validation  \\
+	\verb|var1_wild| & First-order with non-smooth functions \\
+	\rowcolor[gray]{0.9} \verb|var2_wild| & Second-order with non-smooth functions \\
+	\verb|var3_wild| & Third-order with non-smooth functions \\
+	\end{tabular}
+	\label{tab:quickstart_typedefs}
+	\caption{\nomad defines a variety of automatic differentiation variables, including
+	variants that enable input/output validation and the use of non-smooth functions.}
+\end{table*}
+
+\nomad also defines auxiliary automatic differentiation types 
+(Table \ref{tab:quickstart_typedefs}).  The most useful of these are the \text{debug} 
+variants that enable strict input and output validation of each component function.  
+If any numerical problems are encountered then an exception identifying the source 
+of the problem is thrown, assisting in any debugging efforts.  For example,
+%
+\begin{verbatim}
+int n = 100;
+Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
+  
+double f;
+Eigen::VectorXd grad(x.size());
+  
+example_functor<var1_debug> example;
+try {
+  gradient(example, x, f, grad);
+} catch(nomad_error& e) {
+  std::cout << e.what() << std::endl;
 }
-#endif
-\end{verbatim}
 
-Firstly we define the double-valued function,
-%
-\begin{verbatim}
- double new_function(double x).
+std::cout << grad.transpose() << std::endl;
 \end{verbatim}
 %
-although this isn't strictly necessary if the double-valued function is defined
-in an external namespace, it can be helpful to ensure consistency when
-calling the function from within the \verb|nomad| namespace.
+In practice this validation can be a substantial computational burden,
+and these types should be reserved for debugging purposes only.
 
-Next we implement the automatic differentiation viable-valued function,
+The second class of auxiliary types provided to users are the \textit{wild}
+types.  Because they often cause serious, if subtle, pathologies in many
+algorithms, functions that are not everywhere smooth, such as the absolute
+value and the cube root, are disabled by default in \nomad.  Users may
+enable them, however, by using the wild types.  For example,
 %
 \begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> new_function(const var<autodiff_order>& input)
-\end{verbatim}
-%
-Note the use of templates to avoid defining the function for each different
-automatic differentiation variable.  The first critical step in defining this
-function is informing the stack about how much space the function will need,
-%
-\begin{verbatim}
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-\end{verbatim}
-%
-With the stack ready we can create a new node for the function on the
-expression graph,
-%
-\begin{verbatim}
-    new var_body<autodiff_order, partials_order>(n_inputs);
-\end{verbatim}
-%
-Here \verb|operator new| has been overloaded, so that this call creates
-a new node on the top of the node stack.
-
-With the node pushed onto the stack we just have to set the dual numbers,
-inputs, and partials,
-%
-\begin{verbatim}
-    const double x = input.first_val();
-    push_dual_numbers<autodiff_order>(new_function(x));
-    
-    push_inputs(input.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dx);
-    if (autodiff_order >= 2) push_partials(d2f_dx2);
-    if (autodiff_order >= 3) push_partials(d3f_dx3);
-\end{verbatim}
-%
-before returning a new automatic differentiation variable pointing to the new
-node,
-%
-\begin{verbatim}
-    return var<autodiff_order>(next_body_idx_ - 1);
-\end{verbatim}
-
-If not all partial derivatives can be implemented for the new function then the
-higher-order implementations should throw an exception.  For example, we
-specify that we have only first-order partials and then throw exceptions for
-if second or third-order partials are requested,
-%
-\begin{verbatim}
-#ifndef new_funcion_hpp
-#define new_function_hpp
-
-#include <var/var.hpp>
-#include <autodiff/exceptions.hpp>
-
-namespace nomad {
-
-  inline double new_function(double x) { return ...; }
+int n = 100;
+Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
   
-  template <short autodiff_order>
-  inline var<autodiff_order> new_function(const var<autodiff_order>& input) {
-    
-    const short partials_order = 1;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-    
-    new var_body<autodiff_order, partials_order>(n_inputs);
+double f;
+Eigen::VectorXd grad(x.size());
+  
+example_functor<var1_wild> example;
+gradient(example, x, f, grad);
 
-    const double x = input.first_val();
-    push_dual_numbers<autodiff_order>(new_function(x));
-    
-    push_inputs(input.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dx);
-    if (autodiff_order >= 2) {
-      throw partial_fail_ex("Only first-order partials have "
-                            "been implemented for new_function");
-    }
-    if (autodiff_order >= 3) {
-      throw partial_fail_ex("Only first-order partials have "
-                            "been implemented for new_function");
-    }
-
-    return var<autodiff_order>(next_body_idx_ - 1);
-  }
-}
-#endif
+std::cout << grad.transpose() << std::endl;
 \end{verbatim}
-
-\subsection{Generic Binary Function}
-
-The same pattern holds if we include a binary function, only now we have
-to consider all three-possible combinations of double and automatic
-differentiation variable arguments,
-%
-\begin{verbatim}
-#ifndef new_binary_function_hpp
-#define new_binary_function_hpp
-
-#include <math.h>
-#include <var/var.hpp>
-
-namespace nomad {
-  
-  inline double new_binary_function(double x, double y) {
-    return ...;
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
-                                                 const var<autodiff_order>& v2) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 2;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-    
-    new var_body<autodiff_order, partials_order>(n_inputs);
-
-    double x = v1.first_val();
-    double y = v2.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v1.dual_numbers());
-    push_inputs(v2.dual_numbers());
-
-    if (autodiff_order >= 1) {
-      push_partials(df_dx);
-      push_partials(df_dy);
-    }
-    if (autodiff_order >= 2) {
-      push_partials(d2f_dx2);
-      push_partials(d2f_dxdy);
-      push_partials(d2f_dy2);
-    }
-    if (autodiff_order >= 3) {
-      push_partials(df3_dx3);
-      push_partials(df3_dx2dy);
-      push_partials(df3_dxdy2);
-      push_partials(df3_dy3);
-    }
-
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(double x,
-                                                 const var<autodiff_order>& v2) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-    
-    new var_body<autodiff_order, partials_order>(n_inputs);
-    
-    double y = v2.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v2.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dy);
-    if (autodiff_order >= 2) push_partials(df2_dy2);
-    if (autodiff_order >= 3) push_partials(df3_dy3);
-    
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-  
-  template <short autodiff_order>
-  inline var<autodiff_order> new_binary_function(const var<autodiff_order>& v1,
-                                                 double y) {
-    
-    const short partials_order = 3;
-    const unsigned int n_inputs = 1;
-    
-    next_inputs_delta = n_inputs;
-    next_partials_delta =
-      var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-    
-    new var_body<autodiff_order, partials_order>(n_inputs);
-    
-    double x = v1.first_val();
-    
-    push_dual_numbers<autodiff_order>(new_binary_function(x, y));
-    
-    push_inputs(v1.dual_numbers());
-    
-    if (autodiff_order >= 1) push_partials(df_dx);
-    if (autodiff_order >= 2) push_partials(d2f_dx2);
-    if (autodiff_order >= 3) push_partials(d3f_dx3);
-    
-    return var<autodiff_order>(next_body_idx_ - 1);
-    
-  }
-
-}
-#endif
-\end{verbatim}
-
-\subsection{Custom Node Types}
-
-As noted in Section \ref{sec:exp_graph_rep}, some functions may benefit
-from optimized propagation routines defined in custom \verb|var_body|
-implementations.  For example, \nomad defines special unary and binary
-function types with optimized propagation functions.  Using these the binary
-example above would become
-
-Defining new \verb|var_body| specializations is a substantial task and anyone
-interesting in introducing a new specialization should contact the Stan Development
-Team directly.
