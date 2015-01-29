@@ -125,7 +125,7 @@ namespace nomad {
       F<var<1U, false, true> > f1;
       try {
         tests::test_gradient(f1, x);
-      } catch(nomad_error& e) {
+      } catch (nomad_error) {
         SCOPED_TRACE("test_gradient");
         FAIL();
       }
@@ -133,7 +133,7 @@ namespace nomad {
       F<var<2U, false, true> > f2;
       try {
         tests::test_hessian(f2, x);
-      } catch(nomad_error& e) {
+      } catch (nomad_error) {
         SCOPED_TRACE("test_hessian");
         FAIL();
       }
@@ -141,7 +141,7 @@ namespace nomad {
       F<var<3U, false, true> > f3;
       try {
         tests::test_grad_hessian(f3, x);
-      } catch(nomad_error& e) {
+      } catch (nomad_error) {
         SCOPED_TRACE("test_grad_hessian");
         FAIL();
       }

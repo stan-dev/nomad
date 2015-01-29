@@ -37,7 +37,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(multiply_log(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("multiply_log");
     }
       
@@ -62,7 +62,7 @@ namespace nomad {
         push_partials<ValidateIO>(- y_inv * y_inv);
         push_partials<ValidateIO>(2 * x * y_inv * y_inv * y_inv);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("multiply_log");
     }
       
@@ -100,7 +100,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(x * y_inv);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(- x * y_inv * y_inv);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * x * y_inv * y_inv * y_inv);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("multiply_log");
     }
       
@@ -133,7 +133,7 @@ namespace nomad {
     
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(std::log(y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("multiply_log");
     }
       

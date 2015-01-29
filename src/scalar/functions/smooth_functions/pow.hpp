@@ -38,7 +38,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("pow");
     }
       
@@ -46,7 +46,7 @@ namespace nomad {
     push_inputs(v2.dual_numbers());
     
     double lx = std::log(x);
-    
+      
     try {
       if (AutodiffOrder >= 1) {
         push_partials<ValidateIO>(val * y / x);
@@ -63,7 +63,7 @@ namespace nomad {
         push_partials<ValidateIO>( lx * (2.0 + y * lx) * val / x );
         push_partials<ValidateIO>( lx * lx * lx * val );
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("pow");
     }
       
@@ -96,7 +96,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("pow");
     }
       
@@ -108,7 +108,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(val * lx);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(lx * lx * val);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(lx * lx * lx * val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("pow");
     }
       
@@ -141,19 +141,17 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("pow");
     }
       
     push_inputs(v1.dual_numbers());
     
-    double lx = std::log(x);
-    
     try {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(val * y / x);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>( y * (y - 1.0) * val / (x * x) );
       if (AutodiffOrder >= 3) push_partials<ValidateIO>((y - 2.0) * (y - 1.0) * y * val / (x  * x * x) );
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("pow");
     }
       

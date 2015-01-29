@@ -25,7 +25,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(t);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("tanh");
     }
       
@@ -38,7 +38,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(sech2);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(-2 * sech2 * t);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(-2 * sech2 * sech2 + 4 * sech2 * t * t);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("tanh");
     }
       

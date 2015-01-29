@@ -6,6 +6,10 @@
 
 namespace nomad {
 
+  double digamma(double x);
+  double trigamma(double x);
+  double quadrigamma(double x);
+  
   // Accuracy of these implementation is lacking
   // for small arguments with small_threshold < x << 1.
   

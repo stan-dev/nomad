@@ -29,7 +29,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("operator/=");
     }
       
@@ -80,7 +80,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(x * y_inv);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("operator/=");
     }
       

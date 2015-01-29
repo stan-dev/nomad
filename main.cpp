@@ -106,7 +106,7 @@ public:
 */
 
 inline double elapsed_secs(const clock_t& start) {
-  return (double)(clock() - start) / CLOCKS_PER_SEC;
+  return static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
 }
 
 void time_funnel() {
@@ -357,6 +357,7 @@ void time_dot() {
 */
 
 int main(int argc, const char * argv[]) {
+  (void)argc; (void)argv;
   
   /*
   Eigen::VectorXd x = Eigen::VectorXd::Ones(6);

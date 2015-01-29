@@ -33,7 +33,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("atan2");
     }
       
@@ -65,7 +65,7 @@ namespace nomad {
         push_partials<ValidateIO>(p2);
         push_partials<ValidateIO>(p1);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("atan2");
     }
 
@@ -91,7 +91,7 @@ namespace nomad {
     double x = v2.first_val();
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("atan2");
     }
       
@@ -103,7 +103,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(- y * d);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(2 * x * y * d * d);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(2 * y * (y * y - 3 * x * x) * d * d * d);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("atan2");
     }
       
@@ -130,7 +130,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(atan2(y, x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("atan2");
     }
       
@@ -142,7 +142,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(x * d);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(- 2 * x * y * d * d);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(- 2 * x * (x * x - 3 * y * y) * d * d * d);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("atan2");
     }
       

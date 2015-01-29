@@ -27,7 +27,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("cbrt");
     }
       
@@ -39,7 +39,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(val *= 1.0 * d2 / 3.0);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(val *= - 2.0 * d2 / 3.0);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(val *= - 5.0 * d2 / 3.0);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("cbrt");
     }
       

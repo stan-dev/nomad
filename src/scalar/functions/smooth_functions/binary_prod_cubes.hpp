@@ -32,7 +32,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(binary_prod_cubes(x, y));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("binary_prod_cubes");
     }
       
@@ -55,7 +55,7 @@ namespace nomad {
         push_partials<ValidateIO>(18 * x * x * y);
         push_partials<ValidateIO>(6 * x * x * x);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("binary_prod_cubes");
     }
       

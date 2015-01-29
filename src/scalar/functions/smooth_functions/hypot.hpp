@@ -43,7 +43,7 @@ namespace nomad {
         
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -78,7 +78,7 @@ namespace nomad {
         
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -106,7 +106,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("hypot");
     }
 
@@ -141,7 +141,7 @@ namespace nomad {
         double val = x * sqrt(1 + r * r);
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -166,7 +166,7 @@ namespace nomad {
         double val = y * sqrt(1 + r * r);
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -185,7 +185,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("hypot");
     }
       
@@ -220,7 +220,7 @@ namespace nomad {
         double val = x * sqrt(1 + r * r);
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -245,7 +245,7 @@ namespace nomad {
         double val = y * sqrt(1 + r * r);
         try {
           push_dual_numbers<AutodiffOrder, ValidateIO>(val);
-        } catch(nomad_error& e) {
+        } catch (nomad_error) {
           throw nomad_output_value_error("hypot");
         }
         
@@ -264,7 +264,7 @@ namespace nomad {
         }
         
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("hypot");
     }
       

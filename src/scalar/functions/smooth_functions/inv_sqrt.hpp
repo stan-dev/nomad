@@ -32,7 +32,7 @@ namespace nomad {
       
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(sqrtd);
-    } catch (nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("inv_sqrt");
     }
       
@@ -42,7 +42,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(-0.5 * d * sqrtd);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(0.75 * d * d * sqrtd);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>(-1.875 * d * d * d * sqrtd);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("inv_sqrt");
     }
       

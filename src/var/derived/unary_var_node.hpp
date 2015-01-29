@@ -42,6 +42,7 @@ namespace nomad {
     }
     
     inline static nomad_idx_t n_partials(nomad_idx_t n_inputs) {
+      (void)n_inputs;
       if (AutodiffOrder >= 1 && PartialsOrder >= 1) return 1;
       if (AutodiffOrder >= 2 && PartialsOrder >= 2) return 2;
       if (AutodiffOrder >= 3 && PartialsOrder >= 3) return 3;

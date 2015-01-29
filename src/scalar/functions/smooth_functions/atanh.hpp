@@ -29,7 +29,7 @@ namespace nomad {
     const double x = input.first_val();
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(std::atanh(x));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("atanh");
     }
       
@@ -41,7 +41,7 @@ namespace nomad {
       if (AutodiffOrder >= 1) push_partials<ValidateIO>(d1);
       if (AutodiffOrder >= 2) push_partials<ValidateIO>(2 * x * d1 * d1);
       if (AutodiffOrder >= 3) push_partials<ValidateIO>((2 + 6 * x * x) * d1 * d1 * d1);
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("atanh");
     }
       

@@ -34,7 +34,7 @@ namespace nomad {
     
     try {
       push_dual_numbers<AutodiffOrder, ValidateIO>(fma(x, y, z));
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_value_error("fma");
     }
       
@@ -57,7 +57,7 @@ namespace nomad {
         push_partials<ValidateIO>(0);
         push_partials<ValidateIO>(0);
       }
-    } catch(nomad_error& e) {
+    } catch (nomad_error) {
       throw nomad_output_partial_error("fma");
     }
       
