@@ -1,4 +1,4 @@
-\chapter{Nomad Reference Guide}
+\chapter{Nomad Reference Guide} \label{chap:reference_guide}
 
 \section{Linear Differential Operations} \label{sec:differential_operations}
 
@@ -25,7 +25,7 @@ Input & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbatio
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_gradient(const F& functional,
+  void finite_diff_gradient(const F& f,
                             const Eigen::VectorXd& x,
                             Eigen::VectorXd& g,
                             const double epsilon = 1e-6)
@@ -90,7 +90,7 @@ fonttitle=\bfseries,title=Directional Derivative]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{g} & Directional Derivative
@@ -100,7 +100,7 @@ Output & \texttt{double\&} & \texttt{g} & Directional Derivative
 
 \begin{verbatim}
   template <typename F>
-  void gradient_dot_vector(const F& functional,
+  void gradient_dot_vector(const F& f,
                            const Eigen::VectorXd& x,
                            const Eigen::VectorXd& v,
                            double& grad_dot_v)
@@ -113,7 +113,7 @@ fonttitle=\bfseries,title=Directional Derivative]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -124,7 +124,7 @@ Output & \texttt{double\&} & \texttt{g} & Directional Derivative
 
 \begin{verbatim}
   template <typename F>
-  void gradient_dot_vector(const F& functional,
+  void gradient_dot_vector(const F& f,
                            const Eigen::VectorXd& x,
                            const Eigen::VectorXd& v,
                            double& f,
@@ -138,7 +138,7 @@ fonttitle=\bfseries,title=Finite Difference Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian \\
 Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbation
@@ -148,7 +148,7 @@ Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbati
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_hessian(const F& functional,
+  void finite_diff_hessian(const F& f,
                            const Eigen::VectorXd& x,
                            Eigen::MatrixXd& H,
                            const double epsilon = 1e-6)
@@ -169,7 +169,7 @@ fonttitle=\bfseries,title=Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 \end{tabular}
@@ -178,7 +178,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 
 \begin{verbatim}
   template <typename F>
-  void hessian(const F& functional,
+  void hessian(const F& f,
                const Eigen::VectorXd& x,
                Eigen::MatrixXd& H)
 \end{verbatim}
@@ -190,7 +190,7 @@ fonttitle=\bfseries,title=Hessian]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
 Output & \texttt{double\&} & \texttt{g} & Gradient \\
@@ -201,7 +201,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{H} & Hessian
 
 \begin{verbatim}
   template <typename F>
-  void hessian(const F& functional,
+  void hessian(const F& f,
                const Eigen::VectorXd& x,
                double& f,
                Eigen::VectorXd& g,
@@ -215,7 +215,7 @@ fonttitle=\bfseries,title=Hessian-Vector Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
@@ -225,7 +225,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
 
 \begin{verbatim}
   template <typename F>
-  void hessian_dot_vector(const F& functional,
+  void hessian_dot_vector(const F& f,
                           const Eigen::VectorXd& x,
                           const Eigen::VectorXd& v,
                           Eigen::VectorXd& hessian_dot_v)
@@ -238,7 +238,7 @@ fonttitle=\bfseries,title=Hessian-Vector Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{v} & Input Direction \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -250,7 +250,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{H} & Hessian-Vector Product
 
 \begin{verbatim}
   template <typename F>
-  void hessian_dot_vector(const F& functional,
+  void hessian_dot_vector(const F& f,
                           const Eigen::VectorXd& x,
                           const Eigen::VectorXd& v,
                           double& f,
@@ -265,7 +265,7 @@ fonttitle=\bfseries,title=Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
@@ -275,7 +275,7 @@ Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
 
 \begin{verbatim}
   template <typename F>
-  void trace_matrix_times_hessian(const F& functional,
+  void trace_matrix_times_hessian(const F& f,
                                   const Eigen::VectorXd& x,
                                   const Eigen::MatrixXd& M,
                                   double& trace_m_times_h)
@@ -288,7 +288,7 @@ fonttitle=\bfseries,title=Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -300,7 +300,7 @@ Output & \texttt{double\&} & \texttt{H} & Trace of Matrix-Hessian Product
 
 \begin{verbatim}
   template <typename F>
-  void trace_matrix_times_hessian(const F& functional,
+  void trace_matrix_times_hessian(const F& f,
                                   const Eigen::VectorXd& x,
                                   const Eigen::MatrixXd& M,
                                   double& f,
@@ -315,7 +315,7 @@ fonttitle=\bfseries,title=Finite Difference Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient \\
 Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbation
@@ -325,7 +325,7 @@ Output & \texttt{const double} & \texttt{epsilon} & Finite Difference Perturbati
 
 \begin{verbatim}
   template <typename F>
-  void finite_diff_grad_hessian(const F& functional,
+  void finite_diff_grad_hessian(const F& f,
                                 const Eigen::VectorXd& x,
                                 Eigen::MatrixXd& grad_H,
                                 const double epsilon = 1e-6)
@@ -352,7 +352,7 @@ fonttitle=\bfseries,title=Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient \\
 \end{tabular}
@@ -361,7 +361,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient 
 
 \begin{verbatim}
   template <typename F>
-  void grad_hessian(const F& functional,
+  void grad_hessian(const F& f,
                     const Eigen::VectorXd& x,
                     Eigen::MatrixXd& grad_H)
 \end{verbatim}
@@ -379,7 +379,7 @@ fonttitle=\bfseries,title=Hessian Gradient]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
 Output & \texttt{double\&} & \texttt{g} & Gradient \\
@@ -391,7 +391,7 @@ Output & \texttt{const Eigen::MatrixXd\&} & \texttt{grad\_H} & Hessian Gradient 
 
 \begin{verbatim}
   template <typename F>
-  void grad_hessian(const F& functional,
+  void grad_hessian(const F& f,
                     const Eigen::VectorXd& x,
                     double& f,
                     Eigen::VectorXd& g,
@@ -412,7 +412,7 @@ fonttitle=\bfseries,title=Gradient of Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h} 
@@ -423,7 +423,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h}
 
 \begin{verbatim}
   template <typename F>
-  void grad_trace_matrix_times_hessian(const F& functional,
+  void grad_trace_matrix_times_hessian(const F& f,
                                        const Eigen::VectorXd& x,
                                        const Eigen::MatrixXd& M,
                                        Eigen::VectorXd& grad_trace_m_times_h)
@@ -436,7 +436,7 @@ fonttitle=\bfseries,title=Gradient of Trace of Matrix-Hessian Product]
 
 \begin{tabular}{llll}
 \textit{I/O} & \textit{Type} & \textit{Parameter} & \textit{Description} \\
-Input & \texttt{const F\&} & \texttt{functional} & Functor Implementation \\
+Input & \texttt{const F\&} & \texttt{f} & Functor Implementation \\
 Input & \texttt{const Eigen::VectorXd\&} & \texttt{x} & Input Values \\
 Input & \texttt{const Eigen::MatrixXd\&} & \texttt{M} & Input Matrix \\
 Output & \texttt{double\&} & \texttt{f} & Function Value \\
@@ -450,7 +450,7 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h}
 
 \begin{verbatim}
   template <typename F>
-  void grad_trace_matrix_times_hessian(const F& functional,
+  void grad_trace_matrix_times_hessian(const F& f,
                                        const Eigen::VectorXd& x,
                                        const Eigen::MatrixXd& M,
                                        double& f,
@@ -463,676 +463,14 @@ Output & \texttt{const Eigen::VectorXd\&} & \texttt{grad\_trace\_m\_times\_h}
 
 \section{Implemented Operators and Functions} \label{sec:operators_and_functions}
 
-\subsection{Operators}
+\subsection{Smooth Functions}
+\input{4-reference-smooth_functions.tex}
 
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Addition Assignment]
+\subsection{Non-Smooth Functions}
+\input{4-reference-nonsmooth_functions.tex}
 
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator+=(var<autodiff_order>& v1,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
+\subsection{Smooth Operators}
+\input{4-reference-smooth_operators.tex}
 
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator+=(var<autodiff_order>& v1,
-                                         double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Addition]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator+(const var<autodiff_order>& v1,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator+(double x,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator+(const var<autodiff_order>& v1,
-                                       double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Assignment]
-
-\begin{verbatim}
-    template <short autodiff_order>
-    var<autodiff_order>& operator=(const var<autodiff_order>& v)
-\end{verbatim}
-
-\begin{verbatim}
-    template <short autodiff_order>
-    var<autodiff_order>& operator=(double val)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Division Assignment]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator/=(var<autodiff_order>& v1,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator/=(var<autodiff_order>& v1,
-                                         double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Division]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator/(const var<autodiff_order>& v1,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator/(double x,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator/(const var<autodiff_order>& v1,
-                                       double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Multiplication]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator*=(var<autodiff_order>& v1,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator*=(var<autodiff_order>& v1,
-                                         double v2)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Multiplication]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator*(const var<autodiff_order>& v1,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator*(double v1,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator*(const var<autodiff_order>& v1,
-                                       double v2)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Subtraction Assignment]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator-=(var<autodiff_order>& v1,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator-=(var<autodiff_order>& v1,
-                                         double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Subtraction]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator-(const var<autodiff_order>& v1,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator-(double x,
-                                       const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  inline var<autodiff_order> operator-(const var<autodiff_order>& v1,
-                                       double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Unary Decrement]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator--(var<autodiff_order>& v1)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator--(const var<autodiff_order>& v1, int /* dummy */)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Unary Increment]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order>& operator++(var<autodiff_order>& v1)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator++(const var<autodiff_order>& v1, int /* dummy */)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Unary Minus]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator-(const var<autodiff_order>& v1)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Operator Unary Plus]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> operator+(const var<autodiff_order>& v1)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\subsection{Trigonometric and Hyperbolic Functions}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Cosine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> acos(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Hyperbolic Cosine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> acosh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Sine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> asin(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Hyperbolic Sine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> asinh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Tangent]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> atan(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Tangent (Two Arguments)]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> atan2(const var<autodiff_order>& v1,
-                                   const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> atan2(double y,
-                                   const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> atan2(const var<autodiff_order>& v1,
-                                   double x)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Arc Hyperbolic Tangent]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> atanh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Cosine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> cos(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Hyperbolic Cosine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> cosh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Sine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> sin(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Hyperbolic Sine]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> sinh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Tangent]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> tan(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Hyperbolic Tangent]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> tanh(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\subsection{Exponential, Logarithmic, and Logistic Functions}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Exponential]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> exp(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Binary Exponential]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> exp2(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Exponential Minus One]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> expm1(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Inverse Complementary Log-Log Link Function]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> inv_cloglog(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Inverse Logit or Logistic Function]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> inv_logit(const var<autodiff_order>& input) 
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Logarithm of the Difference of Two Natural Exponentials]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_diff_exp(const var<autodiff_order>& v1,
-                                          const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_diff_exp(double x,
-                                          const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_diff_exp(const var<autodiff_order>& v1,
-                                          double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Logarithm of the Sum of Two Natural Exponentials]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_sum_exp(const var<autodiff_order>& v1,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_sum_exp(double x,
-                                         const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log_sum_exp(const var<autodiff_order>& v1,
-                                         double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Logarithm]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Logarithm Plus One
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log1p(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Natural Logarithm of One Plus Natural Exponential
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log1p_exp(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Binary Logarithm]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log2(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Decimal Logarithm]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> log10(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Input Natural Logarithm Product]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> multiply_log(const var<autodiff_order>& v1,
-                                          const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> multiply_log(double x,
-                                          const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> multiply_log(const var<autodiff_order>& v1,
-                                          double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\subsection{Power Functions}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Cubic Root]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> cbrt(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Hypotenuse]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> hypot(const var<autodiff_order>& v1,
-                                   const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> hypot(double x,
-                                   const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> hypot(const var<autodiff_order>& v1,
-                                   double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Inverse]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> inv(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Power]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> pow(const var<autodiff_order>& v1,
-                                 const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> pow(double x,
-                                 const var<autodiff_order>& v2)
-\end{verbatim}
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> pow(const var<autodiff_order>& v1,
-                                 double y)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Square Root]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> inv_sqrt(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Square]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> inv_square(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\subsection{Error and Gamma Functions}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Error Function]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> erf(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Complimentary Error Function]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> erfc(const var<autodiff_order>& input) 
-\end{verbatim}
-
-\end{tcolorbox}
-
-\subsection{Other Functions}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Fast Approximation to Phi]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> Phi_approx(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
-fonttitle=\bfseries,title=Phi]
-
-\begin{verbatim}
-  template <short autodiff_order>
-  inline var<autodiff_order> Phi(const var<autodiff_order>& input)
-\end{verbatim}
-
-\end{tcolorbox}
+\subsection{Non-Smooth Functions}
+\input{4-reference-nonsmooth_operators.tex}

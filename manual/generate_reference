@@ -1,0 +1,260 @@
+#!/bin/bash
+
+############################################################
+###                   Smooth Functions                   ###
+############################################################
+
+output="4-reference-smooth_functions.tex"
+rm -f $output
+
+for file in `find ../src/scalar/functions/smooth_functions -type f -name "*.hpp"`
+do
+
+  name=`echo $file | sed -e 's,.*/\(.*\).hpp,\1,' -e 's,_, ,g'`
+
+  [ "$name" == "polygamma" ] && continue
+
+  format_name=""
+  for word in ${name[@]}
+  do
+    format_name="${format_name} "`echo ${word:0:1} | tr  '[a-z]' '[A-Z]'`${word:1}
+  done
+
+  echo "\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt," >> $output
+  echo "fonttitle=\bfseries,title=${format_name}]" >> $output
+  echo "" >> $output
+
+  # Double signature
+  begin_double=`grep -nE '^  inline double|^  double' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_double[@]} -eq 1 ] && [ "${begin_double[0]}" != "" ]; then
+
+    end_double=`awk 'NR >= '$begin_double' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end_double=begin_double+end_double-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '${begin_double[0]}' && NR <= '${end_double[0]}' {print $0}' $file | \
+      sed -e 's,^[ ]*,,' -e 's,inline ,,' -e 's, {.*$,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+
+  fi
+
+  # Var signatures
+  begin_var=`grep -n 'template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_var[@]} -eq 0 ]; then
+    continue
+  fi
+
+  for begin in ${begin_var[@]}
+  do
+    end=`awk 'NR >= '$begin' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end=begin+end-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '$begin' && NR <= '$end' {print $0}' $file | \
+      sed -e 's,^  ,,' -e 's,inline ,,' -e 's, {,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+  done
+
+  echo '\end{tcolorbox}' >> $output
+  echo "" >> $output
+
+done
+
+############################################################
+###                 Non-Smooth Functions                 ###
+############################################################
+
+output="4-reference-nonsmooth_functions.tex"
+rm -f $output
+
+for file in `find ../src/scalar/functions/nonsmooth_functions -type f -name "*.hpp"`
+do
+
+  name=`echo $file | sed -e 's,.*/\(.*\).hpp,\1,' -e 's,_, ,g'`
+
+  format_name=""
+  for word in ${name[@]}
+  do
+    format_name="${format_name} "`echo ${word:0:1} | tr  '[a-z]' '[A-Z]'`${word:1}
+  done
+
+  echo "\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt," >> $output
+  echo "fonttitle=\bfseries,title=${format_name}]" >> $output
+  echo "" >> $output
+
+  # Double signature
+  begin_double=`grep -nE '^  inline double|^  double' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_double[@]} -eq 1 ] && [ "${begin_double[0]}" != "" ]; then
+
+    end_double=`awk 'NR >= '$begin_double' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end_double=begin_double+end_double-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '${begin_double[0]}' && NR <= '${end_double[0]}' {print $0}' $file | \
+      sed -e 's,^[ ]*,,' -e 's,inline ,,' -e 's, {.*$,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+
+  fi
+
+  # Var signatures
+  begin_var=`grep -n 'template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_var[@]} -eq 0 ]; then
+    continue
+  fi
+
+  for begin in ${begin_var[@]}
+  do
+    end=`awk 'NR >= '$begin' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end=begin+end-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '$begin' && NR <= '$end' {print $0}' $file | \
+      sed -e 's,^  ,,' -e 's,inline ,,' -e 's, {,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+  done
+
+  echo '\end{tcolorbox}' >> $output
+  echo "" >> $output
+
+done
+
+############################################################
+###                   Smooth Operators                   ###
+############################################################
+
+output="4-reference-smooth_operators.tex"
+rm -f $output
+
+for file in `find ../src/scalar/operators/smooth_operators -type f -name "*.hpp"`
+do
+
+  name=`echo $file | sed -e 's,.*/\(.*\).hpp,\1,' -e 's,_, ,g'`
+
+  format_name=""
+  for word in ${name[@]}
+  do
+    format_name="${format_name} "`echo ${word:0:1} | tr  '[a-z]' '[A-Z]'`${word:1}
+  done
+
+  echo "\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt," >> $output
+  echo "fonttitle=\bfseries,title=${format_name}]" >> $output
+  echo "" >> $output
+
+  # Double signature
+  begin_double=`grep -nE '^  inline double|^  double' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_double[@]} -eq 1 ] && [ "${begin_double[0]}" != "" ]; then
+
+    end_double=`awk 'NR >= '$begin_double' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end_double=begin_double+end_double-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '${begin_double[0]}' && NR <= '${end_double[0]}' {print $0}' $file | \
+      sed -e 's,^[ ]*,,' -e 's,inline ,,' -e 's, {.*$,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+
+  fi
+
+  # Var signatures
+  begin_var=`grep -n 'template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_var[@]} -eq 0 ]; then
+    continue
+  fi
+
+  for begin in ${begin_var[@]}
+  do
+    end=`awk 'NR >= '$begin' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end=begin+end-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '$begin' && NR <= '$end' {print $0}' $file | \
+      sed -e 's,^  ,,' -e 's,inline ,,' -e 's, {,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+  done
+
+  echo '\end{tcolorbox}' >> $output
+  echo "" >> $output
+
+done
+
+############################################################
+###                 Non-Smooth Operators                 ###
+############################################################
+
+output="4-reference-nonsmooth_operators.tex"
+rm -f $output
+
+for file in `find ../src/scalar/operators/nonsmooth_operators -type f -name "*.hpp"`
+do
+
+  name=`echo $file | sed -e 's,.*/\(.*\).hpp,\1,' -e 's,_, ,g'`
+
+  format_name=""
+  for word in ${name[@]}
+  do
+  format_name="${format_name} "`echo ${word:0:1} | tr  '[a-z]' '[A-Z]'`${word:1}
+  done
+
+  echo "\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt," >> $output
+  echo "fonttitle=\bfseries,title=${format_name}]" >> $output
+  echo "" >> $output
+
+  # Double signature
+  begin_double=`grep -nE '^  inline double|^  double' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_double[@]} -eq 1 ] && [ "${begin_double[0]}" != "" ]; then
+
+    end_double=`awk 'NR >= '$begin_double' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end_double=begin_double+end_double-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '${begin_double[0]}' && NR <= '${end_double[0]}' {print $0}' $file | \
+      sed -e 's,^[ ]*,,' -e 's,inline ,,' -e 's, {.*$,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+
+  fi
+
+  # Var signatures
+  begin_var=`grep -n 'template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>' $file | sed 's,:, ,' | awk '{print $1}'`
+
+  if [ ${#begin_var[@]} -eq 0 ]; then
+    continue
+  fi
+
+  for begin in ${begin_var[@]}
+  do
+    end=`awk 'NR >= '$begin' {print $0}' $file | grep -n { | head -1 | sed 's,:, ,' | awk '{print $1}'`
+    let end=begin+end-1
+
+    echo '\begin{verbatim}' >> $output
+    awk 'NR >= '$begin' && NR <= '$end' {print $0}' $file | \
+      sed -e 's,^  ,,' -e 's,inline ,,' -e 's, {,,' >> $output
+    echo "" >> $output
+    echo '\end{verbatim}' >> $output
+    echo "" >> $output
+  done
+
+  echo '\end{tcolorbox}' >> $output
+  echo "" >> $output
+
+done
+

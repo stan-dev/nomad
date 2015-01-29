@@ -1,0 +1,262 @@
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Addition]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator+(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator+(double x,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator+(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Addition Assignment]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator+=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator+=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Division]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator/(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator/(double x,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator/(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Division Assignment]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator/=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator/=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Multiplication]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator*(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator*(double v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator*(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            double v2)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Multiplication Assignment]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator*=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator*=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double v2)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Subtraction]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator-(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator-(double x,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator-(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Subtraction Assignment]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator-=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator-=(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Unary Decrement]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator--(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator--(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1, int /* dummy */)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Unary Increment]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>&
+  operator++(var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator++(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1, int /* dummy */)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Unary Minus]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator-(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Unary Plus]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator+(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1)
+
+\end{verbatim}
+
+\end{tcolorbox}
+

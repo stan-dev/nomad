@@ -1,159 +1,220 @@
 \chapter{The Theory of \\ Automatic Differentiation}
 
-Automatic differentiation is a tool for automating the evaluation of linear differential
-operators on complex functions.  In particular, automatic differentiation techniques
-utilize \textit{dual numbers} to factor analytic manipulations, i.e. the computation of
-partial derivatives, from the algebraic manipulations that can be programmatically
-automated.
+Automatic differentiation is a powerful computation tool for the exact, at least up to 
+arithmetic precision, evaluation of linear differential operators on the elaborate, 
+composite functions common to practical applications.  In particular, automatic 
+differentiation techniques factor a linear differential operator into analytic calculations, 
+which can be explicitly implemented, from the algebraic manipulations that can be 
+programmatically automated.
 
-In this chapter we review the theory behind linear differential operations, dual numbers,
-and automatic differentiation beginning with first-order evaluations and then generalizing 
-to higher-order manipulations.
+In this chapter we review the theory behind linear differential operators, dual numbers,
+and, ultimately, automatic differentiation.  We begin by considering differential operators
+in a formal setting, in particular the spaces on which they act, before introducing dual
+numbers and showing how they compliment these operators.  Last we integrate both
+perspectives into automatic differentiation and its implementation.
 
-Firstly, a quick note on notation.  Here frakturs refers to dual units, roman letters are 
-reserved for real numbers, and greek letters are used for dual numbers.  We consider 
-only maps between Euclidean spaces, $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ 
-for some dimensions $N$ and $M$, with subscripts denoting the coordinates of a point
-and bold face denoting the point itself. For example, a many-to-one function,
+\section{Linear Differential Operators}
+
+When considering a one-dimensional function, $f : \mathbb{R} \rightarrow \mathbb{R}$, 
+a common notion is that the derivative defines a ``best'' linear approximation
+to the function in a neighborhood around any point, $x_{0} \in \mathbb{R}$,
 %
 \begin{equation*}
-f : \mathbb{R}^{N} \rightarrow \mathbb{R},
+f \! \left( x \right) - f \! \left( x_{0} \right)
+\approx \frac{ \mathrm{d} f }{ \mathrm{d} x } \! \left( x_{0} \right) \left( x - x_{0} \right).
 \end{equation*}
 %
-is written as
+A more revealing interpretation, however, arises when we consider
+$\delta x = x - x_{0}$ and $\delta f = f \! \left( x \right) - f \! \left( x_{0} \right)$ as
+perturbations, in which case the derivative is just a linear map that propagates
+an input perturbation into an output perturbation,
 %
 \begin{equation*}
-f \! \left( x_{1}, \ldots, x_{N} \right) \equiv f \! \left( \mathbf{x} \right),
-\end{equation*} 
-%
-while the components of a many-to-many function,
+\delta f = \frac{ \mathrm{d} f }{ \mathrm{d} x } \! \left( x_{0} \right) \delta x.
+\end{equation*}
+
+Linear differential operators formalize this intuition of propagating perturbations
+through functions.  Any formal treatment, however, first requires a much more
+careful definition of perturbations, especially for multivariate functions.  In this
+section we review the necessary theory of first-order linear differential operators
+and then briefly discuss the generalization to higher-order operations.
+
+\subsection{First-Order Linear Differential Operators}
+
+First-order linear differential operators generalize the one-dimensional construction
+above.  The most significant complication is that, in general, there are actually two 
+kinds of first-order perturbations: \textit{tangents} and \textit{sensitivities}.
+
+\subsubsection{Tangents}
+
+A defining property of perturbations is that they can be added together and scaled,
+in other words they form a vector space.  Given the real space $\mathbb{R}^{N}$,
+the $N$-dimensional vector space of perturbations at every point, $x \in \mathbb{R}^{N}$, 
+is called the \textit{tangent space} and denoted $T_{x} \mathbb{R}^{N}$.  The notation
+comes from interpreting first-order perturbations as tangent vectors of curves
+passing through $x$.
+
+Consequently, given a smooth function $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$
+a first-order linear differential operator is a linear map from the tangent space of
+the input to the tangent space of the output,
 %
 \begin{equation*}
-f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M},
+D : T_{x} \mathbb{R}^{N} \rightarrow T_{ f ( x ) } \mathbb{R}^{M}.
 \end{equation*}
 %
-are written as
+Taking the standard bases in both tangent spaces, we can identify any tangent,
+$\delta x \in T_{x} \mathbb{R}^{N}$, by its components, $\delta x_{n}$.  In this case
+the operator $D$ is equivalent to an $m \times n$ matrix,
 %
 \begin{equation*}
-f_{m} \! \left( x_{1}, \ldots, x_{N} \right) \equiv f_{m} \! \left( \mathbf{x} \right), \, m \in 1, \ldots, M.
-\end{equation*} 
+\delta f_{m} = \sum_{n = 1}^{N} D_{mn} \, \delta x_{n} \in T_{f(x)} \mathbb{R}^{M}.
+\end{equation*}
 
-\section{Linear Differential Operations}
-
-Intuitively, linear differential operations quantify the sensitivity of a function, 
-$f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$, to the perturbation of its inputs.  
-A first-order linear differential operator, for example, maps a function to its \textit{Jacobian},
+One particularly important first-order linear differential operator is the \textit{pushforward}
+or \textit{tangent map} canonically defined for any function,
 %
 \begin{equation*}
-J_{ij} \equiv \frac{ \partial f_{i} }{ \partial x_{j} },
+f_{*} : T_{x} \mathbb{R}^{N} \rightarrow T_{ f ( x ) } \mathbb{R}^{M}.
 \end{equation*}
 %
-which then maps a \textit{first-order perturbation} of the inputs, $\delta \mathbf{x}$, 
-to a first-order perturbation of the outputs,
+In components the pushforward is given exactly by the Jacobian matrix of partial derivatives,
+%
+\begin{equation*}
+\left( f_{*} \right)_{mn} = \frac{ \partial f_{m} }{ \partial x_{n} }.
+\end{equation*}
+
+Pushforwards behave well under function composition.  Given two functions,
+$f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{L}$ and
+$g : \mathbb{R}^{L} \rightarrow \mathbb{R}^{M}$, the pushforward of their compositions
+is simply
+%
+\begin{equation*}
+\left( g \circ f \right)_{*} = g_{*} \cdot f_{*},
+\end{equation*}
+%
+or, in components,
 %
 \begin{align*}
-\delta f_{m} 
-&=
-\sum_{n= 1}^{N} J_{mn} \delta x_{n}
+\left( \left( g \circ f \right)_{*} \right)_{mn} &= 
+\sum_{l = 1}^{L} \left( g_{*} \right)_{ml} \left( f_{*} \right)_{ln}
 \\
-&= 
-\sum_{n= 1}^{N} \frac{ \partial f_{m} }{ \partial x_{n} } \delta x_{n}, \, m \in 1, \ldots, M.
-\end{align*} 
-%
-Alternatively we can use the \textit{adjoint Jacobian} to map \textit{first-order sensitivities}
-of the outputs into first-order sensitivities of the inputs,
-%
-\begin{align*}
-\mathrm{d} x_{n} 
-&= 
-\sum_{m = 1}^{M} J^{T}_{nm} \mathrm{d} f_{m}
-\\
-&=
-\sum_{m = 1}^{M} J_{mn} \mathrm{d} f_{m}
-\\
-&=
-\sum_{m = 1}^{M} \frac{ \partial f_{m} }{ \partial x_{n} } \mathrm{d} f_{m}, \, n \in 1, \ldots, N.
+\frac{ \partial g_{m} }{ \partial x_{n} } &= 
+\sum_{l = 1}^{L} \frac{ \partial g_{m} }{ \partial f_{l} } \cdot \frac{ \partial f_{l} }{ \partial x_{n} },
 \end{align*}
+%
+which is just the chain rule.  Because of this behavior, the pushforward of a
+composite function is straightforward computationally, provided that the pushforwards
+of each component function are known.  In particular, using the standard basis the
+composition pushforward is given simply by a succession of vector-matrix products.
 
-At second-order we have to consider not just second-order perturbations but also the 
-contributions arising from the interaction of first-order perturbations.  The resulting 
-maps become substantially more cumbersome, such as
+\subsubsection{Sensitivities}
+
+An immediate consequence of this more formal perspective is the introduction of a second
+kind of first-order perturbation.  The space of linear operators acting on tangents,
 %
 \begin{equation*}
+\alpha : T_{x} \mathbb{R}^{N} \rightarrow \mathbb{R},
+\end{equation*}
+%
+is itself a vector space, known as the \textit{cotangent space} and denoted 
+$T^{*}_{x} \mathbb{R}^{N}$.  Composing these maps with a first-order linear differential 
+operator assigns a value to each tangent,
+%
+\begin{equation*}
+\alpha \circ D : T_{x} \mathbb{R}^{N} \rightarrow \mathbb{R},
+\end{equation*}
+%
+in some sense quantifying how sensitive the underlying function is to a given 
+perturbation.  Consequently elements of the cotangent space are often known as
+\textit{sensitivities} and provide dual perturbation to the tangents.
+
+Any first-order linear differential operator,
+$D : T_{x} \mathbb{R}^{N} \rightarrow T_{ f ( x ) } \mathbb{R}^{M}$, acting on
+the tangent spaces canonically defines an \textit{adjoint operator} that acts on the 
+cotangent spaces,
+%
+\begin{equation*}
+D^{*} : T^{*}_{f (x) } \mathbb{R}^{M} \rightarrow T^{*}_{x} \mathbb{R}^{N}.
+\end{equation*}
+%
+The matrix representation of the adjoint operator is, perhaps unsurprisingly, 
+simply the adjoint of the matrix representation of the original operator,
+%
+\begin{equation*}
+\mathrm{d} x_{n} = \sum_{m = 1}^{M} D_{nm} \mathrm{d} f_{m},
+\end{equation*}
+%
+where $\mathrm{d} x \in T^{*}_{x} \mathbb{R}^{N}$ and
+$\mathrm{d} f \in T^{*}_{x} \mathbb{R}^{M}$.
+
+The adjoint of the pushforward is known as the \textit{pullback},
+%
+\begin{equation*}
+f^{*} : T^{*}_{f (x) } \mathbb{R}^{M} \rightarrow T^{*}_{x} \mathbb{R}^{N}.
+\end{equation*}
+%
+Under the composition,
+%
+\begin{equation*}
+\left( g \circ f \right)^{*} = f^{*} \cdot g^{*}
+\end{equation*}
+%
+or, in components,
+%
+\begin{equation*}
+\left( \left( g \circ f \right)^{*} \right)_{mn} = 
+\sum_{l = 1}^{L} \left( g^{*} \right)_{ml} \left( f^{*} \right)_{ln}.
+\end{equation*}
+%
+Computing the input sensitivities corresponding to the output sensitivities then reduces
+to vector-matrix products moving backwards, against the flow of the function evaluation.
+
+\subsection{Higher-Order Linear Differential Operators}
+
+Unfortunately, a theory of higher-order perturbations, and the corresponding
+linear differential operators, is substantially more complicated, requiring an elegant but
+abstract construction known as \textit{jet spaces} to generalize the tangent space.  
+For example, a second-order linear differential operator does simply map second-order 
+tangents to second-order tangents but also requires \textit{two} first-order tangents,
+%
+ \begin{equation*}
 \delta^{2} f_{m} 
 = \sum_{n = 1}^{N} \frac{ \partial f_{m} }{ \partial x_{n} } \delta^{2} x_{n} 
 + \sum_{n = 1}^{N} \sum_{n' = 1}^{N} 
 \frac{ \partial^{2} f_{m} }{ \partial x_{n} \partial x_{n'} } 
 \delta x_{n} \delta x_{n'}.
 \end{equation*}
-
-In practice these operations are incredibly useful because they provide a means of
-constructing differential objects, such as direction derivatives, gradients, and Hessians, 
-that are ubiquitous in many fields.  For instance, given a many-to-one function,
-$f : \mathbb{R}^{N} \rightarrow \mathbb{R}$, the propagation of first-order perturbations
-gives a directional derivative,
 %
-\begin{equation*}
-\delta f = \sum_{n = 1}^{N} \frac{ \partial f }{ \partial x_{n} } \delta x_{n},
-\end{equation*}
-%
-while the adjoint mapping of first-order sensitivities yields the components of the gradient,
-%
-\begin{equation*}
-\mathrm{d} x_{i} = \frac{ \partial f }{ \partial x_{i} } \mathrm{d} f.
-\end{equation*}
+Moreover, adjoint operators do not immediately generalize -- at higher-orders adjoint
+maps require the interaction of tangents and sensitivities.
 
-Although conceptually straightforward, the computation and propagation of perturbations and 
-sensitivities for complex, composite functions is an arduous and error-prone undertaking, especially
-when we consider higher-order operations.  Fortunately, dual numbers implicitly incorporate these 
-manipulations and allows for their automation.
-
-\begin{tcolorbox}[colback=gray90,colframe=gray90, coltitle=black,
-title=\textbf{Geometric Interpretation of Linear Differential Operations}]
-
-In the previous discussion the difference between perturbations and sensitivities, and 
-consequently Jacobians and their adjoints, was subtle, and this can often be
-confusing to those unfamiliar with the automatic differentiation literature.  Once we
-generalize beyond Euclidean spaces the differences become much more apparent.
-
-\parindent=15pt
-
-Linear differential operations naturally arise on smooth manifolds,
-in particular let $\mathcal{M}$ and $\mathcal{N}$ be smooth manifolds with 
-$f : \mathcal{M} \rightarrow \mathcal{N}$ a smooth function between them.  Geometrically,
-first-order perturbations are elements of the tangent bundle, $T \mathcal{M}$, and the 
-pushforward of $f$, $ \left( \mathrm{d} f \right)_{*} : T\mathcal{M} \rightarrow T \mathcal{N}$ 
-propagates them to perturbations on $T \mathcal{N}$.  Conversely, first-order sensitivities are
-elements of the cotangent bundle, $T^{*} \mathcal{N}$, and the adjoint map that propagates
-them to input sensitivities is given by the pull back,
-$ \left( \mathrm{d} f \right)^{*} : T^{*} \mathcal{N} \rightarrow T^{*} \mathcal{N}$.
-
-In the special case of a Euclidean space, the manifold, its tangent spaces, and its cotangent
-spaces are naturally identified by the canonical metric,
-%
-\begin{equation*}
-\mathcal{M} \cong T \mathcal{M} \cong T^{*} \mathcal{M},
-\end{equation*}
-%
-which explains why the objects appear largely interchangeable.
-
-\end{tcolorbox}
+Fortunately we do not have to consider these higher-order jet spaces directly
+because the introduction of \textit{dual numbers} provides an alternative means
+of computing how higher-order perturbations propagate across a function.
 
 \section{Dual Numbers}
 
-Dual numbers are an extension of the real numbers, $\mathbb{R}$, given by the
+Dual numbers are a generalization of real numbers that naturally unify the
+action of a function, its pushforward, and, with some care, its pullback;
+consequently they are the ideal basis for implementing automatic differentiation. 
+In this section we derive first-order dual numbers and then consider the construction 
+of higher-order dual numbers and higher-order linear differential operators.
+
+\subsection{First-Order Dual Numbers}
+
+Dual numbers extend the real numbers, $\mathbb{R}$, with the
 addition of a new element, $\mathfrak{a}$, which is nilpotent, $\mathfrak{a}^{2} = 0$,
 and denoted a \textit{dual unit}.
 
 This extended space of dual numbers forms a two-dimensional associative algebra 
-over the reals.  In other words, the addition of the dual unit generates a two-dimensional
+over $\mathbb{R}$.  In other words, the addition of the dual unit generates a two-dimensional
 space, $\mathbb{D}$, comprised of elements,
 %
 \begin{equation*}
 \xi = x + \mathfrak{a} \, \delta x; \, \xi \in \mathbb{D}, \, x, \delta x \in \mathbb{R},
 \end{equation*}
 %
-that are naturally equipped with addition and multiplication operations,
+that are naturally equipped with associative addition and multiplication operations,
 %
 \begin{align*}
 \xi_{1} + \xi_{2} 
@@ -178,15 +239,10 @@ x_{1} x_{2} + \left( x_{1} \delta x_{2}
 &= 
 x_{1} x_{2} + \left( x_{1} \delta x_{2} + \delta x_{1} x_{2} \right) \mathfrak{a}.
 \end{align*}  
-%
-Because the dual unit is nilpotent, we cannot define an inverse to multiplication.  
-Mathematically this means that the dual numbers form only a local ring; compare this to 
-the complex numbers on which we can define division and whose associative algebra is a field.
 
-Dual numbers have many uses in mathematics and physics, but here we will focus on their
-relationship to functions.  Any smooth function $f : \mathbb{R} \rightarrow \mathbb{R}$ 
-induces a function on the dual numbers, $f : \mathbb{D} \rightarrow \mathbb{D}$, 
-via a Taylor series around any purely real point, $\xi_{0} = x_{0} + \mathfrak{a} \, 0$,
+Any smooth function $f : \mathbb{R} \rightarrow \mathbb{R}$ induces a function on 
+dual numbers, $f : \mathbb{D} \rightarrow \mathbb{D}$, via a Taylor series around any 
+purely real point, $\xi_{0} = x_{0} + \mathfrak{a} \, 0$,
 %
 \begin{align*}
 f \! \left( \xi \right) 
@@ -208,269 +264,43 @@ f \! \left( \xi \right)
 f \! \left( x \right) 
 + \mathfrak{a} \, \delta x \frac{ \partial f }{ \partial x } \! \left( x \right).
 \end{align*}
-%
-The real part of the evaluation yields the value of the function, while the dual part
-is exactly the image of the dual input, $\delta x$, under the Jacobian.
 
-\begin{tcolorbox}[colback=gray90,colframe=gray90, coltitle=black,
-title=\textbf{Dual Numbers, Exterior Derivatives, and Infinitetesimals}]
-
-Introductory calculus is also taught around the idea of an ``infinitesimal'' number that 
-projects out the best linear approximation of a function.  When moving on to the more
-rigorous real analysis, however, such concepts become difficult to define.
-
-\parindent=15pt
-
-One possible defining property of an infinitesimal is a number that is small enough that
-its square vanishes but not so small that it is indistinguishable form zero itself, a property
-that is manifestly captured in nilpotent objects such as the dual unit and the exterior
-derivative from differential geometry.  It should be no surprise, then, that dual numbers
-and exterior calculus provide a means of formalizing intuitive concepts such as
-infinitesimals, tangents, and linear approximations.
-
-\end{tcolorbox}
-
-The generalization to multivariate functions is straightforward: any function 
+Generalizing to multivariate functions is straightforward: any function 
 $f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ is first decomposed into $M$
-functions, $f_{m} : \mathbb{R}^{N} \rightarrow \mathbb{R}$, which generalize
+functions, $f_{m} : \mathbb{R}^{N} \rightarrow \mathbb{R}$, which extend
 to dual numbers as
 %
-\begin{equation} \label{dualFunction}
+\begin{equation} \label{dual_function}
 f_{m} \! \left( \mbox{\boldmath{$\xi$}} \right) = f_{m} \! \left( \mathbf{x} \right) 
 + \mathfrak{a} \sum_{n = 1}^{N} 
 \delta x_{n} \frac{ \partial f_{m} }{ \partial x_{n} } \! \left( \mathbf{x} \right).
 \end{equation}
 %
-As in the univariate case, the dual part of the output is exactly the result of
-mapping the dual part of the input through the Jacobian of $f_{m}$.  
+If we consider the dual component as identifying an element of the tangent
+space, then the dual part of the extended function is exactly the pushforward 
+of the original function.  
 
-Because dual functions propagate both functions and perturbations, any implementation
-of dual functions implicitly automates the intermediate calculations necessary for the 
-construction of linear differential operations.
+Similarly, we can interpret the dual component as a sensitivity.  In this case
+the action of a function on the dual number is given by the adjoint action of the
+pushforward,
+%
+\begin{equation} \label{dual_function}
+\xi_{n}  = x_{n}  + \mathfrak{a} \sum_{m = 1}^{M} 
+\delta f_{m} \frac{ \partial f_{m} }{ \partial x_{n} } \! \left( \mathbf{x} \right).
+\end{equation} 
 
-\section{First-Order Automatic Differentiation}
+Because dual numbers inherently integrate a function with its pushforward or
+pullback, they are the natural type from which we can implement linear
+differential operators and, consequently, automatic differentiation.
 
-Ultimately, first-order automatic differentiation is just an implementation of dual number-valued
-functions.  Implementations become particularly straightforward when we represent functions
-with \textit{expression graphs}, with nodes designating dual numbers and edges denoting
-functional dependencies (Figure \ref{fig:exprGraph}).  Here the evaluation of a
-dual number-valued function reduces to the propagation of dual numbers through the graph.
+\subsection{Higher-Order Dual Numbers}
 
-\begin{figure}
-\setlength{\unitlength}{0.1in} 
-\centering
-\begin{picture}(50, 20)
-%
-%\put(0, 0) { \framebox(50, 20){} }
-%\put(25, 0) { \framebox(25, 30){} }
-%\put(25, 0) { \framebox(6.25, 30){} }
-%\put(25, 0) { \framebox(12.5, 30){} }
-%\put(25, 0) { \framebox(18.75, 30){} }
-%
-%\put(25, 0) { \framebox(3.125, 30){} }
-%\put(25, 0) { \framebox(9.375, 30){} }
-%\put(25, 0) { \framebox(15.625, 30){} }
-%
-\put(12.5, 10) { \makebox(0, 0) 
-{$z \! \left( y_{1} \! \left( x_{1}, x_{2} \right), y_{2} \! \left( x_{2}, x_{3} \right) \right)$} }
-%
-\put(21.875, 10) { \vector(1, 0){6.25} }
-%
-\put(31.25, 2.5) { \circle{4} }
-\put(31.25, 2.5) { \makebox(0, 0) {$ x_{1} $} }
-%
-\put(37.5, 2.5) { \circle{4} }
-\put(37.5, 2.5) { \makebox(0, 0) { $ x_{2} $ } }
-%
-\put(43.75, 2.5) { \circle{4} }
-\put(43.75, 2.5) { \makebox(0, 0) { $ x_{3} $ } }
-%
-\put(31.25, 4.5) { \vector(3, 4){2.75} }
-\put(37.5, 4.5) { \vector(-3, 4){2.75} }
-\put(37.5, 4.5) { \vector(3, 4){2.75} }
-\put(43.75, 4.5) { \vector(-3, 4){2.75} }
-%
-\put(35, 10) {\circle{4} } % Tweaked to the right
-\put(34.375, 10) { \makebox(0, 0) { $y_{1}$ } }
-%
-\put(41.25, 10) {\circle{4} } % Tweaked to the right
-\put(40.625, 10) { \makebox(0, 0) { $y_{2}$ } }
-%
-\put(34.375, 12) { \vector(3, 4){2.75} }
-\put(40.625, 12) { \vector(-3, 4){2.75} }
-%
-\put(38, 17.5) {\circle{4} } % Tweaked to the right
-\put(37.5, 17.5) { \makebox(0, 0) { $ z $ } }
-%
-\end{picture} 
-\caption{
-Composite functions are isomorphic to directed acyclic graphs known as 
-an \textit{expression graph} or \textit{expression tree}.  Here we the function
-$z \! \left( y_{1} \! \left( x_{1}, x_{2} \right), y_{2} \! \left( x_{2}, x_{3} \right) \right)$
-generates a three level graph, with leaves $\left\{ x_{1}, x_{2}, x_{3} \right\}$ and
-root $z$.
-}
-\label{fig:exprGraph} 
-\end{figure}
+The naturalness of dual numbers also generalizes to higher-order perturbations
+with the introduction of multiple dual units, providing an means of computing
+higher-order linear differential operators without having to introduce the mathematical
+machinery of jet spaces.
 
-In general the directionality of the propagation is not constrained.  We could,
-for example, interpret the dual part of each node differently, with some nodes having
-perturbations that propagate forward, from the inputs of the expression graph to the 
-outputs and along the function evaluation, and have others having sensitivities propagating 
-in reverse, from the outputs to the inputs.  Here we consider only
-\textit{forward mode automatic differentiation} where the dual part of every node is
-a perturbation, and \textit{reverse mode automatic differentiation} the dual part of every
-nodes is a sensitivity.
-
-\subsection{Forward Mode}
-
-In forward mode automatic differentiation, the components of $\delta x_{j}$ defined at 
-the inputs of the function, and the leaves of the expression graph, are propagated forward 
-through the expression graph using the Jacobian map at each node (Figure \ref{fig:directions}).  
-Following the literature we will refer to the components of the dual numbers as \textit{values},
-%
-\begin{equation*}
-\mathcal{V} \! \left( \xi \right) 
-= \mathcal{V} \! \left( x + \mathfrak{a} \, \delta x \right) 
-= x,
-\end{equation*}
-%
-and \textit{tangents} or \textit{perturbations},
-\begin{equation*}
-\mathcal{T} \! \left( \xi \right) 
-= \mathcal{T} \! \left( x + \mathfrak{a} \, \delta x \right) 
-= \delta x,
-\end{equation*}
-%
-respectively.
-
-\begin{figure}
-\setlength{\unitlength}{0.1in} 
-\centering
-\begin{picture}(50, 20)
-%
-%\put(0, 1) { \framebox(50, 20){} }
-%\put(0, 0) { \framebox(12.5, 30){} }
-%\put(0, 0) { \framebox(25, 30){} }
-%\put(0, 0) { \framebox(37.5, 30){} }
-%\put(0, 0) { \framebox(50, 10){} }
-%\put(0, 0) { \framebox(50, 20){} }
-%
-% Forward Mode
-%
-\put(12.5, 2) { \makebox(0, 0) { Forward Mode } }
-%
-\put(13, 7) {\circle{4} } % Tweak to the right
-\put(12.5, 7) { \makebox(0, 0) { $ \xi_{j} $ } }
-%
-\put(12, 9) { \vector(0, 1){6} }
-\put(13, 9) { \vector(0, 1){6} }
-%
-\put(13, 17) {\circle{4} } % Tweak to the right
-\put(12.5, 17) { \makebox(0, 0) { $ \xi_{i} $ } }
-%
-\put(6, 12) { \makebox(0, 0) 
-{ $ \mathcal{V} \! \left( \xi_{j} \right) = x_{j} \! \left( x_{i} \right)$ } }
-\put(16.5, 13) { \makebox(0, 0) 
-{ $ \mathcal{T} \! \left( \xi_{i} \right) =  $} }
-\put(20, 10) { \makebox(0, 0) 
-{ $ \sum_{i} \frac{ \partial x_{i} }{ \partial x_{j} } \mathcal{T} \! \left( \xi_{j} \right)  $ } }
-%
-% Reverse Mode
-%
-\put(37.5, 2) { \makebox(0, 0) { Reverse Mode } }
-%
-\put(38, 7) {\circle{4} } % Tweak to the right
-\put(37.5, 7) { \makebox(0, 0) { $ \xi_{j} $ } }
-%
-\put(37, 9) { \vector(0, 1){6} }
-\put(38, 15) { \vector(0, -1){6} }
-%
-\put(38, 17) {\circle{4} } % Tweak to the right
-\put(37.5, 17) { \makebox(0, 0) { $ \xi_{i} $ } }
-%
-\put(31, 12) { \makebox(0, 0) 
-{ $ \mathcal{V} \! \left( x_{j} \right) = x_{j} \! \left( x_{i} \right)$ } }
-\put(41.5, 10) { \makebox(0, 0) 
-{ $ \mathcal{A} \! \left( \xi_{j} \right) =  $} }
-\put(45, 13) { \makebox(0, 0) 
-{ $ \sum_{i} \frac{ \partial x_{i} }{ \partial x_{j} } \mathcal{A} \! \left( \xi_{i} \right)  $ } }
-%
-\end{picture} 
-\caption{
-In forward mode automatic differentiation the Jacobian propagates directional 
-derivatives, $\mathcal{T} \! \left( \xi \right)$ forward in the same direction as the
-values, $\mathcal{V} \! \left( \xi \right)$.  Reverse mode automatic differentiation, 
-on the other hand, uses the adjoint Jacobian to propagate adjoint directional 
-derivatives, $\mathcal{A} \! \left( \xi \right)$, backwards against the 
-values, $\mathcal{V} \! \left( \xi \right)$.
-}
-\label{fig:directions} 
-\end{figure}
-
-The propagation of perturbations has a particularly nice interpretation as a 
-message passing algorithm \textbf{reference Bishop}.  A node $f_{i}$ with dependent
-node $g$, propagates its perturbation forward by emitting the message 
-$ \delta f_{i} \partial g / \partial f_{i}$.  Once the node $g$ has received messages from
-all of its dependencies, $f_{i}$, it computes its own perturbation, 
-$\sum_{i} \delta f_{i} \partial g / \partial f_{i}$, and then emits to any dependent nodes.
-
-\subsection{Reverse Mode}
-
-Reverse mode automatic differentiation propagates sensitivities defined at the outputs,
-and the roots of the expression graph, backwards towards to the leaves by applying
-the adjoint Jacobian map (Figure \ref{fig:directions}).  In this case the components of 
-the dual numbers as denoted \textit{values},
-%
-\begin{equation*}
-\mathcal{V} \! \left( \xi \right) 
-= \mathcal{V} \! \left( x + \mathfrak{a} \, \mathrm{d} x \right) 
-= x,
-\end{equation*}
-%
-and \textit{adjoints} or \textit{sensitivities},
-\begin{equation*}
-\mathcal{A} \! \left( \xi \right) 
-= \mathcal{A} \! \left( x + \mathfrak{a} \, \mathrm{d} x \right) 
-= \mathrm{d} x,
-\end{equation*}
-%
-respectively.
-
-As in forward mode, reverse mode has a nice interpretation as a message passing
-algorithm, only with messages emitted and received in the opposite direction.
-
-\subsection{Performance}
-
-The relative performance of forward and reverse mode automatic differentiation
-depends on the dimensionality of the inputs and the outputs of the given function
-and the linear differential operation being considered.  Note that per evaluation forward 
-mode will always be faster than reverse mode as it requires only one forward sweep 
-to propagate values and perturbations, compared to the two sweeps, one forward to 
-sweep to propagate values and one reverse sweep to propagate sensitivities, required 
-for reverse mode.  Moreover the overhead for forward mode will be smaller since it 
-does not require the full expression graph to be stored in memory.
-
-Consider, for example, the many-to-one case, $f : \mathbb{R}^{N} \rightarrow \mathbb{R}$.  
-Here forward mode computes the directional derivative, $\sum_{k} \delta x_{i} \partial f / \partial x_{i}$,
-where reverse mode computes the components of the gradient, $\mathrm{d} f \partial f / \partial x_{i}$.  
-If the directional derivative is all that is necessary then the forward mode calculation 
-will be quicker given the considerations above.  On the other hand, if the full vector gradient 
-is required then the small overhead from reverse mode will be dwarfed by the $M$ repetitions 
-necessary to build the full gradient from directional derivatives in forward mode.
-
-In general, computing the full Jacobian is faster with forward mode if $n \ll m$ 
-and faster with reverse mode if $n \gg m$.
-
-\section{Higher-Order Automatic Differentiation}
-
-A significant advantage of dual numbers is that they immediately generalize to provide
-an implementation of higher-order automatic differentiation techniques.  Such a
-generalization requires the introduction of multiple dual units and higher-order dual
-numbers.
-
-As we saw above, the real and dual parts of a first-order dual number are simply real 
-numbers,
+At first-order, the real and dual parts of a first-order dual number are real numbers,
 %
 \begin{equation*}
 \zeta = z + \mathfrak{a} \, \delta z, \, z, \delta z \in \mathbb{R}.
@@ -491,27 +321,26 @@ dual number by replacing the real-valued parts of $\zeta$ with dual numbers,
 \, x, \delta x, \delta y, \delta^{2} y \in \mathbb{R}.
 \end{alignat*}
 %
-From the forward mode perspective, $x$ is the value, $\delta x$ and $\delta y$ are 
-first-order perturbations, and $\delta^{2} y$ is a second-order perturbation.  In order
-to remain agnostic to the choice of forward or reverse mode, however, we will refer
-to $x$ as the first value, $\delta x$ as the first gradient, $\delta y$ as the second
-value, and $\delta^{2}$ as the second gradient.
+From the linear differential operator perspective, $x$ is a the value, $\delta x$ and 
+$\delta y$ are first-order perturbations, and $\delta^{2} y$ is a second-order perturbation.
+Higher-order dual numbers follow recursively with the introduction of a new dual unit
+and the replacement of real-valued components with new dual numbers.  An $n$-th 
+order dual number, for example, is constructed from $n$ distinct dual units and
+$2^{n}$ real components.
 
-Higher-order dual numbers follow recursively by replacing real-valued components 
-with dual numbers and new dual units.  An $n$-th order dual number, for example, 
-is constructed from $2^{n}$ real components.
+When constructing higher-order linear differential operators, these components may 
+be considered as both higher-order tangents and higher-order sensitivities. Consequently 
+it's convenient to define notation agnostic to the specific map being considered.
+We will refer to the components of each bottem-level dual number as \textit{values} and
+\textit{gradients}; for example, at second-order $x$ would be a first-order value, $\delta x$ 
+a first-order gradient, $\delta y$ a second-order value, and $\delta^{2} y$ as the second-order 
+gradient.
 
-Implementing higher-order dual number-valued functions is simply a matter of
-replacing each node in the expression graph with a higher-order dual number,
-and deriving generalizations of the propagation rules.   The resulting forward and 
-reverse mode propagations yield higher-order linear differential operations.
+Extending functions to higher-order dual numbers, and constructing higher-order
+linear differential operators in the process, also proceeds recursively.  Here we
+explicitly evaluate the extension to second and third-order dual numbers.
 
-Here we evaluate second and third-order dual number-valued functions, and derive the corresponding
-propagation rules, by evaluating the function recursively through the dual numbers.  Given the
-propagation rules we show how to construct common higher-order linear differential operations,
-such as the Hessian.
- 
-\subsection{Second-Order}
+\subsubsection{Second-Order}
 
 Given the second-order dual number,
 %
@@ -597,47 +426,33 @@ These results are summarized in Table \ref{tab:secondOrder}.
 	\\
 	\end{tabular}
 	\caption{Recursively expanding a function with respect to a second-order dual number 
-	gives the values of each component of the dual number.
+	gives each component of the function's second-order pushforward.
 	\label{tab:secondOrder}}
 \end{table*}
 
-In forward mode we compute four different values at each node -- the function
-evaluation, two first-order perturbations, and the second-order perturbation,
-$ \sum_{j} \delta^{2} y_{j} \, \partial f_{i} / \partial x_{j}
-+ \sum_{jk} \delta x_{k} \, \delta y_{j} \, \partial f_{i} / \partial x_{j} \partial x_{k}$.
+Considering the first-order gradient, second-order value, and second-order gradient as tangents 
+immediately defines two first-order linear differential operators and one second-order linear 
+differential operator.  Unfortunately the same is not true if we try to consider all three components
+as sensitivities, as the second term in the second-order gradient map no longer makes
+sense.  
 
-The generalization of reverse mode requires some care because the second-order
-Jacobian, $\partial f_{i} / \partial x_{j} \partial x_{k}$, does not have a well-defined
-adjoint.  If we propagate the second-order values forward first, however,
-then we can define the adjoint Jacobian operator as
+The generalization of an adjoint map does not consider all components as sensitivities but rather
+considers all $k$th-order values as $(k - 1)$-order tangents (with a $0$-order tangent
+taken to be an input value) and all $k$th-order gradients as $k$th-order sensitivities.  Once the partial
+derivatives are contracted against the tangents they can be transposed to give the
+components of the pullback map.  For example, given our usual test function 
+$f : \mathbb{R}^{N} \rightarrow \mathbb{R}^{M}$ with the perturbations 
+$\delta y \rightarrow \mathrm{d} f$ and $\delta^{2} y \rightarrow \mathrm{d}^{2} f$, the 
+second-order pullback is given by
 %
 \begin{equation*}
-J^{T}_{ij} = \sum_{k} \delta y_{k} \, \partial f_{i} / \partial x_{k} \partial x_{j},
-\end{equation*}
-%
-and the resulting propagation of sensitivities as
-%
-\begin{align*}
-\mathrm{d} x_{i} 
-&= 
-\sum_{j} \mathrm{d} f_{j} J^{T}_{ij} 
-\\
-&= 
-\sum_{jk} \mathrm{d} f_{j} \, \delta y_{k} \, \partial f_{i} / \partial x_{k} \partial x_{j}.
-\end{align*}
-
-Second-order reverse mode then consists of a forward sweep in which the first and 
-second-order values are computed, and then reverse sweep in which the first and 
-second-order gradients are computed.  This  yields the function evaluation, the 
-sensitivities of the inputs with respect to $\mathrm{d} \mathbf{f}$, the perturbation of the 
-output with respect to $\delta \mathbf{y}$, and the second-order sensitivities,
-%
-\begin{equation*}
-\sum_{j} \mathrm{d}^{2} y_{j} \, \partial f_{i} / \partial x_{j}
-+ \sum_{jk} \mathrm{d} f_{j} \, \delta y_{k} \, \partial f_{i} / \partial x_{j} \partial x_{k}.
+\mathrm{d}^{2} x_{n}
+= \sum_{m = 1}^{M} \mathrm{d}^{2} f_{m} \frac{ \partial f_{m} }{ \partial x_{n} }
++ \sum_{m = 1}^{M} \mathrm{d} f_{m} 
+\left[ \sum_{n'=1}^{N} \delta x_{n'} \frac{ \partial^{2} f_{m} }{ \partial x_{n'} \partial x_{n} } \right].
 \end{equation*}
 
-\subsection{Third-Order}
+\subsubsection{Third-Order}
 
 Continuing to third-order follows in kind.  Given a third-order dual number,
 %
@@ -1009,31 +824,183 @@ These results are summarized in Table \ref{tab:thirdOrder}.
 	\\
 	\end{tabular}
 	\caption{Recursively expanding a function with respect to a third-order dual number 
-	gives the values of each component of the dual number.
+	gives each component of the function's third-order pushforward.
 	\label{tab:thirdOrder}}
 \end{table*}
 
-A forward sweep of third-order dual numbers yields a wealth of information.  In addition
-to the function evaluation we have three different first-order perturbations, three different 
-perturbations, and a single third-order perturbation.
+As with second-order pullbacks, third-order pullbacks require considering each values as 
+a tangent and each gradient as a sensitivity.  For example, with the notation
+%
+\begin{align*}
+s &\rightarrow x \\
+\delta s &\rightarrow \mathrm{d} f \\
+\delta t &\rightarrow \delta x \\
+\delta^{2} t &\rightarrow \mathrm{d}^{2} f \\
+\delta u &\rightarrow \delta x^{2} \\
+\delta^{2} u &\rightarrow \mathrm{d}^{3} f \\
+\delta^{2} v &\rightarrow \delta x^{3} \\
+\delta^{3} v &\rightarrow \mathrm{d}^{4} f
+\end{align*}
+%
+the third-order adjoint map is given by
+%
+\begin{align*}
+\mathrm{d}^{4} x_{n}
+&= \quad
+\sum_{m = 1}^{M} \mathrm{d}^{4} f_{m} \frac{ \partial f_{m} }{ \partial x_{n} }
+\\
+& \quad + 
+\sum_{m = 1}^{M} \mathrm{d} f_{m}
+\left[ \sum_{n'=1}^{N} \delta^{3} x_{n'} \frac{ \partial^{2} f_{m} }{ \partial x_{n'} \partial x_{n} } \right]
++
+\sum_{m = 1}^{M} \mathrm{d}^{2} f_{m}
+\left[ \sum_{n'=1}^{N} \delta^{2} x_{n'} \frac{ \partial^{2} f_{m} }{ \partial x_{n'} \partial x_{n} } \right]
++
+\sum_{m = 1}^{M} \mathrm{d}^{3} f_{m}
+\left[ \sum_{n'=1}^{N} \delta x_{n'} \frac{ \partial^{2} f_{m} }{ \partial x_{n'} \partial x_{n} } \right]
+\\
+& \quad +
+\sum_{m = 1}^{M} \mathrm{d} f_{m}
+\left[ \sum_{n'=1}^{N} \sum_{n''=1}^{N} \delta x_{n'} \delta^{2} x_{n''} 
+\frac{ \partial^{3} f_{m} }{ \partial x_{n''} \partial x_{n'} \partial x_{n} } \right]
+\end{align*}
 
-As above, reverse mode requires a separation of values and gradients.  A
-preliminary forwards sweep first builds the expression graph and computes the
-function, three first-order perturbations, and a second-order perturbation.  Given 
-the perturbations we can define adjoint Jacobians and sweep backwards, generating 
-a first-order sensitivity, two second-order sensitivities, and one third-order sensitivity.
+\section{Automatic Differentiation}
 
-\subsection{Constructing Linear Differential Operations}
+Automatic differentiation is the automated computation of linear differential operators applied
+to a user-defined function.  Because dual numbers integrate a function evaluation along with
+its pushforward or pullback, they provide a natural type -- ultimately, automatic differentiation 
+is just the extension of a user-defined, real-valued function to accept dual numbers.
 
-Given the higher-order propagation methods we can now construct various linear 
-differential operations by propagating perturbations and sensitivities.  For simplicity
-we consider only many-to-one functions, $f : \mathbb{R}^{N} \rightarrow 1$, as
-many-to-many functions can always be decomposed into many-to-one functions.
+When these functions are composite, as is the case in almost any practical application, they
+can be represented by an \textit{expression graph}, with each node carrying the value of
+the intermediate function evaluation and each edge denoting a functional dependency
+(Figure \ref{fig:exprGraph}).  The dual number-valued functions necessary for automatic
+differentiation simply replace the single value at each node with the components of a
+$k$th-order dual number.
 
-We denote the gradient by $\mathbf{g}$ and the Hessian as $\mathbf{H}$.
+\begin{figure}
+\setlength{\unitlength}{0.1in} 
+\centering
+\begin{picture}(50, 20)
+%
+%\put(0, 0) { \framebox(50, 20){} }
+%\put(25, 0) { \framebox(25, 30){} }
+%\put(25, 0) { \framebox(6.25, 30){} }
+%\put(25, 0) { \framebox(12.5, 30){} }
+%\put(25, 0) { \framebox(18.75, 30){} }
+%
+%\put(25, 0) { \framebox(3.125, 30){} }
+%\put(25, 0) { \framebox(9.375, 30){} }
+%\put(25, 0) { \framebox(15.625, 30){} }
+%
+\put(12.5, 10) { \makebox(0, 0) 
+{$g \! \left( f_{1} \! \left( x_{1}, x_{2} \right), f_{2} \! \left( x_{2}, x_{3} \right) \right)$} }
+%
+\put(21.875, 10) { \vector(1, 0){6.25} }
+%
+\put(31.25, 2.5) { \circle{4} }
+\put(31.25, 2.5) { \makebox(0, 0) {$ x_{1} $} }
+%
+\put(37.5, 2.5) { \circle{4} }
+\put(37.5, 2.5) { \makebox(0, 0) { $ x_{2} $ } }
+%
+\put(43.75, 2.5) { \circle{4} }
+\put(43.75, 2.5) { \makebox(0, 0) { $ x_{3} $ } }
+%
+\put(31.25, 4.5) { \vector(3, 4){2.75} }
+\put(37.5, 4.5) { \vector(-3, 4){2.75} }
+\put(37.5, 4.5) { \vector(3, 4){2.75} }
+\put(43.75, 4.5) { \vector(-3, 4){2.75} }
+%
+\put(35, 10) {\circle{4} } % Tweaked to the right
+\put(34.375, 10) { \makebox(0, 0) { $f_{1}$ } }
+%
+\put(41.25, 10) {\circle{4} } % Tweaked to the right
+\put(40.625, 10) { \makebox(0, 0) { $f_{2}$ } }
+%
+\put(34.375, 12) { \vector(3, 4){2.75} }
+\put(40.625, 12) { \vector(-3, 4){2.75} }
+%
+\put(38, 17.5) {\circle{4} } % Tweaked to the right
+\put(37.5, 17.5) { \makebox(0, 0) { $ g $ } }
+%
+\end{picture} 
+\caption{
+Composite functions are isomorphic to directed acyclic graphs known as 
+\textit{expression graphs}; for example, the function
+$g \! \left( f_{1} \! \left( x_{1}, x_{2} \right), f_{2} \! \left( x_{2}, x_{3} \right) \right)$
+generates a three level graph, with leaves $\left\{ x_{1}, x_{2}, x_{3} \right\}$ and
+root $g$.  The expression graph corresponding to a real-valued function
+stores single values at each node, and automatic differentiation requires that
+each node store all components of a $k$th-order dual number.
+}
+\label{fig:exprGraph} 
+\end{figure}
 
-Note that adjuncts refers to superfluous linear differential operations that are generated 
-in the construction of the desired operation.
+The computation of any linear differential operator comprised entirely of pushforwards is
+known as \textit{forward mode} or \textit{forward accumulation} automatic differentiation
+because all dual numbers are propagated forward along the expression graph.  Any
+adjoint operator, however, requires propagating sensitivities backwards along the expression
+graph and consequently the implementation of adjoint operators is known as 
+\textit{reverse mode} or \textit{reverse accumulation} automatic differentiation.  In this
+section we consider both forward and reverse mode automatic differentiation, discuss
+their relative performance, and demonstrate a selection of linear differential operator
+implementations.
+
+\subsection{Forward Mode Automatic Differentiation}
+
+Forward mode automatic differentiation computes the $k$th-order pushforward 
+of a given function by first initializing all values and gradients at the function
+inputs and propagating the perturbations along the expression graph in a single 
+forward sweep.  
+
+Because only one sweep is necessary for forward mode, the expression graph does 
+not need to be explicitly stored in memory, reducing overhead and often admitting 
+more optimized code.  On the other hand, the linear differential operators comprised 
+entirely of pushforwards are often not of immediate practical interest.
+
+\subsection{Reverse Mode Automatic Differentiation}
+
+Reverse mode automatic differentiation compliments forward mode by computing
+$k$th-order adjoint operators which require more elaborate traversals of the
+expression graph.  A general reverse mode calculation interleaves the forward
+propagation of tangents and the reverse propagation of sensitivities, starting at
+first order and working up to the desired order.
+
+Consequently, reverse mode requires the persistent storage of the expression 
+graph and induces a corresponding performance overhead.  In practice, however,
+the adjoint operators admitted by reverse mode automatic differentiation are
+more appropriate to applications and worth the additional cost.
+
+\subsection{Relative Performance}
+
+In general neither forward mode nor reverse mode automatic differentiation can be
+claimed as optimal, as the relative performance of the two depends not only on
+the given function but also on the desired linear differential operation.  
+
+Consider, for example, many-to-one functions $f : \mathbb{R}^{N} \rightarrow \mathbb{R}$,
+common to many applications.  Forward mode automatic differentiation, computes the 
+directional derivative of the function along a given tangent in a single forward sweep.
+Recovering the full gradient then requires $N$ forward sweeps, each initialized with
+only one of the input tangents non-zero.  On the other hand, reverse mode automatic
+differentiation computes the gradient with only one forward and one reverse sweep.  
+
+If the directional derivative is sufficient or $N$ is small then forward mode automatic
+differentiation is the better performing approach, but when the gradient is desired and 
+$N$ is large, reverse mode automatic differentiation becomes far more computationally 
+efficient despite the memory overhead.  Because this latter case is ubiquitous is
+practice, \nomad implements reverse mode automatic differentiation.
+
+\subsection{Example Implementations}
+
+Here we review the exact computations needed to implement a selection of
+linear differential operators natural to many-to-one functions, 
+$f : \mathbb{R}^{N} \rightarrow 1$.
+
+The gradient and Hessian are denoted by $\mathbf{g}$ and $\mathbf{H}$, respectively,
+while adjuncts refers to lower-order linear differential operators that are generated
+as a side effect of the desired operation.
 
 \begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
 fonttitle=\bfseries,title=Directional Derivative]
@@ -1041,7 +1008,7 @@ fonttitle=\bfseries,title=Directional Derivative]
 	\begin{description}
 		\item[Form:] $\displaystyle \mathbf{v}^{T} \mathbf{g} = \sum_{i} v_{i} \frac{ \partial f }{ \partial x_{i} } $
 		\item[Algorithm:] \hfill \\
-		Initialize $\delta x_{i} = v_{i}$. \\
+		Initialize first gradient of the inputs, $\delta x_{i} = v_{i}$. \\
 		Compute first-order forward sweep. \\
 		Return first gradient of output.
 		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
@@ -1056,7 +1023,7 @@ fonttitle=\bfseries,title=Gradient]
 	\begin{description}
 		\item[Form:] $\displaystyle g_{i} = \frac{ \partial f }{ \partial x_{i} } $
 		\item[Algorithm:] \hfill \\
-		Initialize $\mathrm{d} f = 1$. \\
+		Initialize first gradient of the output, $\mathrm{d} f = 1$. \\
 		Compute first-order reverse sweep. \\
 		Return first gradient of inputs.
 		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
@@ -1070,9 +1037,11 @@ fonttitle=\bfseries,title=Hessian Quadratic Form]
 
 	\begin{description}
 		\item[Form:] 
-		$\displaystyle \mathbf{v}^{T} \mathbf{H} \, \mathbf{u} = \sum_{ij} v_{i} u_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
+		$\displaystyle \mathbf{v}^{T} \mathbf{H} \, \mathbf{u} = 
+		\sum_{ij} v_{i} u_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
 		\item[Algorithm:] \hfill \\
-		Initialize $\delta x_{i} = v_{i}, \, \delta y_{i} = u_{i}, \delta^{2} y_{i} = 0$. \\
+		Initialize first gradient, $\delta x_{i} = v_{i}$, second value, $\delta y_{i} = u_{i}$,
+		and second gradient, $\delta^{2} y_{i} = 0$, of the inputs. \\
 		Compute second-order forward sweep. \\
 		Return second gradient of output.
 		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
@@ -1085,13 +1054,14 @@ fonttitle=\bfseries,title=Hessian Quadratic Form]
 fonttitle=\bfseries,title=Hessian-Vector Product]
 	
 	\begin{description}
-		\item[Form:] $\displaystyle \mathbf{H} \, \mathbf{v} = \sum_{j} v_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
+		\item[Form:] $\displaystyle \mathbf{H} \, \mathbf{v} = 
+		\sum_{j} v_{j} \frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} } $
 		\item[Algorithm:] \hfill \\
-		Initialize $\mathrm{d} f = 1$. \\
-		Compute first-order reverse sweep for first gradients. \\
-		Initialize $\delta y_{i} = v_{i}$. \\
+		Initialize first gradient of the output, $\mathrm{d} f = 1$. \\
+		Compute first-order reverse sweep for first gradients at the inputs. \\
+		Initialize second values of the inputs, $\delta y_{i} = v_{i}$. \\
 		Propagate second values in a forward sweep. \\
-		Initialize $\mathrm{d}^{2} f = 0.$ \\
+		Initialize second gradient of the output, $\mathrm{d}^{2} f = 0.$ \\
 		Compute second-order reverse sweep. \\
 		Return second gradient of inputs.
 		\item[Cost:] $\mathcal{O} \! \left( 1 \right)$
@@ -1112,9 +1082,9 @@ fonttitle=\bfseries,title=Hessian]
 		\begin{itemize}
 			\setlength{\itemsep}{0cm}
 			\setlength{\parskip}{0cm}
-			\item[] Initialize $\delta y_{i} = \delta^{j}_{i}$.
+			\item[] Initialize second values of the inputs, $\delta y_{i} = \delta^{j}_{i}$.
 			\item[] Propagate second values in a forward sweep. 
-			\item[] Initialize $\mathrm{d}^{2} f = 0.$
+			\item[] Initialize second gradient of the output, $\mathrm{d}^{2} f = 0$.
 			\item[] Compute second-order reverse sweep.
 			\item[] Return second gradient of inputs
 		\end{itemize}
@@ -1139,13 +1109,13 @@ fonttitle=\bfseries,title=Gradient of the Trace of a Matrix Hessian Product]
 		\begin{itemize}
 			\setlength{\itemsep}{0cm}
 			\setlength{\parskip}{0cm}
-			\item[] Initialize $\delta t_{i} = \delta^{j}_{i}$.
+			\item[] Initialize second values of the inputs, $\delta t_{i} = \delta^{j}_{i}$.
 			\item[] Propagate second values in a forward sweep. 
-			\item[] Initialize $\mathrm{d}^{2} f = 0$.
+			\item[] Initialize second gradient of the output, $\mathrm{d}^{2} f = 0$.
 			\item[] Compute second-order reverse sweep.
-			\item[] Initialize $\delta u_{i} = M_{ji}, \delta^{2} v_{i} = 0$.
-			\item[] Propagate third and fourth values in a  forward sweep.
-			\item[] Initialize $\mathrm{d}^{3} f = 0$.
+			\item[] Initialize third and fourth values of the inputs, $\delta u_{i} = M_{ji}, \delta^{2} v_{i} = 0$.
+			\item[] Propagate third and fourth values in a forward sweep.
+			\item[] Initialize third gradient of the output, $\mathrm{d}^{3} f = 0$.
 			\item[] Compute third-order reverse sweep.
 			\item[] Return the fourth gradient of the inputs.
 		\end{itemize}
@@ -1154,3 +1124,4 @@ fonttitle=\bfseries,title=Gradient of the Trace of a Matrix Hessian Product]
 	\end{description}
 	
 \end{tcolorbox}
+

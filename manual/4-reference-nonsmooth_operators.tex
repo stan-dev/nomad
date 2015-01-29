@@ -1,0 +1,186 @@
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Equal To]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator==(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator==(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator==(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Greater Than]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Greater Than Or Equal To]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>=(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator>=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Less Than]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Less Than Or Equal To]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<=(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator<=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Not Equal To]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator!=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator!=(double x,
+             const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator!=(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+             double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Operator Unary Not]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, bool >::type
+  operator!(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+

@@ -1,0 +1,270 @@
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Cbrt]
+
+\begin{verbatim}
+double cbrt(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  cbrt(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Ceil]
+
+\begin{verbatim}
+double ceil(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  ceil(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Fabs]
+
+\begin{verbatim}
+double fabs(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fabs(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Fdim]
+
+\begin{verbatim}
+double fdim(double x, double y)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fdim(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fdim(double x,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fdim(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Floor]
+
+\begin{verbatim}
+double floor(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  floor(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Fmax]
+
+\begin{verbatim}
+double fmax(double x, double y)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmax(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmax(double x,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmax(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Fmin]
+
+\begin{verbatim}
+double fmin(double x, double y)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmin(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmin(double x,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmin(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Fmod]
+
+\begin{verbatim}
+double fmod(double x, double y)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmod(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmod(double x,
+       const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fmod(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+       double y)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= If Else]
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  if_else(bool c,
+          const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v_true,
+          const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v_false)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+if_else(bool c,
+        double x_true,
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v_false)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+if_else(bool c,
+        const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v_true,
+        double x_false)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Round]
+
+\begin{verbatim}
+double round(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  round(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=white,colframe=gray90, coltitle=black,boxrule=3pt,
+fonttitle=\bfseries,title= Trunc]
+
+\begin{verbatim}
+double trunc(double x)
+
+\end{verbatim}
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+typename std::enable_if<!StrictSmoothness, var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  trunc(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input)
+
+\end{verbatim}
+
+\end{tcolorbox}
+

@@ -1,77 +1,43 @@
 \chapter{Implementation}
+\label{chp:implementation}
 
-The treatment of automatic differentiation as a consequence of
-defining dual number-valued functions naturally motivates an
-\textit{operator overloading} implementation \textbf{references},
-where we introduce dual number types and overload common
-operations and functions to accept these types.  \nomad is a C++
-\textbf{reference} implementation of this strategy that heavily 
-leverages template metaprogramming to optimize performance 
-\textbf{reference}.
+\nomad is a \verb|C++| implementation of reverse mode automatic
+differentiation that uses an \textit{operator overloading} strategy.
+More precisely, we introduce a dual number type and then overload
+common functions to accept this type.
 
-One complication to the implementation is that reverse mode
-methods require the expression graph to be stored in memory.
-\nomad builds the expression graph of the fly, storing nodes
-in topological order via an arena-based memory allocation.
+A key difference of \nomad to other implementations is the generalization
+to higher-orders.  Most higher-order automatic differentiation
+implementations leverage the recursive nature of higher-order dual
+numbers directly, automatically differentiating through a first-order
+implementation to compute higher-order partial derivatives and
+the subsequent linear differential operators.  This approach allows for
+arbitrary-order automatic differentiation, but only at the cost of inefficient and 
+sometimes numerically unstable results.  \nomad,
+on the other hand, explicitly implements second and third-order operators
+with a focus on performance and numerical stability.
 
-In this chapter we review the architecture and construction of
-an expression graph in \nomad and investigate the resulting
-user interface.
+In this chapter we introduce the architecture behind the \nomad automatic 
+differentiation implementation.  We first review the internal representation 
+of the expression graph and how it interfaces with function overloads before
+discussing the user interface itself.
 
-\section{Architecture} \label{sec:architecture}
+\section{Internal Representation of the Expression Graph}
+\label{sec:exp_graph_rep}
 
-\nomad defines a templated automatic differentiation type
-%
-\begin{verbatim}
-<template short autodiff_order>
-class var
-\end{verbatim}
-%
-where \verb|autodiff_order| defines the order of the underlying
-dual numbers.  If we needed to consider only methods that
-could be implemented with forward mode automatic differentiation
-then we could simply store the dual numbers as members of
-\verb|var| and propagate them forward by overloading operators
-and functions.
-
-For example, a first-order automatic differentiation variable
-might be implemented as
-%
-\begin{verbatim}
-class var {
-  var(double v, double g): first_val(v), first_grad(g) {}
-  double first_val;
-  double first_grad;
-};
-\end{verbatim}
-%
-with a function like the exponential overloaded as
-%
-\begin{verbatim}
-var exp(const var& v) {
-  return var( std::exp(v.first_val), std::exp(v.first_val) * v.first_grad);
-}
-\end{verbatim}
-
-Although this approach works fine for first-order forward automatic
-differentiation it does not scale well to higher-order methods that
-require the backward propagation of sensitivities.  Instead of storing
-the dual numbers directly, \verb|var| wraps a \verb|var_body| object
-that represents and node of the expression graph and is stored
-in global memory.
-
-In the remainder of the section we will discuss how the expression
-graph is represented in \nomad and how it is constructed by the
-\verb|var| objects.
-
-\subsection{Representing the Expression Graph With Stacks}
-
-Each node of the expression graph, including edges to input nodes
-and dual numbers, is represented by a \verb|var_body| object, and
-the graph itself is represented by a topological sort of the \verb|var_body|
-objects into a stack.  The topological sort insures that when traversing
-the stack sequentially all of the input nodes will have been processed
-before a dependent node is reached (Figure \ref{fig:topologicalSort}).
+While the expression graph represents the entire composite function, each
+node in the expression graph represents just a single component function.  
+Consequently each node must be responsible for both implementing the 
+local pushforward and pullback of the corresponding function and storing 
+the dual numbers, input nodes, and any auxiliary storage convenient for 
+the operator implementations, such as partial derivatives.
+ 
+Like many other automatic differentiation implementations, \nomad
+topologically sorts the expression graph into a linear stack of nodes, 
+sometimes known as a tape (Figure \ref{fig:topologicalSort}).  This ordering 
+preserves the structure of the expression graph, ensuring that a sweep 
+through the stack executes a valid forward or reverse sweep through the 
+expression graph.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -105,16 +71,16 @@ before a dependent node is reached (Figure \ref{fig:topologicalSort}).
 \put(18.75, 4.5) { \vector(-3, 4){2.75} }
 %
 \put(10, 10) {\circle{4} } % Tweaked to the right
-\put(9.375, 10) { \makebox(0, 0) { $y_{1}$ } }
+\put(9.375, 10) { \makebox(0, 0) { $f_{1}$ } }
 %
 \put(16.25, 10) {\circle{4} } % Tweaked to the right
-\put(15.625, 10) { \makebox(0, 0) { $y_{2}$ } }
+\put(15.625, 10) { \makebox(0, 0) { $f_{2}$ } }
 %
 \put(9.375, 12) { \vector(3, 4){2.75} }
 \put(15.625, 12) { \vector(-3, 4){2.75} }
 %
 \put(13, 17.5) {\circle{4} } % Tweaked to the right
-\put(12.5, 17.5) { \makebox(0, 0) { $ z $ } }
+\put(12.5, 17.5) { \makebox(0, 0) { $ g $ } }
 %
 % Middle Arrow
 %
@@ -125,40 +91,32 @@ before a dependent node is reached (Figure \ref{fig:topologicalSort}).
 \put(33.5, 4) { \framebox(8, 2){ $x_{1}$} }
 \put(33.5, 6) { \framebox(8, 2){ $x_{2}$ } }
 \put(33.5, 8) { \framebox(8, 2){ $x_{3}$ } }
-\put(33.5, 10) { \framebox(8, 2){ $y_{1}$ } }
-\put(33.5, 12) { \framebox(8, 2){ $y_{2}$ } }
-\put(33.5, 14) { \framebox(8, 2){ $z$ } }
+\put(33.5, 10) { \framebox(8, 2){ $f_{1}$ } }
+\put(33.5, 12) { \framebox(8, 2){ $f_{2}$ } }
+\put(33.5, 14) { \framebox(8, 2){ $g$ } }
 %
 \end{picture} 
 \caption{
-Topological sort ensures that when sweeping across the stack a node will not
-be processed until all dependent nodes have been processed.  From a message
-passing perspective this ensures that once a node is reached it will have
-received all messages from its inputs.  Note that this is only one possible
-topological sort -- it's not unique.
+A topological sort of the expression graph yields a linear stack of nodes, 
+sometimes known as a \textit{tape}, ordered such that a pass through the 
+stack yields a valid forward or reverse sweep of the expression graph.
 }
 \label{fig:topologicalSort} 
 \end{figure}
 
-\textbf{Okay, need a reasonable argument here for why we use separate
-stacks for the storage.  Dynamic sizing is bad -- do the stacks just make
-an arena-based allocation easier?}
+Nodes are implemented with the \verb|var_node| class which defines
+default pushforward and pullback methods that can be specialized
+for functions with structured Jacobians.  Because the amount of storage for 
+each node can vary widely depending on the corresponding function and the 
+order of the desired linear differential operator, storage is decoupled from 
+each node.  Instead the necessary data are stored in three global stacks, the 
+inputs stack, dual numbers stack, and partials stack, with \verb|var_node| 
+containing only an address to the relevant data in each 
+(Figure \ref{fig:architecture}), as well as accessor and mutator methods that 
+abstract the indirect storage.
 
-\subsubsection{Var Body Stack} \label{subsubsec:var_body}
-
-Nodes in the expression graph are represented by \texttt{var\_body}
-objects, which address the necessary storage and implement
-methods for propagating perturbations and sensitivities.
-
-Dual numbers, inputs, and partials are stored in separate stacks,
-allowing dynamic storage with the same \texttt{var\_body} class.
-\texttt{var\_body} itself simply stores the addresses of the relevant
-data within those stacks (Figure \ref{fig:architecture}).
-
-In the case of heavily-used functions, especially those with sparse 
-partial derivatives, significant computations gains can be found in
-optimizing the propagation routines and partial storage.  For these
-heavily-used functions we implement \texttt{var\_body} derivations.
+Storage for each stack is pre-allocated and expanded only as necessary with 
+an arena-based allocation pattern.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -177,7 +135,7 @@ heavily-used functions we implement \texttt{var\_body} derivations.
 %
 % Var Body
 %
-\put(8.5, 2) { \makebox(8, 2){Var Body} }
+\put(8.5, 2) { \makebox(8, 2){Var Node} }
 \put(8.5, 6) { \framebox(8, 2){} }
 \put(8.5, 8) { \framebox(8, 2){} }
 \put(8.5, 10) { \framebox(8, 2){} }
@@ -235,26 +193,32 @@ heavily-used functions we implement \texttt{var\_body} derivations.
 %
 \end{picture} 
 \caption{ 
-Each node in the expression graph is represented by a 
-\texttt{var\_body} object stored in the \texttt{var\_body} stack.  
-Storage of the inputs, dual numbers, and
-partial derivatives is split out from this representation, with each \texttt{var\_body}
-storing only addresses to the relevant stacks.  Note that the inputs address not
-the input \texttt{var\_body} objects themselves but rather their dual numbers, 
-allowing the direct access needed for computations and avoiding any overhead
-from indirection. 
+Upon a topological sort (Figure \ref{fig:topologicalSort}), the expression graph 
+is represented by a stack of \texttt{var\_node} objects.  The input nodes, 
+dual numbers, and partial derivatives are stored in external stacks, with each 
+\texttt{var\_node} storing only addresses to each.  Note that the inputs stack 
+address not the \texttt{var\_node} objects directly, but rather only the dual numbers 
+of those nodes needed for implementing the pushforward and pullback operators.
 }
 \label{fig:architecture} 
 \end{figure}
 
+\subsubsection{The Inputs Stack}
+
+The inputs stack represents the edges in the expression graph
+needed for directing the forward and reverse sweeps.  Because
+the pushforward and pullback operators need to read and write only 
+the dual numbers at each node, edges index the dual numbers of any
+dependencies directly (Figure \ref{fig:architecture}) and avoid the overhead
+that would be acquired for indirect access through the \verb|var_node|
+objects.
+
 \subsubsection{Dual Number Stack}
 
-The dual number stack stores the values and gradients of the dual
-numbers at each node.  For example, a first-order expression graph
+The dual number stack stores the $2^{k}$ components of the $k$th-order
+dual numbers at each node.  For example, a first-order expression graph
 will need only two elements for each node while a third-order expression 
-graph will need eight (Figure \ref{fig:dualNumberStorage}).  In general
-$2^{n}$ addresses must be reserved for each node of an $n$-th
-order expression graph.
+graph will need eight (Figure \ref{fig:dualNumberStorage}).
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -267,76 +231,79 @@ order expression graph.
 %
 \put(0, 15) { \makebox(8, 2){First-} }
 \put(0, 13) { \makebox(8, 2){Order} }
-\put(9, 12) { \framebox(4, 6){ $x $ } }
-\put(13, 12) { \framebox(4, 6){ $ \delta x $ } }
-\put(17, 17) { \makebox(2, 2){ $\ldots$ } }
-\put(17, 11) { \makebox(2, 2){ $\ldots$ } }
+\put(9, 17) { \makebox(2, 2){ $\ldots$ } }
+\put(9, 11) { \makebox(2, 2){ $\ldots$ } }
+\put(11, 12) { \framebox(4, 6){ $x $ } }
+\put(15, 12) { \framebox(4, 6){ $ \delta x $ } }
+\put(19, 17) { \makebox(2, 2){ $\ldots$ } }
+\put(19, 11) { \makebox(2, 2){ $\ldots$ } }
+%
+{ \thicklines \put(13, 20) { \vector(0, -1){2} } }
 %
 % Second-Order
 %
 \put(0, 5) { \makebox(8, 2){Third-} }
 \put(0, 3) { \makebox(8, 2){Order} }
-\put(9, 2) { \framebox(4, 6){ $s$ } }
-\put(13, 2) { \framebox(4, 6){ $\delta s$ } }
-\put(17, 2) { \framebox(4, 6){ $\delta t$ } }
-\put(21, 2) { \framebox(4, 6){ $\delta^{2} t$ } }
-\put(25, 2) { \framebox(4, 6){ $\delta u$ } }
-\put(29, 2) { \framebox(4, 6){ $\delta^{2} u$ } }
-\put(33, 2) { \framebox(4, 6){ $\delta^{2} v$ } }
-\put(37, 2) { \framebox(4, 6){ $\delta^{3} v$ } }
-\put(41, 7) { \makebox(2, 2){ $\ldots$ } }
-\put(41, 1) { \makebox(2, 2){ $\ldots$ } }
+\put(9, 7) { \makebox(2, 2){ $\ldots$ } }
+\put(9, 1) { \makebox(2, 2){ $\ldots$ } }
+\put(11, 2) { \framebox(4, 6){ $s$ } }
+\put(15, 2) { \framebox(4, 6){ $\delta s$ } }
+\put(19, 2) { \framebox(4, 6){ $\delta t$ } }
+\put(23, 2) { \framebox(4, 6){ $\delta^{2} t$ } }
+\put(27, 2) { \framebox(4, 6){ $\delta u$ } }
+\put(31, 2) { \framebox(4, 6){ $\delta^{2} u$ } }
+\put(35, 2) { \framebox(4, 6){ $\delta^{2} v$ } }
+\put(39, 2) { \framebox(4, 6){ $\delta^{3} v$ } }
+\put(43, 7) { \makebox(2, 2){ $\ldots$ } }
+\put(43, 1) { \makebox(2, 2){ $\ldots$ } }
+%
+{ \thicklines \put(13, 10) { \vector(0, -1){2} } }
 %
 \end{picture} 
 \caption{
-A separate dual number stack is able to accommodate storage
-of dual numbers of any order.  For example, first-order dual numbers
-require only two elements while third-order dual numbers require
+The dual number stack is able to accommodate storage of dual numbers 
+of any order without reallocating memory.  For example, first-order dual 
+numbers require only two elements while third-order dual numbers require
 eight elements.
 }
 \label{fig:dualNumberStorage} 
 \end{figure}
 
-\subsubsection{Input Stack}
-
-The input stack stores the edges to any dependent nodes.  For
-optimal performance the edges index the dual numbers of those
-nodes directly and avoid indirect access through the nodes
-themselves (Figure \ref{fig:architecture}).
-
 \subsubsection{Partials Stack}
 
 A common approach in many automatic differentiation implementations
-is to compute partial derivatives on the fly and avoid storing them in
-the expression graph.  In order to compute higher-order differential operations,
-however, the partials are reused in every sweep and their repeated computation
-can be a significant computational burden.
+is to compute partial derivatives online as necessary and avoid storing them
+in the expression graph.  This strategy is sound for first-order reverse
+mode calculations where the partials are used only once, but higher-order
+calculations require multiple sweeps that reuse the partials.  Recomputing
+the partials for each sweep then becomes a significant computational burden.
 
-Given its focus on higher-order methods, \nomad explicitly stores partial 
-derivatives in a dedicated partials stack.  When constructing an $n$th-order
-expression graph only the $n$th-order partial derivatives and lower are
-stored, and only if the partial derivatives are non-zero.  For example, 
-a second-order expression graph will calculate and store the first and
-second-order partial derivatives.
+With a focus on implementing efficient higher-order methods, \nomad 
+explicitly stores partial derivatives in a dedicated partials stack.  When 
+constructing an $k$th-order expression graph only the $k$th-order partial 
+derivatives and lower are stored, and only if the partial derivatives are 
+non-zero.  For example, a second-order expression graph will calculate 
+and store only the first and second-order partial derivatives.
 
-To avoid redundant calculations and storage, \nomad leverages the commutation
-of partial derivatives and considers only the unique higher-order values.  
-For a node representing a function $f \! \left( x_{1}, \ldots, x_{N} \right)$, 
-at second-order the stack will store
+To avoid redundant calculations and storage, \nomad stores only the 
+unique higher-order values.  In a second-order calculation a node 
+representing the component function 
+$f: \mathbb{R}^{N} \rightarrow \mathbb{R}$ will store
 %
 \begin{equation*}
-\frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} }, \, i \in 1, \ldots, N, j \in 1, \ldots i.
+\frac{ \partial^{2} f }{ \partial x_{i} \partial x_{j} }, \, i \in 1, \ldots, N, j \in 1, \ldots i,
 \end{equation*}
 %
-and at third-order
+while a third-order calculation will store
 %
 \begin{equation*}
 \frac{ \partial^{3} f }{ \partial x_{i} \partial x_{j} \partial x_{k} }, \, 
 i \in 1, \ldots, N, j \in 1, \ldots i, k \in 1, \ldots, j.
 \end{equation*}
 %
-For example, the storage for a binary function $f \! \left(x, y \right)$
-is given in Figure \ref{fig:partialsStorage}.
+For example, when executing a third-order calculation the node representing
+a binary function, $f : \mathbb{R}^{2} \rightarrow \mathbb{R}$, utilizes the
+compact storage demonstrated in Figure \ref{fig:partialsStorage}.
 
 \begin{figure}
 \setlength{\unitlength}{0.1in} 
@@ -347,6 +314,8 @@ is given in Figure \ref{fig:partialsStorage}.
 %
 % Second-Order
 %
+\put(5, 7) { \makebox(2, 2){ $\ldots$ } }
+\put(5, 1) { \makebox(2, 2){ $\ldots$ } }
 \put(7, 2) { \framebox(4, 6){ $ \frac{ \partial f }{ \partial x} $ } }
 \put(11, 2) { \framebox(4, 6){ $ \frac{ \partial f }{ \partial y} $ } }
 \put(15, 2) { \framebox(4, 6){ $ \frac{ \partial^{2} f }{ \partial x^{2}} $ } }
@@ -359,11 +328,15 @@ is given in Figure \ref{fig:partialsStorage}.
 \put(43, 7) { \makebox(2, 2){ $\ldots$ } }
 \put(43, 1) { \makebox(2, 2){ $\ldots$ } }
 %
+{ \thicklines \put(9, 10) { \vector(0, -1){2} } }
+%
 \end{picture} 
 \caption{
 Only unique partial derivatives are stored in the partials stack,
-as demonstrated here for node representing a binary function 
-$f \! \left( x, y \right)$ in a third-order expression graph.
+as demonstrated here for node representing a binary function,
+$f: \mathbb{R}^{2} \rightarrow \mathbb{R}$, in a third-order 
+expression graph that requires first, second, and third-order
+partial derivatives.
 }
 \label{fig:partialsStorage} 
 \end{figure}
@@ -372,96 +345,422 @@ In general a function with $N$ inputs and non-vanishing derivatives at
 all orders will require $\binom{N + M}{M}$ elements to store the unique
 $M$th-order partial derivatives.
 
-\subsection{Building the Expression Graph}
+\section{Extending Functions to Accept Dual Numbers}
 
-The \verb|var| class is responsible for building the internal representation
-of the expression graph, either when constructed explicitly or implicitly
-when a function is called.  Pushing a node onto the expression graph 
-proceeds in three stages.
+In order to implement automatic differentiation calculations, each dual-number 
+valued-function is responsible for not only computing the function
+value but also expanding the expression graph with the addition of
+a node with the desired pushforward and pullback methods and
+addresses to the top of the inputs, dual numbers, and partials stacks.
+The evaluation of a composite dual number-valued function will then
+build the complete expression graph primed for the application of
+linear differential operators.
 
-Firstly two global variables, \verb|next_inputs_delta| and 
-\verb|next_partials_delta| have to be set, informing the stack of the memory
-needed for the new node.  The \verb|var_body| class has a special
-member dedicated to computing the number of partial derivatives needed
-and is called as
+Dual numbers in \nomad are exposed to the user by the \verb|var|
+class with \verb|var|-valued functions responsible for the management
+of the expression graph.  In this section we present the details of
+the \verb|var| class and the implementation of \verb|var|-valued functions.
+
+\subsection{The var Class}
+
+The \verb|var| class itself is only a lightweight wrapper for an underlying 
+\verb|var_node| in the expression graph, storing an address to the 
+corresponding node with a variety of member functions that expose the 
+node's data.  Most importantly, \verb|var| is templated to allow for the 
+compile-time configuration of the expression graph,
 %
 \begin{verbatim}
-next_inputs_delta = n_inputs;
-next_partials_delta =
-  var_body<autodiff_order, partials_order>::n_partials(n_inputs);
-\end{verbatim}
-
-Once these variables have been set the node can be pushed by constructing
-a \verb|var_body| with an overloaded \verb|operator new|,
-%
-\begin{verbatim}
-new var_body<autodiff_order, partials_order>(n_inputs);
-\end{verbatim}
-%
-The overloaded \verb|operator new| checks if the current memory is large 
-enough for the new node, allocating more if necessary, and then constructs 
-the node at the top of the stack.  During construction addresses to the top of 
-the dual numbers, inputs, and partial stack are set.
-
-Once the node has been pushed, the state of the node can be pushed onto
-the individual stacks.  Values are pushed onto the autodiff stack with the
-command,
-%
-\begin{verbatim}
-push_dual_numbers<autodiff_order>(value));
-\end{verbatim},
-%
-which pushes $2^{\mathrm{autodiff\_order}}$ elements, the first being set to
-value and the rest to zero.  Inputs are pushed with an address to the dual
-number stack, for example,
-%
-\begin{verbatim}
-push_inputs(input.dual_numbers());
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+class var { ...
 \end{verbatim}
 %
-Finally partial derivatives are pushed one at a time using the sparse storage
-pattern discussed above.  A binary function, for example, would require
+\nomad also defines a variety of type definitions for the most commonly
+used template configurations (Table \ref{tab:typedefs}).
 
+\begin{table*}[t!]
+	\centering
+	\renewcommand{\arraystretch}{2}
+	\begin{tabular}{cccc}
+	\rowcolor[gray]{0.9} Type Definition & \verb|AutodiffOrder|
+	& \verb|StrictSmoothness| & \verb|ValidateIO| \\
+	\verb|var1| & \verb|1| & \verb|true| & \verb|false| \\
+	\rowcolor[gray]{0.9} \verb|var2| & \verb|2| & \verb|true| & \verb|false| \\
+	\verb|var3| & \verb|3| & \verb|true| & \verb|false| \\
+	\rowcolor[gray]{0.9} \verb|var1_debug| & \verb|1| & \verb|true| & \verb|true| \\
+	\verb|var2_debug| & \verb|2| & \verb|true| & \verb|true| \\
+	\rowcolor[gray]{0.9} \verb|var3_debug| & \verb|3| & \verb|true| & \verb|true| \\
+	\verb|var1_wild| & \verb|1| & \verb|false| & \verb|false| \\
+	\rowcolor[gray]{0.9} \verb|var2_wild| & \verb|2| & \verb|false| & \verb|false| \\
+	\verb|var3_wild| & \verb|3| & \verb|false| & \verb|false| \\
+	\end{tabular}
+	\caption{The \texttt{nomad} namespace includes helpful type definitions for 
+	the most common \texttt{var} configurations.}
+	\label{tab:typedefs}
+\end{table*}
+
+\subsubsection{AutodiffOrder}
+
+The template parameter \verb|AutodiffOrder| defines the maximum order
+linear differential operator that the corresponding expression graph will
+admit.  Attempting to apply a second-order linear differential operator
+to a graph built from \verb|var|s with \verb|AutodiffOrder = 1|, for example,
+will induce a compile-time error.
+
+Note that lower-order graphs require the computation and storage of
+fewer dual numbers and partial derivatives, not to mention faster pushforward
+and pullback implementations.  Consequently, although a higher-order
+graph will admit lower-order operators, it is much more efficient to match
+the order of the expression graph, via the choice of \verb|AutodiffOrder|,
+to the linear differential operators of interest.
+
+\subsubsection{StrictSmoothness}
+
+\verb|StrictSmoothness| defines the smoothness requirements of 
+component functions.
+
+Formally, automatic differentiation requires only that each component
+function have well-behaved derivatives defined in some neighborhood
+containing the point at which the function is being evaluated.  For
+example, a linear differential operator applied to the absolute value
+function is well defined everywhere except at the origin.  Many
+algorithms that use these operators, however, actually require that
+the derivatives be well-defined \textit{everywhere} because even 
+functions with only point discontinuities in their derivatives will
+manifest undesired pathologies.
+
+With these algorithms in mind, when \verb|StrictSmoothness = true| 
+\nomad will disable functions and operators that are not everywhere 
+smooth, as well as those that admit comparisons that may introduce cusps.
+
+\subsubsection{ValidateIO}
+
+\verb|ValidateIO| enables strict validation of the inputs and outputs
+to each component function.
+
+Identifying the source of potential floating-point pathologies like
+underflow, overflow and \verb|NaN| in a large, composite function
+is often a challenging debugging task.  When \verb|ValidateIO = true|,
+\nomad assists users by checking all input values, output values,
+and output partial derivatives for \verb|NaN| and throws an
+exception identifying the responsible component function if any
+are found.  Domain validation will also be done if implemented in
+the function.  These checks, however, are a nontrivial computational
+burden and should be disabled for high-performance applications.
+
+\subsection{var-valued Functions}
+
+Extending a function to take \verb|var| arguments requires not just propagating the
+value of the function but also creating a new node in the expression
+graph.  In this section we review the steps necessary for implementing
+a \verb|var|-valued function and present some specific examples.
+
+\subsubsection{Input Validation}
+
+Firstly, a \verb|var|-valued function has to validate its inputs if
+\verb|ValidateIO| is \verb|true|.  \nomad provides helper functions
+that validate double values and throws \nomad-specific exceptions
+if \verb|NaN|s are encountered,
 %
 \begin{verbatim}
-    if (autodiff_order >= 1) {
-      push_partials(df_dx);
-      push_partials(df_dy);
+inline void validate_input(double val, std::string f_name)
+\end{verbatim}
+%
+Here \verb|f_name| is the name of the function being implemented
+and is used to trace the exception to the origin of the violation.
+Domain constraints may also be validated here with helper functions
+such as
+%
+\begin{verbatim}
+inline void validate_lower_bound(double val, double lower, std::string f_name)
+\end{verbatim}
+
+\subsubsection{Expression Graph Node Creation}
+
+With the inputs validated we can now append a new node to the
+expression graph with the \verb|create_node| function.  This function
+is templated to accept the type of node being used by the function
+and will require the number of inputs to the function unless the
+specific \verb|var_node| implementation does not require it.
+
+For example, if the function is utilizing the default \verb|var_node|
+implementation then the call would be
+%
+\begin{verbatim}
+create_node<var_node<AutodiffOrder, PartialsOrder>>(n_inputs);
+\end{verbatim}
+%
+On the other hand, a function utilizing a \verb|var_node| specialization
+with a predefined number of inputs would not need to specify an
+argument,
+%
+\begin{verbatim}
+create_node<binary_var_node<AutodiffOrder, PartialsOrder>>();
+\end{verbatim}
+
+\subsubsection{Pushing Inputs}
+
+Once the node representing the component function has been created
+we can now being to push the necessary data onto the external stacks.
+First are the addresses of the inputs to the function,
+%
+\begin{verbatim}
+inline void push_inputs(nomad_idx_t input)
+\end{verbatim}
+%
+which are readily accessed from the input \verb|var| arguments.
+
+\subsubsection{Pushing Dual Numbers}
+
+Next are the dual numbers.  The function
+%
+\begin{verbatim}
+template<short AutodiffOrder, bool ValidateIO>
+inline void push_dual_numbers(double val)
+\end{verbatim}
+%
+pushes $2^{\mathrm{AutodiffOrder}}$ components onto the stack, with
+the first component set to the value of the function, \verb|val|, and the
+rest set to zero.
+
+When \verb|ValidateIO = true| the function \verb|push_dual_numbers|
+will also check the output \verb|val| for a \verb|NaN| and throw an
+exception if necessary.  Consequently the call to \verb|push_dual_numbers|
+must be wrapped in a \verb|try/catch| block, preferable one that throws
+a new exception identifying the current function, for example
+%
+\begin{verbatim}
+try {
+  push_dual_numbers<AutodiffOrder, ValidateIO>(binary_function(x, y));
+} catch(nomad_error) {
+  throw nomad_output_value_error("binary_function");
+}
+\end{verbatim}
+
+\subsubsection{Pushing Partials}
+
+Finally we can compute the partial derivatives and push them onto the
+partials stack with
+%
+\begin{verbatim}
+template<bool ValidateIO>
+inline void push_partials(double partial)
+\end{verbatim}
+%
+As with \verb|push_dual_numbers|, \verb|push_partials| will optionally
+validate the values of the partial derivatives and must be wrapped in
+a \verb|try/catch| block,
+%
+\begin{verbatim}
+try {
+  if (AutodiffOrder >= 1) {
+    push_partials<ValidateIO>(df_dx);
+    push_partials<ValidateIO>(df_dy);
+  }
+  ...Push higher-order partial derivatives...
+} catch(nomad_error) {
+  throw nomad_output_partial_error("binary_function");
+}
+\end{verbatim}
+
+Because partial derivatives only up to \verb|AutodiffOrder| need to be
+computed and stored, efficient implementations of a \verb|var|-valued
+function should evaluate partial derivatives only conditionally on
+\verb|AutodiffOrder|.
+
+\subsubsection{Returning a New Var}
+
+Finally we return a new \verb|var| that wraps the freshly-created node.
+%
+\begin{verbatim}
+return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
+\end{verbatim}
+%
+\verb|next_node_idx_| addresses the top of the \verb|var_node| stack, hence
+\verb|next_node_idx_ - 1| addresses the last node pushed to the stack.
+
+\subsubsection{Example Implemention of a Smooth Function}
+
+The logic of a \verb|var|-valued function implementation is more clear
+when each step is presented together.  Here is an example implementation
+of a smooth, binary function using the default \verb|var_node| implementation.
+
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  binary_function(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+                  const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
+    
+  // Validate input values if ValidateIO is true
+  if (ValidateIO) {
+    validate_input(v1.first_val(), "binary_function");
+    validate_input(v2.first_val(), "binary_function");
+  }
+      
+  // Create a var_node on the top of the stack
+  const short partials_order = 3;
+  const unsigned int n_inputs = 2;
+    
+  create_node<var_node<AutodiffOrder, partials_order>>(n_inputs);
+
+  // Push dependencies to top of the inputs stack
+  push_inputs(v1.dual_numbers());
+  push_inputs(v2.dual_numbers());
+
+  // Push dual numbers to the the top of the dual numbers stack
+  double x = v1.first_val();
+  double y = v2.first_val();
+    
+  try {
+    push_dual_numbers<AutodiffOrder, ValidateIO>(binary_function(x, y));
+  } catch(nomad_error) {
+    throw nomad_output_value_error("binary_function");
+  }
+    
+  // Push partial derivatives to the top of the partials stack
+  try {
+    if (AutodiffOrder >= 1) {
+      ...Compute df_dx and df_dy...
+      push_partials<ValidateIO>(df_dx);
+      push_partials<ValidateIO>(df_dy);
     }
-    if (autodiff_order >= 2) {
-      push_partials(d2f_dx2);
-      push_partials(d2f_dxdy);
-      push_partials(d2f_dy2);
+    if (AutodiffOrder >= 2) {
+      ...Compute df2_dx2, df2_dxy, and df2_dy2...
+      push_partials<ValidateIO>(df2_dx2);
+      push_partials<ValidateIO>(df2_dxdy);
+      push_partials<ValidateIO>(df2_dy2);
     }
-    if (autodiff_order >= 3) {
-      push_partials(df3_dx3);
-      push_partials(df3_dx2dy);
-      push_partials(df3_dxdy2);
-      push_partials(df3_dy3);
+    if (AutodiffOrder >= 3) {
+      ...Compute df3_dx3, df3_dx2dy, df3_dxdy2, and df3_dy3...
+      push_partials<ValidateIO>(df3_dx3);
+      push_partials<ValidateIO>(df3_dx2dy);
+      push_partials<ValidateIO>(df3_dxdy2);
+      push_partials<ValidateIO>(df3_dy3);
     }
+  } catch(nomad_error) {
+    throw nomad_output_partial_error("binary_function");
+  }
+
+  // Return a new var that wraps the newly created node
+  return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
+    
+}
 \end{verbatim}
+%
+Note that expensive calculations, such as when validating inputs and computing
+and storing partial derivatives, are conditioned on template parameters wherever 
+possible to avoid unnecessary computation.  Because these template parameters 
+are known at compile-time these checks incur no run-time penalties.
 
-Optimized derivations of \verb|var_body| may not use every stack and so may
-not require each step.  Binary addition, for example, is able to efficiently 
-compute partial derivatives on the fly and so does not need to worry about
-storing any partials, let alone checking and expanding the partial derivative 
-stack.
+When the partial derivatives of a function are structured then we can achieve
+much higher performance by specializing the underlying \verb|var_node|.
+For example, the only non-zero partial derivatives of the addition operator
+are at first-order, and they are all equal to $1$.  Consequently we can speed
+up the automatic differentiation computations by specializing \verb|var_node|
+to avoid unnecessary multiplications by $1$.
 
-\section{User Interface} \label{sec:user_interface}
-
-Linear differential operators are implemented in a functor-functional
-pattern \textbf{reference}.
-
-Functors are specified with any stateless class implementing
+This is done in the \verb|binary_sum_var_node| and the implementation of
+the addition operator then becomes
 %
 \begin{verbatim}
-T operator()(const Eigen::VectorXd& x) const,
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+inline var<AutodiffOrder, StrictSmoothness, ValidateIO>
+  operator+(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v1,
+            const var<AutodiffOrder, StrictSmoothness, ValidateIO>& v2) {
+
+  if (ValidateIO) {
+    validate_input(v1.first_val(), "operator+");
+    validate_input(v2.first_val(), "operator+");
+  }
+      
+  // Create a specialized var_node on the stack
+  create_node<binary_sum_var_node<AutodiffOrder>>();
+    
+  push_inputs(v1.dual_numbers());
+  push_inputs(v2.dual_numbers());
+    
+  try {
+    push_dual_numbers<AutodiffOrder, ValidateIO>(v1.first_val() + v2.first_val());
+  } catch(nomad_error) {
+    throw nomad_output_value_error("operator+");
+  }
+    
+  // The binary_sum_var_node pushforward and pullback implementations
+  // use hardcoded partial derivatives and don't require partial derivatives to 
+  // be pushed onto the partials stack
+    
+  return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
+    
+}
+\end{verbatim}
+
+\subsubsection{Example Implemention of a Non-Smooth Function}
+
+Non-smooth functions are implemented almost exactly the same as smooth functions.
+The only difference is in the function signature which uses the \verb|enable_if|
+template metaprogram to disable the function unless \verb|StrictSmoothness = 1|.
+
+For example, the absolute value function is implemented as
+%
+\begin{verbatim}
+template <short AutodiffOrder, bool StrictSmoothness, bool ValidateIO>
+inline typename 
+  std::enable_if<!StrictSmoothness, 
+                 var<AutodiffOrder, StrictSmoothness, ValidateIO> >::type
+  fabs(const var<AutodiffOrder, StrictSmoothness, ValidateIO>& input) {
+    
+  if (ValidateIO) validate_input(input.first_val(), "fabs");
+      
+  const short partials_order = 1;
+  const unsigned int n_inputs = 1;
+    
+  create_node<unary_var_node<AutodiffOrder, partials_order>>(n_inputs);
+
+  double x = input.first_val();
+    
+  try {
+    push_dual_numbers<AutodiffOrder, ValidateIO>(fabs(x));
+  } catch(nomad_error) {
+    throw nomad_output_value_error("fabs");
+  }
+      
+  push_inputs(input.dual_numbers());
+    
+  try {
+    if (AutodiffOrder >= 1) {
+      if (x < 0)
+        push_partials<ValidateIO>(-1);
+      else
+        push_partials<ValidateIO>(1);
+    }
+  } catch(nomad_error) {
+    throw nomad_output_partial_error("fabs");
+  }
+
+  return var<AutodiffOrder, StrictSmoothness, ValidateIO>(next_node_idx_ - 1);
+    
+}
+\end{verbatim}
+
+\section{The \nomad User Interface}
+\label{sec:user_interface}
+
+In \nomad, linear differential operators are implemented as functionals acting
+on \verb|var|-valued functors.
+
+Specifically, functors are classes deriving from \verb|base_functor|
+%
+\begin{verbatim}
+template<class T>
+class base_functor {
+public:
+  virtual T operator()(const Eigen::VectorXd& x) const;
+  typedef T var_type;
+};
 \end{verbatim}
 %
-where \verb|T| is any automatic differentiation variable and \verb|x|
-contains the input values to the function.  Letting \verb|T| be
-a template parameter is often more convenient than explicitly
-defining the type.  For example, a functor implementing the function
+that implement a \verb|var|-valued \verb|operator()| taking an
+\verb|Eigen::VectorXd&| of input values.  For example, at
+first-order the composite function
 %
 \begin{equation*}
 f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
@@ -470,40 +769,43 @@ f \! \left( x, y, z \right) = \cos \! \left( e^{x} + e^{y} \right) / z
 would be defined as
 %
 \begin{verbatim}
-template <typename T>
-class example_functor {
-  T operator()(const Eigen::VectorXd& x) const {
-    T v1 = x[0];
-    T v2 = x[1];
-    T v3 = x[2];
+class example_functor: public base_functor<var1> {
+  var1 operator()(const Eigen::VectorXd& x) const {
+    var1 v1 = x[0];
+    var1 v2 = x[1];
+    var1 v3 = x[2];
     return cos( exp(v1) + exp(v2) ) / v3;  
   }
 };
 \end{verbatim}
 
-The linear differential operations themselves are implemented as
-template functions taking functors as their first argument.  The 
-gradient, for example, has the signature
+The functionals implementing linear differential operators then
+take a functor instance as an argument, first calling \verb|operator()|
+to build the expression graph and then the various sweeps
+necessary to compute the differential operator itself.  For example,
+the gradient is defined with the signature
 %
 \begin{verbatim}
-  template <typename F>
-  void gradient(const F& f,
-                const Eigen::VectorXd& x,
-                Eigen::VectorXd& g)
+template <typename F>
+void gradient(const F& f,
+              const Eigen::VectorXd& x,
+              Eigen::VectorXd& g)
 \end{verbatim}
 %
-and would be called as
+Consequently computing a gradient is straightforward,
 %
 \begin{verbatim}
-Eigen::VectorXd& x = ...;
-Eigen::VectorXd& g = Eigen::VectorXd::Ones(x.size());
-gradient(example_functor<var<1U>>, x, g);
-\end{verbatim}
-%
-Note the specialization of \verb|example_functor| to a first-order
-automatic differentiation variable.  Any higher-order automatic
-differentiation variable would also work.
+int n = 100;
+Eigen::VectorXd x = Eigen::VectorXd::Ones(n);
+  
+double f;
+Eigen::VectorXd grad(x.size());
+  
+example_functor example;
+gradient(example, x, f, grad);
 
-Internally each functional calls \verb|F::operator()| to build up
-the expression graph and then propagates perturbations and
-sensitivities as necessary.
+std::cout << grad.transpose() << std::endl;
+\end{verbatim}
+
+For the complete list of \verb|var|-valued functions and linear differential
+operators implemented in \nomad please consult Chapter \ref{chap:reference_guide}.
